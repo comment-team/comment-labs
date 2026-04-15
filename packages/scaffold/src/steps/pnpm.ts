@@ -12,7 +12,7 @@ import { changesetConfigTemplate } from '../templates/changesets'
 
 
 const COMMAND_TIMEOUT_MS = 60_000
-const pluginPackageName = '@comment-team/pnpm-plugin-defaults'
+const pluginPackageName = '@comment-labs/pnpm-plugin-defaults'
 
 export async function handlePnpmPlugin(context: AppContext): Promise<void> {
   if (usesPluginDefaults(context)) {

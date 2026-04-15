@@ -5,7 +5,7 @@ A pnpm plugin that provides default configuration settings and hooks for consist
 ## Installation
 
 ```bash
-pnpm add --config @comment-team/pnpm-plugin-defaults
+pnpm add --config @comment-labs/pnpm-plugin-defaults
 ```
 
 ## Usage
