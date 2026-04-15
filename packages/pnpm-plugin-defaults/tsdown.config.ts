@@ -6,6 +6,7 @@ export default defineConfig({
     pnpmfile: './src/index.ts'
   },
   outDir: '.',
+  clean: [ 'pnpmfile.cjs' ],
   format: [ 'cjs' ],
   sourcemap: true
 })
