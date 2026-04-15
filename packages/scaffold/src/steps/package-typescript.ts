@@ -79,7 +79,7 @@ async function maybeUpdateTypescriptRange(context: AppContext, pkg: WorkspacePac
   const nextPackageJson = structuredClone(pkg.packageJson)
   nextPackageJson.devDependencies = {
     ...nextPackageJson.devDependencies,
-    typescript: '^6.0.0'
+    typescript: '6.0.2'
   }
 
   const before = formatWorkspacePackageJson(pkg, pkg.packageJson)
