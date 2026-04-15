@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/oxlint-config",
+  "version": "1.0.0-beta.0",
+  "description": "Oxlint configuration for comment-labs projects",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.mjs",
+  "files": [
+    "dist/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "prelint": "pnpm build",
+    "lint": "oxlint && eslint --cache .",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@e18e/eslint-plugin": "^0.3.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "empathic": "^2.0.0",
+    "eslint-plugin-jsdoc": "^62.9.0",
+    "eslint-plugin-regexp": "^3.1.0",
+    "globals": "^17.4.0"
+  },
+  "devDependencies": {
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "bundled-eslint-config": "catalog:lint",
+    "eslint": "^10.1.0",
+    "eslint-plugin-oxlint": "catalog:lint",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:toolchain"
+  },
+  "peerDependencies": {
+    "oxlint": "^1.57.0",
+    "oxlint-tsgolint": "^0.17.3"
+  }
+}

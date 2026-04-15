@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/scaffold",
+  "version": "0.1.0-beta.0",
+  "description": "CLI for scaffolding consistent repository defaults",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "comment-labs-scaffold": "dist/index.mjs"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint && eslint --cache .",
+    "prepublishOnly": "pnpm build",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "chokidar": "5.0.0",
+    "detect-package-manager": "^3.0.2",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2",
+    "ts-dedent": "^2.2.0",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "@types/prompts": "catalog:types",
+    "bundled-eslint-config": "catalog:lint",
+    "eslint": "catalog:lint",
+    "eslint-plugin-oxlint": "catalog:lint",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain"
+  }
+}

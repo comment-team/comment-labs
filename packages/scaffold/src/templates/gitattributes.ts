@@ -1,0 +1,42 @@
+import { dedent } from 'ts-dedent'
+
+
+export function gitattributesTemplate(): string {
+  return dedent`
+    # All files auto-detected as text
+    *               text=auto eol=lf
+
+    # Source code
+    *.ts            text eol=lf
+    *.tsx           text eol=lf
+    *.js            text eol=lf
+    *.jsx           text eol=lf
+    *.json          text eol=lf
+    *.mjs           text eol=lf
+    *.mts           text eol=lf
+    *.cjs           text eol=lf
+    *.cts           text eol=lf
+
+    # Graphics
+    *.svg           text eol=lf
+    *.png           binary
+    *.pdf           binary
+    *.jpg           binary
+    *.jpeg          binary
+    *.ico           binary
+
+    # Configuration files
+    *.env           text eol=lf
+    *.yml           text eol=lf
+    *.yaml          text eol=lf
+    *.lock          text eol=lf
+    .gitattributes  text eol=lf
+    *.*rc           text eol=lf
+    *.*ignore       text eol=lf
+
+    # etc
+    *.md            text eol=lf
+    LICENSE         text eol=lf
+    README          text eol=lf
+  `
+}

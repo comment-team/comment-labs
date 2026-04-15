@@ -1,0 +1,96 @@
+{
+  "renovate": true,
+  "workspace": {
+    "packages": {
+      "selectAll": true,
+      "selected": []
+    }
+  },
+  "codeowners": {
+    "enabled": true,
+    "root": "@DaniFoldi @illmatah",
+    "packages": {
+      "oxlint-config": {
+        "default": true
+      },
+      "pnpm-plugin-defaults": {
+        "default": true
+      },
+      "scaffold": {
+        "default": true
+      },
+      "schema-validator": {
+        "default": true
+      },
+      "tsconfig": {
+        "default": true
+      }
+    }
+  },
+  "pnpm-plugin": {
+    "install": false
+  },
+  "changesets": {
+    "install": true,
+    "access": "public",
+    "config": true
+  },
+  "knip": {
+    "install": true,
+    "config": true
+  },
+  "packages": {
+    "oxlint-config": {
+      "packageJson": {
+        "schema": true
+      },
+      "tsconfig": {
+        "preset": "node",
+        "normalize": true
+      },
+      "oxlint": {
+        "enabled": true,
+        "config": false,
+        "install": false
+      },
+      "eslint": {
+        "enabled": true,
+        "config": "merge"
+      }
+    },
+    "pnpm-plugin-defaults": {
+      "tsconfig": {
+        "preset": "node"
+      },
+      "oxlint": {
+        "enabled": true
+      },
+      "eslint": {
+        "enabled": true
+      }
+    },
+    "scaffold": {
+      "tsconfig": {
+        "preset": "node"
+      },
+      "oxlint": {
+        "enabled": true
+      },
+      "eslint": {
+        "enabled": true
+      }
+    },
+    "schema-validator": {
+      "tsconfig": {
+        "preset": "node"
+      },
+      "oxlint": {
+        "enabled": true
+      },
+      "eslint": {
+        "enabled": true
+      }
+    }
+  },
+  "gitignore": true
+}

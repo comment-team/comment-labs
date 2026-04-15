@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": [
+    "@comment-labs/tsconfig/node"
+  ],
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "#/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts"
+  ]
+}

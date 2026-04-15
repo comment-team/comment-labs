@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "comment-labs",
+  "private": true,
+  "packageManager": "pnpm@10.31.0",
+  "devDependencies": {
+    "@changesets/changelog-github": "0.6.0",
+    "@changesets/cli": "2.30.0",
+    "knip": "6.1.0"
+  }
+}

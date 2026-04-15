@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/pnpm-plugin-defaults",
+  "version": "1.0.0-beta.0",
+  "description": "A pnpm plugin that provides default configuration settings and hooks",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "pnpmfile.cjs",
+  "files": [
+    "pnpmfile.cjs"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint && eslint --cache .",
+    "prepublishOnly": "pnpm run build",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "bundled-eslint-config": "catalog:lint",
+    "eslint": "catalog:lint",
+    "eslint-plugin-oxlint": "catalog:lint",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain"
+  }
+}

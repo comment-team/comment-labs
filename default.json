@@ -1,0 +1,146 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "assigneesFromCodeOwners": true,
+  "commitMessagePrefix": ":paperclip:",
+  "configMigration": true,
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
+    ":automergeDigest",
+    ":automergeMinor",
+    ":automergeRequireAllStatusChecks",
+    "npm:unpublishSafe",
+    "workarounds:nodeDockerVersioning",
+    "workarounds:typesNodeVersioning"
+  ],
+  "npmrcMerge": true,
+  "packageRules": [
+    {
+      "matchDepTypes": [ "dependencies" ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "dependencies{{#if (equals parentDir '')}}{{else}}-{{parentDir}}{{/if}}",
+      "commitMessageSuffix": "({{#if (equals parentDir '')}}root{{else}}{{parentDir}}{{/if}})"
+    },
+    {
+      "matchDepTypes": [ "devDependencies" ],
+      "matchUpdateTypes": [
+          "minor",
+          "patch"
+      ],
+      "rangeStrategy": "pin",
+      "groupName": "devDependencies"
+    },
+    {
+      "matchDepTypes": [ "pnpm.overrides" ],
+      "enabled": false
+    },
+    {
+      "matchCurrentVersion": "/^(0.)|.*-/",
+      "groupName": "{{{depNameSanitized}}}"
+    },
+    {
+      "matchDepNames": [ "zod" ],
+      "groupName": "zod"
+    },
+    {
+      "matchDepNames": [ "prisma", "@prisma/client" ],
+      "groupName": "prisma"
+    },
+    {
+      "matchDepNames": [ "playwright", "@playwright/test" ],
+      "groupName": "playwright"
+    },
+    {
+      "matchDepNames": [ "drizzle-orm", "drizzle-kit", "drizzle-zod" ],
+      "groupName": "drizzle"
+    },
+    {
+      "matchDepNames": [
+        "@lexical/code",
+        "@lexical/link",
+        "@lexical/list",
+        "@lexical/markdown",
+        "@lexical/rich-text",
+        "@lexical/selection",
+        "@lexical/table",
+        "@lexical/utils",
+        "lexical",
+        "lexical-vue"
+      ],
+      "groupName": "lexical"
+    },
+    {
+      "matchDepNames": [
+        "lucide-vue-next",
+        "lucide-react",
+        "lucide-react-native"
+      ],
+      "groupName": "lucide"
+    },
+    {
+      "matchFileNames": [
+        "packages/*app*/package.json"
+      ],
+      "ignoreDeps": [
+        "@react-native-async-storage/async-storage",
+        "@react-native-community/slider",
+        "@sentry/react-native",
+        "@shopify/react-native-skia",
+        "@stripe/stripe-react-native",
+        "@types/react",
+        "@types/react-dom",
+        "babel-preset-expo",
+        "expo",
+        "expo-location",
+        "react",
+        "react-dom",
+        "react-native",
+        "react-native-gesture-handler",
+        "react-native-keyboard-controller",
+        "react-native-maps",
+        "react-native-pager-view",
+        "react-native-reanimated",
+        "react-native-safe-area-context",
+        "react-native-screens",
+        "react-native-svg",
+        "react-native-webview",
+        "react-test-renderer",
+        "typescript"
+      ]
+    },
+    {
+      "matchDepTypes": [ "dependencies" ],
+      "matchFileNames": [
+        "packages/*app*/package.json"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "dependencies-{{parentDir}}",
+      "commitMessageSuffix": "({{parentDir}})"
+    },
+    {
+      "matchDepTypes": [ "devDependencies" ],
+      "matchFileNames": [
+        "packages/*app*/package.json"
+      ],
+      "matchUpdateTypes": [
+          "minor",
+          "patch"
+      ],
+      "groupName": "{{parentDir}}-devDependencies"
+    }
+  ],
+  "prConcurrentLimit": 5,
+  "rangeStrategy": "bump",
+  "schedule": [
+    "* 1-8 * * *"
+  ],
+  "timezone": "CET",
+  "updateNotScheduled": false
+}

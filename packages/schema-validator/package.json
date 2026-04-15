@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/schema-validator",
+  "version": "1.0.0-beta.0",
+  "description": "CLI for validating JSON, YAML, and TOML files against JSON Schema",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "schema-validator": "dist/index.mjs"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint && eslint --cache .",
+    "prepublishOnly": "pnpm build",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "ajv": "^8.18.0",
+    "ajv-draft-04": "^1.0.0",
+    "cli-progress": "^3.12.0",
+    "jsonc-parser": "^3.3.1",
+    "picocolors": "^1.1.1",
+    "smol-toml": "^1.6.1",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/cli-progress": "catalog:types",
+    "@types/node": "catalog:types",
+    "bundled-eslint-config": "catalog:lint",
+    "eslint": "catalog:lint",
+    "eslint-plugin-oxlint": "catalog:lint",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain"
+  }
+}
