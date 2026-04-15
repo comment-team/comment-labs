@@ -13,5 +13,8 @@
   ],
   "peerDependencies": {
     "typescript": "catalog:toolchain"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

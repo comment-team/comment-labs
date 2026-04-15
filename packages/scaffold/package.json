@@ -37,5 +37,8 @@
     "oxlint-tsgolint": "catalog:lint",
     "tsdown": "catalog:toolchain",
     "typescript": "catalog:toolchain"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
