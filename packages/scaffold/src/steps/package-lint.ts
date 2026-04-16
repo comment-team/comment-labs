@@ -226,11 +226,8 @@ async function decideConfigFileDecision(
   allowApply: boolean
 ): Promise<StepDecision> {
   const stored = getPreference(context.preferences, key)
-  if (stored === 'merge') {
-    return 'merge'
-  }
-
-  if (stored === false) {
+  // If user previously chose to merge manually or skip, don't ask again - skip the file
+  if (stored === 'merge' || stored === false) {
     return 'skip'
   }
 
