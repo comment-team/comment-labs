@@ -9,6 +9,7 @@ import type { AppContext, JsonValue, PackageJson } from '../core/types'
 import { detectIndent } from '../core/utils'
 import { typescriptRangeNeedsUpdate } from '../core/version'
 import { discoverWorkspacePackages, formatWorkspacePackageJson, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
+import { runPnpmAdd } from './pnpm'
 
 
 const presetOptions = [ 'base', 'node', 'react', 'react-native', 'worker' ] as const
@@ -113,34 +114,7 @@ async function maybeEnsureTsconfigDependency(context: AppContext, pkg: Workspace
     return
   }
 
-  const nextPackageJson = structuredClone(pkg.packageJson)
-  nextPackageJson.devDependencies = {
-    ...nextPackageJson.devDependencies,
-    '@comment-labs/tsconfig': 'workspace:*'
-  }
-
-  const decision = await decideFileStep(
-    context,
-    `packages.${pkg.dirName}.dependencies.tsconfig`,
-    `Add @comment-labs/tsconfig to ${pkg.dirName} devDependencies?`,
-    `Aborted while updating @comment-labs/tsconfig dependency for ${pkg.dirName}.`,
-    {
-      title: `${pkg.dirName}/package.json`,
-      before: formatWorkspacePackageJson(pkg, pkg.packageJson),
-      after: formatWorkspacePackageJson(pkg, nextPackageJson)
-    }
-  )
-  const before = formatWorkspacePackageJson(pkg, pkg.packageJson)
-  const after = formatWorkspacePackageJson(pkg, nextPackageJson)
-  if (decision !== 'apply') {
-    await applyFileDecision(context, decision, pkg.packageJsonPath, before, after)
-
-    return
-  }
-
-  if (await writeWorkspacePackageJson(pkg, nextPackageJson)) {
-    context.changedFiles.add(pkg.packageJsonPath)
-  }
+  runPnpmAdd(pkg.dirPath, [ '-D', '@comment-labs/tsconfig' ])
 }
 
 async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {

@@ -80,7 +80,7 @@ async function maybeInstallOxlintDependencies(context: AppContext, pkg: Workspac
     '-D',
     'oxlint',
     'oxlint-tsgolint',
-    '@comment-labs/oxlint-config@workspace:*'
+    '@comment-labs/oxlint-config'
   ])
   await refreshWorkspacePackageState(pkg)
 }
