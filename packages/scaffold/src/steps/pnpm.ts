@@ -19,11 +19,30 @@ export async function handlePnpmPlugin(context: AppContext): Promise<void> {
     return
   }
 
+  if (await isPluginInWorkspaceConfig(context.cwd)) {
+    return
+  }
+
   if (!(await shouldApplyStep(context, 'pnpm-plugin.install', 'Install the pnpm defaults plugin in the root package?', 'Aborted before pnpm plugin installation.'))) {
     return
   }
 
   runPnpmAdd(context.cwd, [ '--config', pluginPackageName ])
+}
+
+async function isPluginInWorkspaceConfig(cwd: string): Promise<boolean> {
+  const workspaceYamlPath = path.join(cwd, 'pnpm-workspace.yaml')
+  if (!(await exists(workspaceYamlPath))) {
+    return false
+  }
+
+  try {
+    const content = await readFile(workspaceYamlPath, 'utf8')
+    // Check if the plugin is mentioned in configDependencies
+    return content.includes(pluginPackageName)
+  } catch {
+    return false
+  }
 }
 
 export async function handleChangesets(context: AppContext): Promise<void> {
