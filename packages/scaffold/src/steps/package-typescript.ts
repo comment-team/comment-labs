@@ -1,9 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { applyFileDecision, exists } from '../core/filesystem'
+import { applyFileDecision, exists, trackWriteMergeConflictAndWait, trackWriteTextFileIfChanged } from '../core/filesystem'
 import type { WorkspacePackage } from '../core/package-step'
-import { askSelect, askStep } from '../core/prompts'
+import { askEphemeralStep, askSelect, askStep } from '../core/prompts'
+import { getPreference, persistPreferences, setPreference } from '../core/preferences'
 import { decideFileStep } from '../core/step-helpers'
 import type { AppContext, JsonValue, PackageJson } from '../core/types'
 import { detectIndent } from '../core/utils'
@@ -86,21 +87,15 @@ async function maybeUpdateTypescriptRange(context: AppContext, pkg: WorkspacePac
   const before = formatWorkspacePackageJson(pkg, pkg.packageJson)
   const after = formatWorkspacePackageJson(pkg, nextPackageJson)
 
-  const decision = await decideFileStep(
-    context,
-    `packages.${pkg.dirName}.typescript.version`,
+  const decision = await askEphemeralStep(
     `Update ${pkg.dirName} TypeScript devDependency to ^6.0.0?`,
-    `Aborted while updating TypeScript for ${pkg.dirName}.`,
-    {
-      title: `${pkg.dirName}/package.json`,
-      before,
-      after
-    }
+    context.autoApprove
   )
+  if (decision === 'abort') {
+    throw new Error(`Aborted while updating TypeScript for ${pkg.dirName}.`)
+  }
 
   if (decision !== 'apply') {
-    await applyFileDecision(context, decision, pkg.packageJsonPath, before, after)
-
     return
   }
 
@@ -140,8 +135,17 @@ async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): 
   }
 
   const current = await readFile(tsconfigPath, 'utf8')
-  const next = normalizeTsconfigJson(current, preset)
-  if (next === current) {
+  const proposed = createTsconfigTemplate(preset)
+  const normalizedCurrent = normalizeTsconfigJson(current, preset)
+  
+  // If file already matches proposed content, skip
+  if (normalizedCurrent === proposed) {
+    return
+  }
+
+  // If user previously chose to merge manually, skip the file
+  const stored = getPreference(context.preferences, `packages.${pkg.dirName}.tsconfig.normalize`)
+  if (stored === 'merge' || stored === false) {
     return
   }
 
@@ -153,10 +157,24 @@ async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): 
     {
       title: `${pkg.dirName}/tsconfig.json`,
       before: current,
-      after: next
+      after: proposed
     }
   )
-  await applyFileDecision(context, decision, tsconfigPath, current, next)
+  
+  if (decision === 'merge') {
+    await trackWriteMergeConflictAndWait(context, tsconfigPath, current, proposed)
+    // After manual merge, check if the result matches the proposed content
+    const mergedContent = await readFile(tsconfigPath, 'utf8')
+    const normalizedMerged = normalizeTsconfigJson(mergedContent, preset)
+    if (normalizedMerged === proposed) {
+      // Content matches proposed, save as apply instead of merge
+      context.preferences = setPreference(context.preferences, `packages.${pkg.dirName}.tsconfig.normalize`, true)
+      await persistPreferences(context)
+    }
+    context.changedFiles.add(tsconfigPath)
+  } else if (decision === 'apply') {
+    await trackWriteTextFileIfChanged(context, tsconfigPath, proposed)
+  }
 }
 
 async function maybeEnsureTypecheckScript(context: AppContext, pkg: WorkspacePackage): Promise<void> {

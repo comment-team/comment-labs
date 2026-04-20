@@ -2,7 +2,7 @@ import path from 'node:path'
 import { readFile } from 'node:fs/promises'
 import process from 'node:process'
 
-import { applyFileDecision, exists } from '../core/filesystem'
+import { applyFileDecision, exists, trackWriteMergeConflictAndWait, trackWriteTextFileIfChanged } from '../core/filesystem'
 import type { WorkspacePackage } from '../core/package-step'
 import { renderDiffPreview } from '../core/diff'
 import { askStep, runSelectPrompt } from '../core/prompts'
@@ -115,10 +115,10 @@ async function maybeInstallEslintDependencies(context: AppContext, pkg: Workspac
 async function maybeWriteOxlintConfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
   const filePath = path.join(pkg.dirPath, 'oxlint.config.ts')
   const before = (await exists(filePath)) ? await readFile(filePath, 'utf8') : ''
-  const after = oxlintConfigTemplate()
+  const proposed = oxlintConfigTemplate()
   const normalizedBefore = normalizeScaffoldedFile(before)
-  const normalizedAfter = normalizeScaffoldedFile(after)
-  if (normalizedBefore === normalizedAfter) {
+  const normalizedProposed = normalizeScaffoldedFile(proposed)
+  if (normalizedBefore === normalizedProposed) {
     return
   }
 
@@ -130,20 +130,38 @@ async function maybeWriteOxlintConfig(context: AppContext, pkg: WorkspacePackage
     {
       title: `${pkg.dirName}/oxlint.config.ts`,
       before,
-      after: normalizedAfter
+      after: proposed
     },
     before.trim().length === 0
   )
-  await applyConfigDecision(context, decision, filePath, before, normalizedAfter)
+  
+  if (decision === 'skip') {
+    return
+  }
+  
+  if (decision === 'merge') {
+    await trackWriteMergeConflictAndWait(context, filePath, before, proposed)
+    // After manual merge, check if the result matches the proposed content
+    const mergedContent = await readFile(filePath, 'utf8')
+    const normalizedMerged = normalizeScaffoldedFile(mergedContent)
+    if (normalizedMerged === normalizedProposed) {
+      // Content matches proposed, save as apply instead of merge
+      context.preferences = setPreference(context.preferences, `packages.${pkg.dirName}.oxlint.config`, true)
+      await persistPreferences(context)
+    }
+    context.changedFiles.add(filePath)
+  } else if (decision === 'apply') {
+    await trackWriteTextFileIfChanged(context, filePath, proposed)
+  }
 }
 
 async function maybeWriteEslintConfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
   const filePath = path.join(pkg.dirPath, 'eslint.config.js')
   const before = (await exists(filePath)) ? await readFile(filePath, 'utf8') : ''
-  const after = eslintConfigTemplate()
+  const proposed = eslintConfigTemplate()
   const normalizedBefore = normalizeScaffoldedFile(before)
-  const normalizedAfter = normalizeScaffoldedFile(after)
-  if (normalizedBefore === normalizedAfter) {
+  const normalizedProposed = normalizeScaffoldedFile(proposed)
+  if (normalizedBefore === normalizedProposed) {
     return
   }
 
@@ -156,11 +174,29 @@ async function maybeWriteEslintConfig(context: AppContext, pkg: WorkspacePackage
     {
       title: `${pkg.dirName}/eslint.config.js`,
       before,
-      after: normalizedAfter
+      after: proposed
     },
     canReplace
   )
-  await applyConfigDecision(context, decision, filePath, before, normalizedAfter)
+  
+  if (decision === 'skip') {
+    return
+  }
+  
+  if (decision === 'merge') {
+    await trackWriteMergeConflictAndWait(context, filePath, before, proposed)
+    // After manual merge, check if the result matches the proposed content
+    const mergedContent = await readFile(filePath, 'utf8')
+    const normalizedMerged = normalizeScaffoldedFile(mergedContent)
+    if (normalizedMerged === normalizedProposed) {
+      // Content matches proposed, save as apply instead of merge
+      context.preferences = setPreference(context.preferences, `packages.${pkg.dirName}.eslint.config`, true)
+      await persistPreferences(context)
+    }
+    context.changedFiles.add(filePath)
+  } else if (decision === 'apply') {
+    await trackWriteTextFileIfChanged(context, filePath, proposed)
+  }
 }
 
 async function maybeUpdateLintScript(context: AppContext, pkg: WorkspacePackage): Promise<void> {
