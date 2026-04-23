@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/schema-validator",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.1",
   "description": "CLI for validating JSON, YAML, and TOML files against JSON Schema",
   "license": "Apache-2.0",
   "type": "module",

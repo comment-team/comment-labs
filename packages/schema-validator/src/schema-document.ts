@@ -62,12 +62,20 @@ export function getValidatorName(schema: Record<string, unknown>): ValidatorName
   return 'draft2020'
 }
 
-export function getSupportedExtension(filePath: string): '.json' | '.yaml' | '.yml' | '.toml' | null {
+export function getSupportedExtension(filePath: string): '.json' | '.jsonc' | '.json5' | '.yaml' | '.yml' | '.toml' | null {
   const extension = path.extname(filePath).toLowerCase()
 
-  return extension === '.json' || extension === '.yaml' || extension === '.yml' || extension === '.toml'
-    ? extension
-    : null
+  switch (extension) {
+    case '.json':
+    case '.jsonc':
+    case '.json5':
+    case '.yaml':
+    case '.yml':
+    case '.toml':
+      return extension
+    default:
+      return null
+  }
 }
 
 export async function parseDocument(filePath: string, schemaStore: SchemaStore): Promise<ParsedDocument> {
@@ -81,8 +89,14 @@ export async function parseDocument(filePath: string, schemaStore: SchemaStore):
   switch (extension) {
     case '.json':
       return {
-        data: parseJsonWithLocation(content),
-        schemaHint: await readJsonSchemaHint(content, filePath, schemaStore)
+        data: parseJsonWithLocation(content, false),
+        schemaHint: await readJsonSchemaHint(content, filePath, schemaStore, false)
+      }
+    case '.jsonc':
+    case '.json5':
+      return {
+        data: parseJsonWithLocation(content, true),
+        schemaHint: await readJsonSchemaHint(content, filePath, schemaStore, true)
       }
     case '.yaml':
     case '.yml':
@@ -110,7 +124,10 @@ export async function writeSchemaHint(filePath: string, schemaText: string): Pro
 
   switch (extension) {
     case '.json':
-      return addRecommendedJsonSchema(filePath, content, schemaText)
+      return addRecommendedJsonSchema(filePath, content, schemaText, false)
+    case '.jsonc':
+    case '.json5':
+      return addRecommendedJsonSchema(filePath, content, schemaText, true)
     case '.yaml':
     case '.yml':
       return addRecommendedYamlSchema(filePath, content, schemaText)
@@ -194,11 +211,11 @@ export async function validateFileAgainstResolvedSchema(
   }
 }
 
-function parseJsonWithLocation(content: string): unknown {
+function parseJsonWithLocation(content: string, allowComments = false): unknown {
   const errors: ParseError[] = []
   const parsed: unknown = parseJson(content, errors, {
-    allowTrailingComma: false,
-    disallowComments: true
+    allowTrailingComma: allowComments,
+    disallowComments: !allowComments
   })
 
   if (errors.length > 0) {
@@ -237,8 +254,13 @@ function getLineAndColumn(content: string, position: number): { line: number; co
   return { line, column }
 }
 
-async function addRecommendedJsonSchema(filePath: string, content: string, schemaUrl: string): Promise<string> {
-  const parsed = parseJsonWithLocation(content)
+async function addRecommendedJsonSchema(
+  filePath: string,
+  content: string,
+  schemaUrl: string,
+  allowComments = false
+): Promise<string> {
+  const parsed = parseJsonWithLocation(content, allowComments)
   if (!isRecord(parsed)) {
     throw new Error('Recommended schema can only be added to a JSON object at the document root')
   }
@@ -290,8 +312,13 @@ function detectIndentSize(content: string): number {
   return match?.[1]?.length ?? 2
 }
 
-async function readJsonSchemaHint(content: string, filePath: string, schemaStore: SchemaStore): Promise<SchemaHint> {
-  const parsed = parseJsonWithLocation(content)
+async function readJsonSchemaHint(
+  content: string,
+  filePath: string,
+  schemaStore: SchemaStore,
+  allowComments = false
+): Promise<SchemaHint> {
+  const parsed = parseJsonWithLocation(content, allowComments)
   if (!isRecord(parsed)) {
     return {
       recommendation: await schemaStore.findRecommendation(filePath)
