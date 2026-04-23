@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/oxlint-config",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Oxlint configuration for comment-labs projects",
   "license": "Apache-2.0",
   "type": "module",
@@ -10,6 +10,10 @@
     "dist/",
     "LICENSE"
   ],
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./plugins/*": "./dist/plugins/*.mjs"
+  },
   "scripts": {
     "build": "tsdown",
     "prelint": "pnpm build",
