@@ -4,6 +4,7 @@ const hooks = {
   updateConfig: (config: object) => {
     Object.assign(config, {
       allowBuilds: {
+        '@apollo/protobufjs': false,
         '@firebase/util': false,
         '@neoaren/comet': false,
         '@parcel/watcher': false,
