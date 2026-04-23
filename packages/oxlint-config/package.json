@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/oxlint-config",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.1",
   "description": "Oxlint configuration for comment-labs projects",
   "license": "Apache-2.0",
   "type": "module",
@@ -24,7 +24,7 @@
     "empathic": "^2.0.0",
     "eslint-plugin-jsdoc": "^62.9.0",
     "eslint-plugin-regexp": "^3.1.0",
-    "globals": "^17.4.0"
+    "globals": "^17.5.0"
   },
   "devDependencies": {
     "@comment-labs/tsconfig": "workspace:*",
@@ -39,8 +39,8 @@
     "vitest": "catalog:toolchain"
   },
   "peerDependencies": {
-    "oxlint": "^1.57.0",
-    "oxlint-tsgolint": "^0.17.3"
+    "oxlint": "^1.61.0",
+    "oxlint-tsgolint": ">=0.21.0"
   },
   "publishConfig": {
     "access": "public"
