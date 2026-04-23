@@ -1,5 +1,5 @@
 export const jsPlugins = [
-  '@comment-labs/oxlint-config',
+  { name: 'comment-labs-js', specifier: '@comment-labs/oxlint-config/plugins/labs' },
   { name: 'brettz9-js', specifier: '@comment-labs/oxlint-config/plugins/brettz9' },
   { name: 'i18next-js', specifier: '@comment-labs/oxlint-config/plugins/i18next' },
   { name: 'import-zod-js', specifier: '@comment-labs/oxlint-config/plugins/import-zod' },
