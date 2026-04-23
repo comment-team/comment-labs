@@ -25,7 +25,6 @@ const hooks = {
       },
       blockExoticSubdeps: true,
       dedupePeerDependents: true,
-      enableGlobalVirtualStore: true,
       enablePrePostScripts: true,
       hoist: false,
       ignorePatchFailures: false,
