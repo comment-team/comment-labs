@@ -84,7 +84,7 @@ export const baseRules: DummyRuleMap = {
   'typescript/parameter-properties': [ 'warn', { prefer: 'parameter-property' }],
   'typescript/prefer-readonly-parameter-types': 'off',
   'typescript/require-await': 'warn',
-  'typescript/no-non-nullable-type-assertion-style': 'warn',
+  'typescript/non-nullable-type-assertion-style': 'warn',
 
   'import/no-unassigned-import': 'warn',
   'import/consistent-type-specifier-style': 'off',
@@ -422,7 +422,8 @@ export const baseRules: DummyRuleMap = {
   'no-control-regex': 'error',
   'no-misleading-character-class': 'error',
   'no-regex-spaces': 'error',
-  'prefer-regex-literals': 'error',
+  // TODO add when supported
+  // 'prefer-regex-literals': 'error',
   'no-invalid-regexp': 'off',
   'no-useless-backreference': 'off',
   'no-empty-character-class': 'off',
