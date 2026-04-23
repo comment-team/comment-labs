@@ -4,6 +4,10 @@ import { cwd } from 'node:process'
 import { up } from 'empathic/find'
 
 
+export type DeepPartial<T> = T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>
+} : T
+
 export async function enableMode(configFiles: string[], dependencies?: string[]): Promise<boolean> {
 
   const hasConfigFile = await Promise.all(configFiles.map(async file => access(join(cwd(), file))

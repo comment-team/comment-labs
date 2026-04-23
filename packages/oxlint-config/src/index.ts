@@ -1,4 +1,4 @@
-import type { OxlintConfig } from 'oxlint'
+import { defineConfig, type OxlintConfig } from 'oxlint'
 import { categories } from './categories'
 import { baseRules } from './base-rules'
 import { plugins } from './plugins'
@@ -7,9 +7,11 @@ import { jsPlugins } from './js-plugins'
 import { playwrightOverrides } from './overrides/playwright'
 import { reactOverrides } from './overrides/react'
 import { reactNativeOverrides } from './overrides/react-native'
+import { defu } from 'defu'
+import type { DeepPartial } from './utils'
 
 
-export const config: OxlintConfig = {
+export const config: (userConfig?: DeepPartial<OxlintConfig>) => OxlintConfig = userConfig => defineConfig(defu({
   options: {
     reportUnusedDisableDirectives: 'warn',
     typeAware: true,
@@ -31,6 +33,6 @@ export const config: OxlintConfig = {
     reactNativeOverrides
   ],
   ignorePatterns: [ 'coverage/**', 'public/**', '.expo/**', '.output/**', '**/dist/**', '**/*wasm-bindgen/**' ]
-}
+}, userConfig))
 
 export { commentLabsJs as default } from './plugin'
