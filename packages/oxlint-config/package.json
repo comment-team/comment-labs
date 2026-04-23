@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/oxlint-config",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Oxlint configuration for comment-labs projects",
   "license": "Apache-2.0",
   "type": "module",
@@ -22,7 +22,6 @@
     "@brettz9/eslint-plugin": "^3.0.0",
     "@e18e/eslint-plugin": "^0.3.0",
     "@stylistic/eslint-plugin": "^5.10.0",
-    "defu": "^6.1.7",
     "empathic": "^2.0.0",
     "eslint-plugin-i18next": "^6.1.4",
     "eslint-plugin-import-zod": "^1.2.1",

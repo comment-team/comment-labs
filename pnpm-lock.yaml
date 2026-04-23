@@ -23,15 +23,9 @@ catalogs:
       specifier: 4.0.2
       version: 4.0.2
   types:
-    '@types/cli-progress':
-      specifier: 3.11.6
-      version: 3.11.6
     '@types/node':
       specifier: 25.5.0
       version: 25.5.0
-    '@types/prompts':
-      specifier: 2.4.9
-      version: 2.4.9
 
 importers:
 
@@ -58,9 +52,6 @@ importers:
       '@stylistic/eslint-plugin':
         specifier: ^5.10.0
         version: 5.10.0(eslint@10.1.0(jiti@2.6.1))
-      defu:
-        specifier: ^6.1.7
-        version: 6.1.7
       empathic:
         specifier: ^2.0.0
         version: 2.0.0

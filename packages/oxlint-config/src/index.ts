@@ -7,11 +7,9 @@ import { jsPlugins } from './js-plugins'
 import { playwrightOverrides } from './overrides/playwright'
 import { reactOverrides } from './overrides/react'
 import { reactNativeOverrides } from './overrides/react-native'
-import { defu } from 'defu'
-import type { DeepPartial } from './utils'
 
 
-export const config: (userConfig?: DeepPartial<OxlintConfig>) => OxlintConfig = userConfig => defineConfig(defu({
+export const config: OxlintConfig = {
   options: {
     reportUnusedDisableDirectives: 'warn',
     typeAware: true,
@@ -33,6 +31,4 @@ export const config: (userConfig?: DeepPartial<OxlintConfig>) => OxlintConfig = 
     reactNativeOverrides
   ],
   ignorePatterns: [ 'coverage/**', 'public/**', '.expo/**', '.output/**', '**/dist/**', '**/*wasm-bindgen/**' ]
-}, userConfig))
-
-export { commentLabsJs as default } from './plugin'
+}
