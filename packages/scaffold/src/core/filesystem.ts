@@ -84,10 +84,16 @@ export async function trackWriteMergeConflictAndWait(
   filePath: string,
   existing: string,
   scaffoldRecommended: string
-): Promise<void> {
-  if (await writeMergeConflictAndWait(filePath, existing, scaffoldRecommended)) {
+): Promise<{
+  changed: boolean
+  resolved: string
+}> {
+  const result = await writeMergeConflictAndWait(filePath, existing, scaffoldRecommended)
+  if (result.changed) {
     context.changedFiles.add(filePath)
   }
+
+  return result
 }
 
 export async function applyFileDecision(
@@ -166,12 +172,20 @@ async function writeMergeConflictAndWait(
   filePath: string,
   existing: string,
   scaffoldRecommended: string
-): Promise<boolean> {
+): Promise<{
+  changed: boolean
+  resolved: string
+}> {
   const conflict = buildMergeConflict(existing, scaffoldRecommended)
-  const changed = await writeTextFileIfChanged(filePath, conflict)
+  await writeTextFileIfChanged(filePath, conflict)
   await waitForConflictResolution(filePath)
 
-  return changed
+  const resolved = await readFile(filePath, 'utf8')
+
+  return {
+    changed: resolved !== ensureFinalNewline(existing),
+    resolved
+  }
 }
 
 function buildMergeConflict(existing: string, scaffoldRecommended: string): string {

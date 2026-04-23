@@ -39,6 +39,7 @@ async function isPluginInWorkspaceConfig(cwd: string): Promise<boolean> {
   try {
     const content = await readFile(workspaceYamlPath, 'utf8')
     // Check if the plugin is mentioned in configDependencies
+
     return content.includes(pluginPackageName)
   } catch {
     return false
@@ -120,6 +121,18 @@ export function runPnpmAdd(cwd: string, args: string[]): void {
     const message = error instanceof Error ? error.message : String(error)
 
     throw new Error(`pnpm add failed: ${message}`, { cause: error })
+  }
+}
+
+export function runPnpmRemove(cwd: string, args: string[]): void {
+  logInfo(`Removing with pnpm remove ${args.join(' ')} in ${path.relative(process.cwd(), cwd) || '.'}`)
+
+  try {
+    execFileSync('pnpm', [ 'remove', ...args ], { cwd, stdio: 'inherit', timeout: COMMAND_TIMEOUT_MS })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    throw new Error(`pnpm remove failed: ${message}`, { cause: error })
   }
 }
 

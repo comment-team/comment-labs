@@ -1,15 +1,14 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { applyFileDecision, exists, trackWriteMergeConflictAndWait, trackWriteTextFileIfChanged } from '../core/filesystem'
+import { applyFileDecision, exists } from '../core/filesystem'
 import type { WorkspacePackage } from '../core/package-step'
 import { askEphemeralStep, askSelect, askStep } from '../core/prompts'
-import { getPreference, persistPreferences, setPreference } from '../core/preferences'
-import { decideFileStep } from '../core/step-helpers'
+import { applyProtectedFileStep, decideFileStep, decideProtectedFileStep, shouldApplyStep } from '../core/step-helpers'
 import type { AppContext, JsonValue, PackageJson } from '../core/types'
 import { detectIndent } from '../core/utils'
 import { typescriptRangeNeedsUpdate } from '../core/version'
-import { discoverWorkspacePackages, formatWorkspacePackageJson, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
+import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspacePackage, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
 import { runPnpmAdd } from './pnpm'
 
 
@@ -84,9 +83,6 @@ async function maybeUpdateTypescriptRange(context: AppContext, pkg: WorkspacePac
     typescript: '6.0.2'
   }
 
-  const before = formatWorkspacePackageJson(pkg, pkg.packageJson)
-  const after = formatWorkspacePackageJson(pkg, nextPackageJson)
-
   const decision = await askEphemeralStep(
     `Update ${pkg.dirName} TypeScript devDependency to ^6.0.0?`,
     context.autoApprove
@@ -109,7 +105,17 @@ async function maybeEnsureTsconfigDependency(context: AppContext, pkg: Workspace
     return
   }
 
+  if (!(await shouldApplyStep(
+    context,
+    `packages.${pkg.dirName}.tsconfig.install`,
+    `Install @comment-labs/tsconfig in ${pkg.dirName}?`,
+    `Aborted while installing @comment-labs/tsconfig for ${pkg.dirName}.`
+  ))) {
+    return
+  }
+
   runPnpmAdd(pkg.dirPath, [ '-D', '@comment-labs/tsconfig' ])
+  await refreshWorkspacePackage(pkg)
 }
 
 async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
@@ -137,19 +143,11 @@ async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): 
   const current = await readFile(tsconfigPath, 'utf8')
   const proposed = createTsconfigTemplate(preset)
   const normalizedCurrent = normalizeTsconfigJson(current, preset)
-  
-  // If file already matches proposed content, skip
   if (normalizedCurrent === proposed) {
     return
   }
 
-  // If user previously chose to merge manually, skip the file
-  const stored = getPreference(context.preferences, `packages.${pkg.dirName}.tsconfig.normalize`)
-  if (stored === 'merge' || stored === false) {
-    return
-  }
-
-  const decision = await decideFileStep(
+  const decision = await decideProtectedFileStep(
     context,
     `packages.${pkg.dirName}.tsconfig.normalize`,
     `Update tsconfig.json in ${pkg.dirName} to add $schema and use an @comment-labs/tsconfig preset?`,
@@ -158,23 +156,10 @@ async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): 
       title: `${pkg.dirName}/tsconfig.json`,
       before: current,
       after: proposed
-    }
+    },
+    false
   )
-  
-  if (decision === 'merge') {
-    await trackWriteMergeConflictAndWait(context, tsconfigPath, current, proposed)
-    // After manual merge, check if the result matches the proposed content
-    const mergedContent = await readFile(tsconfigPath, 'utf8')
-    const normalizedMerged = normalizeTsconfigJson(mergedContent, preset)
-    if (normalizedMerged === proposed) {
-      // Content matches proposed, save as apply instead of merge
-      context.preferences = setPreference(context.preferences, `packages.${pkg.dirName}.tsconfig.normalize`, true)
-      await persistPreferences(context)
-    }
-    context.changedFiles.add(tsconfigPath)
-  } else if (decision === 'apply') {
-    await trackWriteTextFileIfChanged(context, tsconfigPath, proposed)
-  }
+  await applyProtectedFileStep(context, `packages.${pkg.dirName}.tsconfig.normalize`, tsconfigPath, current, proposed, decision)
 }
 
 async function maybeEnsureTypecheckScript(context: AppContext, pkg: WorkspacePackage): Promise<void> {

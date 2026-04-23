@@ -56,6 +56,17 @@ export async function writeWorkspacePackageJson(pkg: WorkspacePackage, packageJs
   return true
 }
 
+export async function refreshWorkspacePackage(pkg: WorkspacePackage): Promise<void> {
+  const { json, indent, newline } = await readAnyPackageJson(pkg.packageJsonPath)
+  if (!json) {
+    throw new Error(`Invalid package.json in ${pkg.packageJsonPath}.`)
+  }
+
+  pkg.packageJson = json
+  pkg.indent = indent
+  pkg.newline = newline
+}
+
 export function formatWorkspacePackageJson(pkg: WorkspacePackage, packageJson: PackageJson): string {
   return `${JSON.stringify(withSchemaFirst(packageJson), null, pkg.indent)}${pkg.newline}`
 }

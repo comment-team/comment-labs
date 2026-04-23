@@ -1,7 +1,7 @@
 import { decideFileStep } from '../core/step-helpers'
 import { applyFileDecision } from '../core/filesystem'
 import type { AppContext } from '../core/types'
-import { discoverWorkspacePackages, formatWorkspacePackageJson } from '../manifests/workspace-package-json'
+import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspacePackage } from '../manifests/workspace-package-json'
 
 
 export async function handleWorkspacePackageJsonSchema(context: AppContext): Promise<void> {
@@ -26,5 +26,8 @@ export async function handleWorkspacePackageJsonSchema(context: AppContext): Pro
       }
     )
     await applyFileDecision(context, decision, pkg.packageJsonPath, before, after)
+    if (decision !== 'skip') {
+      await refreshWorkspacePackage(pkg)
+    }
   }
 }

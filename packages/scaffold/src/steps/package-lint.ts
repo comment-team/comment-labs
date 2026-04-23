@@ -1,19 +1,19 @@
+import { readFile, unlink } from 'node:fs/promises'
 import path from 'node:path'
-import { readFile } from 'node:fs/promises'
-import process from 'node:process'
 
-import { applyFileDecision, exists, trackWriteMergeConflictAndWait, trackWriteTextFileIfChanged } from '../core/filesystem'
+import { applyFileDecision, exists } from '../core/filesystem'
 import type { WorkspacePackage } from '../core/package-step'
-import { renderDiffPreview } from '../core/diff'
-import { askStep, runSelectPrompt } from '../core/prompts'
-import { getPreference, persistPreferences, setPreference } from '../core/preferences'
-import { decideFileStep, shouldApplyStep } from '../core/step-helpers'
-import type { AppContext, PackageJson, StepDecision } from '../core/types'
-import { detectIndent, isPackageJson } from '../core/utils'
-import { discoverWorkspacePackages, formatWorkspacePackageJson, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
+import { askEphemeralStep, askStep } from '../core/prompts'
+import { applyProtectedFileStep, decideFileStep, decideProtectedFileStep, shouldApplyStep } from '../core/step-helpers'
+import type { AppContext, PackageJson } from '../core/types'
+import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspacePackage, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
 import { eslintConfigTemplate, legacyBundledEslintReexport } from '../templates/eslint-config'
 import { oxlintConfigTemplate } from '../templates/oxlint-config'
-import { runPnpmAdd } from './pnpm'
+import { runPnpmAdd, runPnpmRemove } from './pnpm'
+
+
+const eslintPackages = [ 'eslint', 'bundled-eslint-config', 'eslint-plugin-oxlint' ] as const
+const eslintConfigFiles = [ 'eslint.config.js', 'eslint.config.ts' ] as const
 
 
 export async function handlePackageLint(context: AppContext): Promise<void> {
@@ -35,19 +35,14 @@ export async function handlePackageLint(context: AppContext): Promise<void> {
       await maybeWriteOxlintConfig(context, pkg)
     }
 
-    const wantsEslint = await askBooleanLikeStep(
-      context,
-      `packages.${pkg.dirName}.eslint.enabled`,
-      `Set up eslint for ${pkg.dirName}?`,
-      `Aborted while deciding eslint setup for ${pkg.dirName}.`
-    )
-    if (!wantsEslint) {
+    if (!packageNeedsEslint(pkg)) {
+      await maybeRemoveEslint(context, pkg)
       continue
     }
 
     await maybeInstallEslintDependencies(context, pkg)
     await maybeWriteEslintConfig(context, pkg)
-    await maybeUpdateLintScript(context, pkg)
+    await maybeUpdateLintScript(context, pkg, 'oxlint && eslint --cache .')
   }
 }
 
@@ -82,7 +77,7 @@ async function maybeInstallOxlintDependencies(context: AppContext, pkg: Workspac
     'oxlint-tsgolint',
     '@comment-labs/oxlint-config'
   ])
-  await refreshWorkspacePackageState(pkg)
+  await refreshWorkspacePackage(pkg)
 }
 
 async function maybeInstallEslintDependencies(context: AppContext, pkg: WorkspacePackage): Promise<void> {
@@ -109,7 +104,51 @@ async function maybeInstallEslintDependencies(context: AppContext, pkg: Workspac
     'bundled-eslint-config',
     'eslint-plugin-oxlint'
   ])
-  await refreshWorkspacePackageState(pkg)
+  await refreshWorkspacePackage(pkg)
+}
+
+async function maybeRemoveEslint(context: AppContext, pkg: WorkspacePackage): Promise<void> {
+  const installedPackages = eslintPackages.filter(name => typeof pkg.packageJson.devDependencies?.[name] === 'string')
+  const existingFiles = await getExistingEslintConfigFiles(pkg)
+  const lintScript = pkg.packageJson.scripts?.lint
+  const hasEslintLintScript = typeof lintScript === 'string' && lintScript !== 'oxlint'
+  if (installedPackages.length === 0 && existingFiles.length === 0 && !hasEslintLintScript) {
+    return
+  }
+
+  const decision = await askEphemeralStep(
+    `Remove eslint setup from ${pkg.dirName} and use oxlint only?`,
+    context.autoApprove
+  )
+  if (decision === 'abort') {
+    throw new Error(`Aborted while removing eslint from ${pkg.dirName}.`)
+  }
+
+  if (decision !== 'apply') {
+    return
+  }
+
+  if (installedPackages.length > 0) {
+    runPnpmRemove(pkg.dirPath, [ ...installedPackages ])
+    await refreshWorkspacePackage(pkg)
+  }
+
+  for (const filePath of existingFiles) {
+    await unlink(filePath)
+    context.changedFiles.add(filePath)
+  }
+
+  if (lintScript !== 'oxlint') {
+    const nextPackageJson: PackageJson = structuredClone(pkg.packageJson)
+    nextPackageJson.scripts = {
+      ...nextPackageJson.scripts,
+      lint: 'oxlint'
+    }
+
+    if (await writeWorkspacePackageJson(pkg, nextPackageJson)) {
+      context.changedFiles.add(pkg.packageJsonPath)
+    }
+  }
 }
 
 async function maybeWriteOxlintConfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
@@ -122,7 +161,7 @@ async function maybeWriteOxlintConfig(context: AppContext, pkg: WorkspacePackage
     return
   }
 
-  const decision = await decideConfigFileDecision(
+  const decision = await decideProtectedFileStep(
     context,
     `packages.${pkg.dirName}.oxlint.config`,
     `Write oxlint.config.ts for ${pkg.dirName}?`,
@@ -134,25 +173,7 @@ async function maybeWriteOxlintConfig(context: AppContext, pkg: WorkspacePackage
     },
     before.trim().length === 0
   )
-  
-  if (decision === 'skip') {
-    return
-  }
-  
-  if (decision === 'merge') {
-    await trackWriteMergeConflictAndWait(context, filePath, before, proposed)
-    // After manual merge, check if the result matches the proposed content
-    const mergedContent = await readFile(filePath, 'utf8')
-    const normalizedMerged = normalizeScaffoldedFile(mergedContent)
-    if (normalizedMerged === normalizedProposed) {
-      // Content matches proposed, save as apply instead of merge
-      context.preferences = setPreference(context.preferences, `packages.${pkg.dirName}.oxlint.config`, true)
-      await persistPreferences(context)
-    }
-    context.changedFiles.add(filePath)
-  } else if (decision === 'apply') {
-    await trackWriteTextFileIfChanged(context, filePath, proposed)
-  }
+  await applyProtectedFileStep(context, `packages.${pkg.dirName}.oxlint.config`, filePath, before, proposed, decision)
 }
 
 async function maybeWriteEslintConfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
@@ -166,7 +187,7 @@ async function maybeWriteEslintConfig(context: AppContext, pkg: WorkspacePackage
   }
 
   const canReplace = before.trim().length === 0 || before.trim() === legacyBundledEslintReexport
-  const decision = await decideConfigFileDecision(
+  const decision = await decideProtectedFileStep(
     context,
     `packages.${pkg.dirName}.eslint.config`,
     `Write eslint.config.js for ${pkg.dirName}?`,
@@ -178,36 +199,18 @@ async function maybeWriteEslintConfig(context: AppContext, pkg: WorkspacePackage
     },
     canReplace
   )
-  
-  if (decision === 'skip') {
-    return
-  }
-  
-  if (decision === 'merge') {
-    await trackWriteMergeConflictAndWait(context, filePath, before, proposed)
-    // After manual merge, check if the result matches the proposed content
-    const mergedContent = await readFile(filePath, 'utf8')
-    const normalizedMerged = normalizeScaffoldedFile(mergedContent)
-    if (normalizedMerged === normalizedProposed) {
-      // Content matches proposed, save as apply instead of merge
-      context.preferences = setPreference(context.preferences, `packages.${pkg.dirName}.eslint.config`, true)
-      await persistPreferences(context)
-    }
-    context.changedFiles.add(filePath)
-  } else if (decision === 'apply') {
-    await trackWriteTextFileIfChanged(context, filePath, proposed)
-  }
+  await applyProtectedFileStep(context, `packages.${pkg.dirName}.eslint.config`, filePath, before, proposed, decision)
 }
 
-async function maybeUpdateLintScript(context: AppContext, pkg: WorkspacePackage): Promise<void> {
-  if (pkg.packageJson.scripts?.lint === 'oxlint && eslint --cache .') {
+async function maybeUpdateLintScript(context: AppContext, pkg: WorkspacePackage, lintCommand: string): Promise<void> {
+  if (pkg.packageJson.scripts?.lint === lintCommand) {
     return
   }
 
   const nextPackageJson: PackageJson = structuredClone(pkg.packageJson)
   nextPackageJson.scripts = {
     ...nextPackageJson.scripts,
-    lint: 'oxlint && eslint --cache .'
+    lint: lintCommand
   }
 
   const before = formatWorkspacePackageJson(pkg, pkg.packageJson)
@@ -249,108 +252,33 @@ async function askBooleanLikeStep(
   return decision === 'apply'
 }
 
-async function decideConfigFileDecision(
-  context: AppContext,
-  key: string,
-  message: string,
-  abortMessage: string,
-  preview: {
-    title: string
-    before: string
-    after: string
-  },
-  allowApply: boolean
-): Promise<StepDecision> {
-  const stored = getPreference(context.preferences, key)
-  // If user previously chose to merge manually or skip, don't ask again - skip the file
-  if (stored === 'merge' || stored === false) {
-    return 'skip'
-  }
-
-  if (allowApply) {
-    return decideFileStep(context, key, message, abortMessage, preview)
-  }
-
-  if (context.autoApprove) {
-    throw new Error(`Missing saved scaffold preference for "${key}" while running with --verify.`)
-  }
-
-  const choice = await promptManualMergeOnly(context, key, message, preview)
-  if (choice === 'abort') {
-    throw new Error(abortMessage)
-  }
-
-  return choice
-}
-
-async function promptManualMergeOnly(
-  context: AppContext,
-  key: string,
-  message: string,
-  preview: {
-    title: string
-    before: string
-    after: string
-  }
-): Promise<StepDecision> {
-  process.stdout.write(`\n${renderDiffPreview(preview.title, preview.before, preview.after)}\n`)
-
-  const { decision } = await runSelectPrompt({
-    type: 'select',
-    name: 'decision',
-    message: `${message} Existing file differs, so scaffold will not overwrite it automatically.`,
-    choices: [
-      { title: 'Merge manually', value: 'merge' },
-      { title: 'Skip', value: 'skip' },
-      { title: 'Abort', value: 'abort' }
-    ],
-    initial: 0
-  })
-
-  if (decision === 'merge' || decision === 'skip') {
-    context.preferences = setPreference(context.preferences, key, decision === 'merge' ? 'merge' : false)
-    await persistPreferences(context)
-  }
-
-  return decision
-}
-
-async function applyConfigDecision(
-  context: AppContext,
-  decision: StepDecision,
-  filePath: string,
-  before: string,
-  after: string
-): Promise<void> {
-  if (decision === 'skip') {
-    return
-  }
-
-  await applyFileDecision(context, decision, filePath, before, after)
-}
-
-async function refreshWorkspacePackageState(pkg: WorkspacePackage): Promise<void> {
-  const raw = await readFile(pkg.packageJsonPath, 'utf8')
-  const parsed = parsePackageJson(raw)
-  if (!parsed) {
-    throw new Error(`Invalid package.json in ${pkg.packageJsonPath}.`)
-  }
-
-  pkg.packageJson = parsed
-  pkg.indent = detectIndent(raw)
-  pkg.newline = raw.includes('\r\n') ? '\r\n' : '\n'
-}
-
-function parsePackageJson(raw: string): PackageJson | null {
-  const parsed: unknown = JSON.parse(raw)
-
-  return isPackageJson(parsed) ? parsed : null
-}
-
 function normalizeScaffoldedFile(content: string): string {
   if (content.length === 0) {
     return ''
   }
 
   return content.endsWith('\n') ? content : `${content}\n`
+}
+
+function packageNeedsEslint(pkg: WorkspacePackage): boolean {
+  const allDependencies = {
+    ...pkg.packageJson.dependencies,
+    ...pkg.packageJson.devDependencies,
+    ...pkg.packageJson.peerDependencies
+  }
+
+  return typeof allDependencies.astro === 'string' || typeof allDependencies.vue === 'string'
+}
+
+async function getExistingEslintConfigFiles(pkg: WorkspacePackage): Promise<string[]> {
+  const results: string[] = []
+
+  for (const fileName of eslintConfigFiles) {
+    const filePath = path.join(pkg.dirPath, fileName)
+    if (await exists(filePath)) {
+      results.push(filePath)
+    }
+  }
+
+  return results
 }
