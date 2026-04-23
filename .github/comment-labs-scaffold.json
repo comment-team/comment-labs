@@ -46,7 +46,8 @@
       },
       "tsconfig": {
         "preset": "node",
-        "normalize": true
+        "normalize": true,
+        "normalizeRecommendedFingerprint": "b6b39fad45f98a7d02e525ba2a183313da46a0192c0119966b999118b1704d1d"
       },
       "oxlint": {
         "enabled": true,
@@ -60,7 +61,9 @@
     },
     "pnpm-plugin-defaults": {
       "tsconfig": {
-        "preset": "node"
+        "preset": "node",
+        "normalize": true,
+        "normalizeRecommendedFingerprint": "b6b39fad45f98a7d02e525ba2a183313da46a0192c0119966b999118b1704d1d"
       },
       "oxlint": {
         "enabled": true

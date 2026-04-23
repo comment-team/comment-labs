@@ -3,14 +3,14 @@
   "extends": [
     "@comment-labs/tsconfig/node"
   ],
-  "include": [
-    "**/*.ts"
-  ],
   "compilerOptions": {
     "paths": {
       "#/*": [
         "./src/*"
       ]
     }
-  }
+  },
+  "include": [
+    "**/*.ts"
+  ]
 }

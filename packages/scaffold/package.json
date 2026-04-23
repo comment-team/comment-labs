@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "lint": "oxlint && eslint --cache .",
+    "lint": "oxlint",
     "prepublishOnly": "pnpm build",
     "typecheck": "tsc"
   },
@@ -30,9 +30,6 @@
     "@comment-labs/tsconfig": "workspace:*",
     "@types/node": "catalog:types",
     "@types/prompts": "catalog:types",
-    "bundled-eslint-config": "catalog:lint",
-    "eslint": "catalog:lint",
-    "eslint-plugin-oxlint": "catalog:lint",
     "oxlint": "catalog:lint",
     "oxlint-tsgolint": "catalog:lint",
     "tsdown": "catalog:toolchain",

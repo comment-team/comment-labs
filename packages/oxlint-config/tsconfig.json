@@ -4,7 +4,6 @@
     "@comment-labs/tsconfig/node"
   ],
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "paths": {
       "#/*": [
         "./src/*"
