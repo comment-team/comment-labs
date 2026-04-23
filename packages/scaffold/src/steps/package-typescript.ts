@@ -12,13 +12,13 @@ import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspace
 import { runPnpmAdd } from './pnpm'
 
 
-const presetOptions = [ 'base', 'node', 'react', 'react-native', 'worker' ] as const
+const presetOptions = [ 'base', 'node', 'react', 'react-native', 'workers' ] as const
 type PresetName = (typeof presetOptions)[number]
 
 const detectionRules: Array<{ preset: PresetName; markers: string[] }> = [
   { preset: 'react', markers: [ 'react', 'vite' ] },
   { preset: 'react-native', markers: [ 'react-native', 'expo' ] },
-  { preset: 'worker', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
+  { preset: 'workers', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
 ]
 
 const presetIncludes: Record<PresetName, string[]> = {
@@ -47,7 +47,7 @@ const presetIncludes: Record<PresetName, string[]> = {
     'expo-env.d.ts',
     '*.ts'
   ],
-  worker: [
+  workers: [
     'src',
     'e2e',
     'scripts',
