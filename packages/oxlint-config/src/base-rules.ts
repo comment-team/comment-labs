@@ -4,7 +4,7 @@ import type { DummyRuleMap } from 'oxlint'
 export const baseRules: DummyRuleMap = {
   'array-type': 'off',
   'capitalized-comments': 'off',
-  'class-methods-use-this': 'warn',
+  'class-methods-use-this': 'off',
   'consistent-indexed-object-style': 'off',
   'consistent-type-definitions': 'off',
   'complexity': [ 'warn', { max: 50 }],
@@ -85,6 +85,7 @@ export const baseRules: DummyRuleMap = {
   'typescript/prefer-readonly-parameter-types': 'off',
   'typescript/require-await': 'warn',
   'typescript/non-nullable-type-assertion-style': 'warn',
+  'typescript/explicit-member-accessibility': 'off',
 
   'import/no-unassigned-import': 'warn',
   'import/consistent-type-specifier-style': 'off',
