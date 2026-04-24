@@ -23,7 +23,8 @@ const cloudflareSpecificGlobals: OxlintGlobals = {
   HTMLRewriter: 'readonly',
   WebSocketPair: 'readonly',
   WebSocketRequestResponsePair: 'readonly',
-  scheduler: 'readonly'
+  scheduler: 'readonly',
+  caches: 'readonly'
 }
 
 const cloudflare: OxlintGlobals = {
