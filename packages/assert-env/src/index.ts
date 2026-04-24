@@ -115,6 +115,11 @@ export function assertEnv(
     }
   }
 
+  // Skip throwing errors if running in knip
+  if (process.argv.find(arg => arg.endsWith('/knip.js'))) {
+    return result
+  }
+
   if (errors.length > 0) {
     const lines = errors.map(error => `- ${error.name}: ${error.message}`)
 
