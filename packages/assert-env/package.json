@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/assert-env",
+  "version": "1.0.0-beta.0",
+  "description": "Type-safe environment variable validation",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.mts",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:toolchain"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

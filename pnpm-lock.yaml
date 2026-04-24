@@ -23,9 +23,15 @@ catalogs:
       specifier: 4.0.2
       version: 4.0.2
   types:
+    '@types/cli-progress':
+      specifier: 3.11.6
+      version: 3.11.6
     '@types/node':
       specifier: 25.5.0
       version: 25.5.0
+    '@types/prompts':
+      specifier: 2.4.9
+      version: 2.4.9
 
 importers:
 
@@ -40,6 +46,33 @@ importers:
       knip:
         specifier: 6.1.0
         version: 6.1.0
+
+  packages/assert-env:
+    devDependencies:
+      '@comment-labs/oxlint-config':
+        specifier: workspace:*
+        version: link:../oxlint-config
+      '@comment-labs/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: catalog:types
+        version: 25.5.0
+      oxlint:
+        specifier: catalog:lint
+        version: 1.57.0(oxlint-tsgolint@0.18.1)
+      oxlint-tsgolint:
+        specifier: catalog:lint
+        version: 0.18.1
+      tsdown:
+        specifier: catalog:toolchain
+        version: 0.21.7(oxc-resolver@11.19.1)(synckit@0.11.12)(typescript@6.0.2)
+      typescript:
+        specifier: catalog:toolchain
+        version: 6.0.2
+      vitest:
+        specifier: catalog:toolchain
+        version: 4.0.2(@types/node@25.5.0)(jiti@2.6.1)(yaml@2.8.3)
 
   packages/oxlint-config:
     dependencies:

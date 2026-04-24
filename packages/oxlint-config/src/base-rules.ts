@@ -97,6 +97,7 @@ export const baseRules: DummyRuleMap = {
   // TODO enable jest rules for vitest
   'jest/require-hook': 'off',
   'jest/no-conditional-in-test': 'off',
+  'vitest/prefer-strict-boolean-matchers': 'off',
 
   'jsdoc/require-param-type': 'off',
   'jsdoc/require-returns': 'off',
