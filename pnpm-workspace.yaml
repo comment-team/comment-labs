@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://www.schemastore.org/pnpm-workspace.json
-
 packages:
   - 'packages/*'
 
@@ -9,7 +7,7 @@ catalogs:
     eslint: 10.1.0
     eslint-plugin-oxlint: 1.57.0
     oxlint: 1.57.0
-    oxlint-tsgolint: 0.18.1
+    oxlint-tsgolint: 0.22.0
   toolchain:
     tsdown: 0.21.7
     typescript: 6.0.2
