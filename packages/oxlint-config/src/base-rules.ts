@@ -86,6 +86,7 @@ export const baseRules: DummyRuleMap = {
   'typescript/require-await': 'warn',
   'typescript/non-nullable-type-assertion-style': 'warn',
   'typescript/explicit-member-accessibility': 'off',
+  'typescript/return-await': [ 'warn', 'always' ],
 
   'import/no-unassigned-import': 'warn',
   'import/consistent-type-specifier-style': 'off',
