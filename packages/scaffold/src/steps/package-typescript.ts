@@ -164,7 +164,7 @@ async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): 
 
 async function maybeEnsureTypecheckScript(context: AppContext, pkg: WorkspacePackage): Promise<void> {
   const current = pkg.packageJson.scripts?.typecheck
-  if (current === 'tsc') {
+  if (current === 'tsc' || current === 'tsc -b') {
     return
   }
 
