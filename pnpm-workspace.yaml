@@ -7,7 +7,7 @@ catalogs:
     eslint: 10.1.0
     eslint-plugin-oxlint: 1.57.0
     oxlint: 1.57.0
-    oxlint-tsgolint: 0.18.1
+    oxlint-tsgolint: 0.22.0
   toolchain:
     tsdown: 0.21.10
     typescript: 6.0.2
