@@ -108,6 +108,7 @@ export const baseRules: DummyRuleMap = {
   'unicorn/switch-case-braces': [ 'warn', 'avoid' ],
   'unicorn/no-array-method-this-argument': 'warn',
   'unicorn/no-await-expression-member': 'warn',
+  'unicorn/no-invalid-fetch-options': 'off',
 
   'vitest/no-importing-vitest-globals': 'off',
 

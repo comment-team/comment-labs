@@ -1,4 +1,4 @@
-import { defineConfig, type OxlintConfig } from 'oxlint'
+import type { OxlintConfig } from 'oxlint'
 import { categories } from './categories'
 import { baseRules } from './base-rules'
 import { plugins } from './plugins'
@@ -7,6 +7,7 @@ import { jsPlugins } from './js-plugins'
 import { playwrightOverrides } from './overrides/playwright'
 import { reactOverrides } from './overrides/react'
 import { reactNativeOverrides } from './overrides/react-native'
+import { scriptsOverrides } from './overrides/scripts'
 
 
 export const config: OxlintConfig = {
@@ -28,7 +29,8 @@ export const config: OxlintConfig = {
   overrides: [
     playwrightOverrides,
     reactOverrides,
-    reactNativeOverrides
+    reactNativeOverrides,
+    scriptsOverrides
   ],
   ignorePatterns: [ 'coverage/**', 'public/**', '.expo/**', '.output/**', '**/dist/**', '**/*wasm-bindgen/**' ]
 }
