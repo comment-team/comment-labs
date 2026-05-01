@@ -6,7 +6,7 @@ catalogs:
     bundled-eslint-config: 0.8.1
     eslint: 10.1.0
     eslint-plugin-oxlint: 1.57.0
-    oxlint: 1.57.0
+    oxlint: 1.61.0
     oxlint-tsgolint: 0.22.0
   toolchain:
     tsdown: 0.21.10
@@ -16,3 +16,6 @@ catalogs:
     '@types/cli-progress': 3.11.6
     '@types/node': 25.5.0
     '@types/prompts': 2.4.9
+
+configDependencies:
+  '@comment-labs/pnpm-plugin-defaults': 1.0.0-beta.2+sha512-mJD/uiBAwsRk1qCdUMxmduSiQtG7TgPK2LaDk7CW+Kbi5NgYDVOhsh1lMQF9Dv/ppGgU1GZsO0ZVyno2jg1uZA==
