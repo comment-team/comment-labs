@@ -42,7 +42,7 @@ export async function readPreferences(cwd: string, git: GitContext): Promise<{
 }
 
 export async function persistPreferences(context: AppContext): Promise<void> {
-  const body = `${JSON.stringify(context.preferences, null, 2)}\n`
+  const body = `${JSON.stringify(sortKeys(context.preferences), null, 2)}\n`
   if (await writeTextFileIfChanged(context.preferencesPath, body)) {
     context.changedFiles.add(context.preferencesPath)
   }
@@ -121,4 +121,21 @@ function isJsonValue(value: unknown): value is JsonValue {
   }
 
   return false
+}
+
+function sortKeys(value: JsonValue): JsonValue {
+  if (value === null || typeof value !== 'object') {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(entry => sortKeys(entry))
+  }
+
+  const sorted: Record<string, JsonValue> = {}
+  for (const key of Object.keys(value).sort()) {
+    sorted[key] = sortKeys(value[key])
+  }
+
+  return sorted
 }
