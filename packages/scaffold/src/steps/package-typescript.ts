@@ -66,8 +66,10 @@ export async function handlePackageTypescript(context: AppContext): Promise<void
     }
 
     await maybeUpdateTypescriptRange(context, pkg, tsRange)
-    await maybeEnsureTsconfigDependency(context, pkg)
-    await maybeEnsureTsconfig(context, pkg)
+    const shouldEnsureTsconfig = await maybeEnsureTsconfigDependency(context, pkg)
+    if (shouldEnsureTsconfig) {
+      await maybeEnsureTsconfig(context, pkg)
+    }
     await maybeEnsureTypecheckScript(context, pkg)
   }
 }
@@ -100,9 +102,9 @@ async function maybeUpdateTypescriptRange(context: AppContext, pkg: WorkspacePac
   }
 }
 
-async function maybeEnsureTsconfigDependency(context: AppContext, pkg: WorkspacePackage): Promise<void> {
+async function maybeEnsureTsconfigDependency(context: AppContext, pkg: WorkspacePackage): Promise<boolean> {
   if (typeof pkg.packageJson.devDependencies?.['@comment-labs/tsconfig'] === 'string') {
-    return
+    return true
   }
 
   if (!(await shouldApplyStep(
@@ -111,11 +113,13 @@ async function maybeEnsureTsconfigDependency(context: AppContext, pkg: Workspace
     `Install @comment-labs/tsconfig in ${pkg.dirName}?`,
     `Aborted while installing @comment-labs/tsconfig for ${pkg.dirName}.`
   ))) {
-    return
+    return false
   }
 
   runPnpmAdd(pkg.dirPath, [ '-D', '@comment-labs/tsconfig' ])
   await refreshWorkspacePackage(pkg)
+
+  return true
 }
 
 async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
