@@ -16,8 +16,8 @@ const presetOptions = [ 'base', 'node', 'react', 'react-native', 'workers' ] as 
 type PresetName = (typeof presetOptions)[number]
 
 const detectionRules: Array<{ preset: PresetName; markers: string[] }> = [
-  { preset: 'react', markers: [ 'react', 'vite' ] },
   { preset: 'react-native', markers: [ 'react-native', 'expo' ] },
+  { preset: 'react', markers: [ 'react', 'vite' ] },
   { preset: 'workers', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
 ]
 
