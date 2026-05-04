@@ -54,8 +54,6 @@ catalogs:
       specifier: 2.4.9
       version: 2.4.9
 
-pnpmfileChecksum: sha256-P/bTEdwoDCFCY/uWDZ/JUssWeiHNF/kLvuW4XCMCmWw=
-
 importers:
 
   .:
@@ -237,7 +235,7 @@ importers:
   packages/schema-validator:
     dependencies:
       ajv:
-        specifier: ^8.18.0
+        specifier: ^8.20.0
         version: 8.20.0
       ajv-draft-04:
         specifier: ^1.0.0
@@ -2723,10 +2721,6 @@ packages:
 
   zod@4.4.1:
     resolution: {integrity: sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q==}
-
-ignoredOptionalDependencies:
-  - '@prisma/*'
-  - prisma
 
 snapshots:
 
