@@ -12,11 +12,12 @@ import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspace
 import { runPnpmAdd } from './pnpm'
 
 
-const presetOptions = [ 'base', 'node', 'react', 'react-native', 'workers' ] as const
+const presetOptions = [ 'base', 'node', 'react', 'react-native', 'react-workers', 'workers' ] as const
 type PresetName = (typeof presetOptions)[number]
 
-const detectionRules: Array<{ preset: PresetName; markers: string[] }> = [
+const detectionRules: Array<{ preset: PresetName; markers: string[]; requires?: string[] }> = [
   { preset: 'react-native', markers: [ 'react-native', 'expo' ] },
+  { preset: 'react-workers', markers: [ '@cloudflare/workers-types', 'wrangler' ], requires: [ 'react' ] },
   { preset: 'react', markers: [ 'react', 'vite' ] },
   { preset: 'workers', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
 ]
@@ -45,6 +46,13 @@ const presetIncludes: Record<PresetName, string[]> = {
     'test',
     '.expo/types',
     'expo-env.d.ts',
+    '*.ts'
+  ],
+  'react-workers': [
+    'e2e',
+    'scripts',
+    'src',
+    'test',
     '*.ts'
   ],
   workers: [
@@ -213,7 +221,9 @@ function detectPreset(packageJson: PackageJson): PresetName | null {
   }
 
   for (const rule of detectionRules) {
-    if (rule.markers.some(marker => marker in allDependencies)) {
+    const markersMatch = rule.markers.some(marker => marker in allDependencies)
+    const requiresMatch = rule.requires?.every(req => req in allDependencies) ?? true
+    if (markersMatch && requiresMatch) {
       return rule.preset
     }
   }
