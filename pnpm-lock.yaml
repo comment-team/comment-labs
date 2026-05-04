@@ -191,10 +191,10 @@ importers:
   packages/scaffold:
     dependencies:
       chokidar:
-        specifier: 5.0.0
+        specifier: ^5.0.0
         version: 5.0.0
       package-manager-detector:
-        specifier: 1.6.0
+        specifier: ^1.6.0
         version: 1.6.0
       picocolors:
         specifier: ^1.1.1
