@@ -30,14 +30,14 @@ export async function handlePackageJson(context: AppContext): Promise<void> {
     changed = true
   }
 
-  ({ nextPackageJson, changed } = await maybeUpdatePackageName(context, nextPackageJson, desiredName, changed))
-  ;({ nextPackageJson, changed } = await maybeUpdatePackagePrivate(context, nextPackageJson, changed))
-  ;({ nextPackageJson, changed } = await maybeUpdatePackageManager(
+  changed = await maybeUpdatePackageName(context, nextPackageJson, desiredName, changed)
+  changed = await maybeUpdatePackagePrivate(context, nextPackageJson, changed)
+  changed = await maybeUpdatePackageManager(
     context,
     nextPackageJson,
     desiredPackageManager,
     changed
-  ))
+  )
 
   if (changed) {
     await writePackageJson(context, nextPackageJson)
@@ -76,9 +76,9 @@ async function maybeUpdatePackageName(
   nextPackageJson: PackageJson,
   desiredName: string,
   changed: boolean
-): Promise<{ nextPackageJson: PackageJson; changed: boolean }> {
+): Promise<boolean> {
   if (nextPackageJson.name === desiredName) {
-    return { nextPackageJson, changed }
+    return changed
   }
 
   const candidate = { ...nextPackageJson, name: desiredName }
@@ -98,9 +98,9 @@ async function maybeUpdatePackagePrivate(
   context: AppContext,
   nextPackageJson: PackageJson,
   changed: boolean
-): Promise<{ nextPackageJson: PackageJson; changed: boolean }> {
+): Promise<boolean> {
   if (nextPackageJson.private === true) {
-    return { nextPackageJson, changed }
+    return changed
   }
 
   const candidate = { ...nextPackageJson, private: true }
@@ -120,13 +120,13 @@ async function maybeUpdatePackageManager(
   nextPackageJson: PackageJson,
   desiredPackageManager: string,
   changed: boolean
-): Promise<{ nextPackageJson: PackageJson; changed: boolean }> {
+): Promise<boolean> {
   if (nextPackageJson.packageManager === desiredPackageManager) {
-    return { nextPackageJson, changed }
+    return changed
   }
 
   if (typeof nextPackageJson.packageManager === 'string' && nextPackageJson.packageManager.startsWith('pnpm@')) {
-    return { nextPackageJson, changed }
+    return changed
   }
 
   const candidate = { ...nextPackageJson, packageManager: desiredPackageManager }
@@ -152,29 +152,24 @@ async function applyPackageJsonDecision(
   abortMessage: string,
   apply: (draft: PackageJson) => void,
   changed: boolean
-): Promise<{ nextPackageJson: PackageJson; changed: boolean }> {
+): Promise<boolean> {
   if (decision === 'abort') {
     throw new Error(abortMessage)
   }
 
   if (decision === 'merge') {
-    return {
-      nextPackageJson: await mergeRootPackageJson(context, current, candidate),
-      changed: false
-    }
+    await mergeRootPackageJson(context, current, candidate)
+
+    return false
   }
 
   if (decision === 'apply') {
-    const draft = structuredClone(current)
-    apply(draft)
+    apply(current)
 
-    return {
-      nextPackageJson: draft,
-      changed: true
-    }
+    return true
   }
 
-  return { nextPackageJson: current, changed }
+  return changed
 }
 
 async function mergeRootPackageJson(
