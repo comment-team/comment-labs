@@ -38,8 +38,8 @@ catalogs:
       specifier: 0.21.10
       version: 0.21.10
     typescript:
-      specifier: 6.0.2
-      version: 6.0.2
+      specifier: 6.0.3
+      version: 6.0.3
     vitest:
       specifier: 4.0.2
       version: 4.0.2
@@ -53,8 +53,6 @@ catalogs:
     '@types/prompts':
       specifier: 2.4.9
       version: 2.4.9
-
-pnpmfileChecksum: sha256-P/bTEdwoDCFCY/uWDZ/JUssWeiHNF/kLvuW4XCMCmWw=
 
 importers:
 
@@ -89,10 +87,10 @@ importers:
         version: 0.22.0
       tsdown:
         specifier: catalog:toolchain
-        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.2)
+        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
       typescript:
         specifier: catalog:toolchain
-        version: 6.0.2
+        version: 6.0.3
       vitest:
         specifier: catalog:toolchain
         version: 4.0.2(@types/node@25.5.0)(jiti@2.6.1)(yaml@2.8.3)
@@ -116,7 +114,7 @@ importers:
         version: 6.1.4
       eslint-plugin-import-zod:
         specifier: ^1.2.1
-        version: 1.2.1(@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1))
+        version: 1.2.1(@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(eslint@9.39.4(jiti@2.6.1))
       eslint-plugin-jsdoc:
         specifier: ^62.9.0
         version: 62.9.0(eslint@9.39.4(jiti@2.6.1))
@@ -159,10 +157,10 @@ importers:
         version: 0.22.0
       tsdown:
         specifier: catalog:toolchain
-        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.2)
+        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
       typescript:
         specifier: catalog:toolchain
-        version: 6.0.2
+        version: 6.0.3
       vitest:
         specifier: catalog:toolchain
         version: 4.0.2(@types/node@25.5.0)(jiti@2.6.1)(yaml@2.8.3)
@@ -183,10 +181,10 @@ importers:
         version: 0.22.0
       tsdown:
         specifier: catalog:toolchain
-        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.2)
+        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
       typescript:
         specifier: catalog:toolchain
-        version: 6.0.2
+        version: 6.0.3
 
   packages/scaffold:
     dependencies:
@@ -229,10 +227,10 @@ importers:
         version: 0.22.0
       tsdown:
         specifier: catalog:toolchain
-        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.2)
+        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
       typescript:
         specifier: catalog:toolchain
-        version: 6.0.2
+        version: 6.0.3
 
   packages/schema-validator:
     dependencies:
@@ -278,16 +276,16 @@ importers:
         version: 0.22.0
       tsdown:
         specifier: catalog:toolchain
-        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.2)
+        version: 0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
       typescript:
         specifier: catalog:toolchain
-        version: 6.0.2
+        version: 6.0.3
 
   packages/tsconfig:
     dependencies:
       typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^6.0.3
+        version: 6.0.3
 
 packages:
 
@@ -2567,8 +2565,8 @@ packages:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
 
-  typescript@6.0.2:
-    resolution: {integrity: sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -2723,10 +2721,6 @@ packages:
 
   zod@4.4.1:
     resolution: {integrity: sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q==}
-
-ignoredOptionalDependencies:
-  - '@prisma/*'
-  - prisma
 
 snapshots:
 
@@ -3638,12 +3632,12 @@ snapshots:
       '@types/node': 25.5.0
       kleur: 3.0.3
 
-  '@typescript-eslint/project-service@8.59.1(typescript@6.0.2)':
+  '@typescript-eslint/project-service@8.59.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.59.1(typescript@6.0.2)
+      '@typescript-eslint/tsconfig-utils': 8.59.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.59.1
       debug: 4.4.3
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -3652,35 +3646,35 @@ snapshots:
       '@typescript-eslint/types': 8.59.1
       '@typescript-eslint/visitor-keys': 8.59.1
 
-  '@typescript-eslint/tsconfig-utils@8.59.1(typescript@6.0.2)':
+  '@typescript-eslint/tsconfig-utils@8.59.1(typescript@6.0.3)':
     dependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
 
   '@typescript-eslint/types@8.59.1': {}
 
-  '@typescript-eslint/typescript-estree@8.59.1(typescript@6.0.2)':
+  '@typescript-eslint/typescript-estree@8.59.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.59.1(typescript@6.0.2)
-      '@typescript-eslint/tsconfig-utils': 8.59.1(typescript@6.0.2)
+      '@typescript-eslint/project-service': 8.59.1(typescript@6.0.3)
+      '@typescript-eslint/tsconfig-utils': 8.59.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.59.1
       '@typescript-eslint/visitor-keys': 8.59.1
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.7.4
       tinyglobby: 0.2.16
-      ts-api-utils: 2.5.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)':
+  '@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@9.39.4(jiti@2.6.1))
       '@typescript-eslint/scope-manager': 8.59.1
       '@typescript-eslint/types': 8.59.1
-      '@typescript-eslint/typescript-estree': 8.59.1(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.59.1(typescript@6.0.3)
       eslint: 9.39.4(jiti@2.6.1)
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
 
@@ -3943,9 +3937,9 @@ snapshots:
       lodash: 4.18.1
       requireindex: 1.1.0
 
-  eslint-plugin-import-zod@1.2.1(@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2))(eslint@9.39.4(jiti@2.6.1)):
+  eslint-plugin-import-zod@1.2.1(@typescript-eslint/utils@8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3))(eslint@9.39.4(jiti@2.6.1)):
     dependencies:
-      '@typescript-eslint/utils': 8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.2)
+      '@typescript-eslint/utils': 8.59.1(eslint@9.39.4(jiti@2.6.1))(typescript@6.0.3)
       eslint: 9.39.4(jiti@2.6.1)
 
   eslint-plugin-jsdoc@62.9.0(eslint@9.39.4(jiti@2.6.1)):
@@ -4616,7 +4610,7 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown-plugin-dts@0.23.2(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(rolldown@1.0.0-rc.17)(typescript@6.0.2):
+  rolldown-plugin-dts@0.23.2(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(rolldown@1.0.0-rc.17)(typescript@6.0.3):
     dependencies:
       '@babel/generator': 8.0.0-rc.3
       '@babel/helper-validator-identifier': 8.0.0-rc.3
@@ -4630,7 +4624,7 @@ snapshots:
       picomatch: 4.0.4
       rolldown: 1.0.0-rc.17
     optionalDependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - oxc-resolver
 
@@ -4794,13 +4788,13 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  ts-api-utils@2.5.0(typescript@6.0.2):
+  ts-api-utils@2.5.0(typescript@6.0.3):
     dependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
 
   ts-dedent@2.2.0: {}
 
-  tsdown@0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.2):
+  tsdown@0.21.10(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3):
     dependencies:
       ansis: 4.2.0
       cac: 7.0.0
@@ -4811,7 +4805,7 @@ snapshots:
       obug: 2.1.1
       picomatch: 4.0.4
       rolldown: 1.0.0-rc.17
-      rolldown-plugin-dts: 0.23.2(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(rolldown@1.0.0-rc.17)(typescript@6.0.2)
+      rolldown-plugin-dts: 0.23.2(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(rolldown@1.0.0-rc.17)(typescript@6.0.3)
       semver: 7.7.4
       tinyexec: 1.1.2
       tinyglobby: 0.2.16
@@ -4819,7 +4813,7 @@ snapshots:
       unconfig-core: 7.5.0
       unrun: 0.2.37
     optionalDependencies:
-      typescript: 6.0.2
+      typescript: 6.0.3
     transitivePeerDependencies:
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
@@ -4834,7 +4828,7 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
 
-  typescript@6.0.2: {}
+  typescript@6.0.3: {}
 
   unbash@2.2.0: {}
 
