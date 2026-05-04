@@ -1,4 +1,4 @@
-import { getNpmVersion } from 'detect-package-manager'
+import { detect } from 'package-manager-detector'
 
 import { trackWriteMergeConflictAndWait } from '../core/filesystem'
 import { askStep } from '../core/prompts'
@@ -8,7 +8,12 @@ import { formatRootPackageJson, inferPackageName, readPackageJson, withJsonSchem
 
 export async function handlePackageJson(context: AppContext): Promise<void> {
   const desiredName = inferPackageName(context)
-  const pnpmVersion = await getNpmVersion('pnpm')
+  const packageManager = await detect()
+  if (packageManager?.name !== 'pnpm') {
+    throw new Error('Package manager could not be detected, or is not pnpm')
+  }
+
+  const pnpmVersion = packageManager.version
   const desiredPackageManager = `pnpm@${pnpmVersion}`
 
   if (!context.packageJson) {
@@ -84,7 +89,7 @@ async function maybeUpdatePackageName(
     after: formatRootPackageJson(context, candidate)
   })
 
-  return applyPackageJsonDecision(context, nextPackageJson, candidate, decision, 'Aborted while updating package.json name.', draft => {
+  return await applyPackageJsonDecision(context, nextPackageJson, candidate, decision, 'Aborted while updating package.json name.', draft => {
     draft.name = desiredName
   }, changed)
 }
@@ -105,7 +110,7 @@ async function maybeUpdatePackagePrivate(
     after: formatRootPackageJson(context, candidate)
   })
 
-  return applyPackageJsonDecision(context, nextPackageJson, candidate, decision, 'Aborted while updating package.json private.', draft => {
+  return await applyPackageJsonDecision(context, nextPackageJson, candidate, decision, 'Aborted while updating package.json private.', draft => {
     draft.private = true
   }, changed)
 }
@@ -134,7 +139,7 @@ async function maybeUpdatePackageManager(
     after: formatRootPackageJson(context, candidate)
   })
 
-  return applyPackageJsonDecision(context, nextPackageJson, candidate, decision, 'Aborted while updating package.json packageManager.', draft => {
+  return await applyPackageJsonDecision(context, nextPackageJson, candidate, decision, 'Aborted while updating package.json packageManager.', draft => {
     draft.packageManager = desiredPackageManager
   }, changed)
 }

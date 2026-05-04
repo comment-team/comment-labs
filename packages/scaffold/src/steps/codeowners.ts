@@ -84,7 +84,7 @@ async function shouldRunCodeownersStep(context: AppContext): Promise<boolean | '
     return true
   }
 
-  return askBoolean(context, 'codeowners.enabled', 'Create or update .github/CODEOWNERS?')
+  return await askBoolean(context, 'codeowners.enabled', 'Create or update .github/CODEOWNERS?')
 }
 
 async function askOwners(context: AppContext, key: string, message: string, initialValue: string): Promise<string> {

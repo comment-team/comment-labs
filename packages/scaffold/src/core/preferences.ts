@@ -133,8 +133,13 @@ function sortKeys(value: JsonValue): JsonValue {
   }
 
   const sorted: Record<string, JsonValue> = {}
-  for (const key of Object.keys(value).sort()) {
-    sorted[key] = sortKeys(value[key])
+
+  for (const [ key, innerValue ] of Object.entries(value).sort(([ key1 ], [ key2 ]) => key1.localeCompare(key2))) {
+    if (innerValue === undefined) {
+      continue
+    }
+
+    sorted[key] = sortKeys(innerValue)
   }
 
   return sorted

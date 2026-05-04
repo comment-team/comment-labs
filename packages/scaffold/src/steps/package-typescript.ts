@@ -66,10 +66,13 @@ export async function handlePackageTypescript(context: AppContext): Promise<void
     }
 
     await maybeUpdateTypescriptRange(context, pkg, tsRange)
+
     const shouldEnsureTsconfig = await maybeEnsureTsconfigDependency(context, pkg)
+
     if (shouldEnsureTsconfig) {
       await maybeEnsureTsconfig(context, pkg)
     }
+
     await maybeEnsureTypecheckScript(context, pkg)
   }
 }
@@ -235,7 +238,7 @@ async function resolvePreset(context: AppContext, pkg: WorkspacePackage): Promis
     }
   }
 
-  return askSelect(
+  return await askSelect(
     context,
     `packages.${pkg.dirName}.tsconfig.preset`,
     `Select a tsconfig preset for ${pkg.dirName}`,

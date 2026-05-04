@@ -1,7 +1,5 @@
 import process from 'node:process'
-
 import prompts from 'prompts'
-
 import { renderDiffPreview } from './diff'
 import { getPreference, persistPreferences, setPreference } from './preferences'
 import type { AppContext, PromptChoice, StepDecision } from './types'
@@ -250,7 +248,7 @@ export async function askEphemeralStep(message: string, autoApprove = false): Pr
 }
 
 export async function runPrompt(question: PromptQuestion): Promise<Record<string, unknown>> {
-  return prompts(question, {
+  return await prompts(question, {
     onCancel: () => {
       throw cancelled
     }

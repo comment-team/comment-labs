@@ -1,6 +1,6 @@
 import { readdir } from 'node:fs/promises'
 
-import { detect } from 'detect-package-manager'
+import { detect } from 'package-manager-detector'
 
 import { logWarn } from '../core/log'
 import { askStep } from '../core/prompts'
@@ -29,8 +29,9 @@ export async function handleEmptyFolder(context: AppContext): Promise<void> {
     return
   }
 
-  const pm = await detect({ cwd: context.cwd })
-  if (pm === 'npm' || pm === 'yarn' || pm === 'bun') {
-    throw new Error(`Found ${pm} lockfile in an otherwise empty repository. Remove it before running scaffold.`)
+  const { name } = (await detect({ cwd: context.cwd })) ?? { name: 'none' }
+
+  if (name === 'npm' || name === 'yarn' || name === 'bun') {
+    throw new Error(`Found ${name} lockfile in an otherwise empty repository. Remove it before running scaffold.`)
   }
 }
