@@ -6,7 +6,7 @@ import { up } from 'empathic/find'
 
 export async function enableMode(configFiles: string[], dependencies?: string[]): Promise<boolean> {
 
-  const hasConfigFile = await Promise.all(configFiles.map(async file => access(join(cwd(), file))
+  const hasConfigFile = await Promise.all(configFiles.map(async file => await access(join(cwd(), file))
     .then(() => true)
     .catch(() => false)))
 

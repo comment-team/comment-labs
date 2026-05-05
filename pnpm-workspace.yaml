@@ -19,3 +19,7 @@ catalogs:
 
 configDependencies:
   '@comment-labs/pnpm-plugin-defaults': 1.0.0-beta.2+sha512-mJD/uiBAwsRk1qCdUMxmduSiQtG7TgPK2LaDk7CW+Kbi5NgYDVOhsh1lMQF9Dv/ppGgU1GZsO0ZVyno2jg1uZA==
+
+peerDependencyRules:
+  allowedVersions:
+    eslint: ^10.0.0

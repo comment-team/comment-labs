@@ -87,6 +87,7 @@ export const baseRules: DummyRuleMap = {
   'typescript/non-nullable-type-assertion-style': 'warn',
   'typescript/explicit-member-accessibility': 'off',
   'typescript/return-await': [ 'warn', 'always' ],
+  'typescript/no-confusing-void-expression': [ 'warn', { ignoreArrowShorthand: true }],
 
   'import/no-unassigned-import': 'warn',
   'import/consistent-type-specifier-style': 'off',
@@ -95,10 +96,14 @@ export const baseRules: DummyRuleMap = {
   'import/no-nodejs-modules': 'off',
   'import/unambiguous': 'off',
 
+  'react/react-in-jsx-scope': 'off',
+
   // TODO enable jest rules for vitest
   'jest/require-hook': 'off',
   'jest/no-conditional-in-test': 'off',
+
   'vitest/prefer-strict-boolean-matchers': 'off',
+  'vitest/require-test-timeout': 'off',
 
   'jsdoc/require-param-type': 'off',
   'jsdoc/require-returns': 'off',
