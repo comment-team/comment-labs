@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/tsconfig",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Base tsconfig for comment-labs packages",
   "license": "Apache-2.0",
   "files": [
@@ -12,7 +12,7 @@
     "workers.json"
   ],
   "peerDependencies": {
-    "typescript": "^6.0.2"
+    "typescript": "^5.9.2 || ^6.0.2"
   },
   "publishConfig": {
     "access": "public"
