@@ -44,7 +44,7 @@ const presetIncludes: Record<PresetName, string[]> = {
     'scripts',
     'src',
     'test',
-    '.expo/types',
+    '.expo/types/**/*.ts',
     'expo-env.d.ts',
     '*.ts'
   ],

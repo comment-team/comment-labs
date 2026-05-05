@@ -286,7 +286,7 @@ importers:
   packages/tsconfig:
     dependencies:
       typescript:
-        specifier: ^6.0.2
+        specifier: ^5.9.2 || ^6.0.2
         version: 6.0.2
 
 packages:
