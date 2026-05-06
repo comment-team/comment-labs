@@ -12,19 +12,27 @@ import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspace
 import { runPnpmAdd } from './pnpm'
 
 
-const presetOptions = [ 'base', 'node', 'react', 'react-astro', 'react-astro-workers', 'react-native', 'react-workers', 'workers' ] as const
+const presetOptions = [ 'astro-workers', 'base', 'node', 'react', 'react-astro', 'react-astro-workers', 'react-native', 'react-workers', 'workers' ] as const
 type PresetName = (typeof presetOptions)[number]
 
 const detectionRules: Array<{ preset: PresetName; markers: string[]; requires?: string[] }> = [
   { preset: 'react-native', markers: [ 'react-native', 'expo' ] },
   { preset: 'react-astro-workers', markers: [ 'astro', '@cloudflare/workers-types', 'wrangler' ], requires: [ 'react' ] },
-  { preset: 'react-workers', markers: [ '@cloudflare/workers-types', 'wrangler' ], requires: [ 'react' ] },
   { preset: 'react-astro', markers: [ 'astro' ], requires: [ 'react' ] },
+  { preset: 'react-workers', markers: [ '@cloudflare/workers-types', 'wrangler' ], requires: [ 'react' ] },
   { preset: 'react', markers: [ 'react', 'vite' ] },
+  { preset: 'astro-workers', markers: [ 'astro', '@cloudflare/workers-types', 'wrangler' ] },
   { preset: 'workers', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
 ]
 
 const presetIncludes: Record<PresetName, string[]> = {
+  'astro-workers': [
+    'src',
+    'e2e',
+    'scripts',
+    'test',
+    '*.ts'
+  ],
   base: [
     'e2e',
     'scripts',
@@ -143,7 +151,7 @@ async function maybeEnsureTsconfigDependency(context: AppContext, pkg: Workspace
     return false
   }
 
-  runPnpmAdd(pkg.dirPath, [ '-D', '@comment-labs/tsconfig' ])
+  runPnpmAdd(pkg.dirPath, [ '-D', '@comment-labs/tsconfig@latest' ])
   await refreshWorkspacePackage(pkg)
 
   return true

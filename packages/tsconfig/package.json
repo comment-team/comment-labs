@@ -1,10 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/tsconfig",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Base tsconfig for comment-labs packages",
   "license": "Apache-2.0",
   "files": [
+    "astro-workers.json",
     "base.json",
     "node.json",
     "react-astro-workers.json",
