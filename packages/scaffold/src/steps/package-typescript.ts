@@ -12,12 +12,14 @@ import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspace
 import { runPnpmAdd } from './pnpm'
 
 
-const presetOptions = [ 'base', 'node', 'react', 'react-native', 'react-workers', 'workers' ] as const
+const presetOptions = [ 'base', 'node', 'react', 'react-astro', 'react-astro-workers', 'react-native', 'react-workers', 'workers' ] as const
 type PresetName = (typeof presetOptions)[number]
 
 const detectionRules: Array<{ preset: PresetName; markers: string[]; requires?: string[] }> = [
   { preset: 'react-native', markers: [ 'react-native', 'expo' ] },
+  { preset: 'react-astro-workers', markers: [ 'astro', '@cloudflare/workers-types', 'wrangler' ], requires: [ 'react' ] },
   { preset: 'react-workers', markers: [ '@cloudflare/workers-types', 'wrangler' ], requires: [ 'react' ] },
+  { preset: 'react-astro', markers: [ 'astro' ], requires: [ 'react' ] },
   { preset: 'react', markers: [ 'react', 'vite' ] },
   { preset: 'workers', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
 ]
@@ -33,6 +35,20 @@ const presetIncludes: Record<PresetName, string[]> = {
   ],
   node: [ '**/*.ts' ],
   react: [
+    'e2e',
+    'scripts',
+    'src',
+    'test',
+    '*.ts'
+  ],
+  'react-astro': [
+    'e2e',
+    'scripts',
+    'src',
+    'test',
+    '*.ts'
+  ],
+  'react-astro-workers': [
     'e2e',
     'scripts',
     'src',

@@ -7,7 +7,10 @@
   "files": [
     "base.json",
     "node.json",
+    "react-astro-workers.json",
+    "react-astro.json",
     "react-native.json",
+    "react-workers.json",
     "react.json",
     "workers.json"
   ],
