@@ -134,6 +134,56 @@
           "patch"
       ],
       "groupName": "{{parentDir}}-devDependencies"
+    },
+    {
+      "matchDepNames": [
+        "@hcengineering/api-client",
+        "@hcengineering/contact",
+        "@hcengineering/core",
+        "@hcengineering/tags",
+        "@hcengineering/tools",
+        "@hcengineering/tracker"
+      ],
+      "groupName": "{{parentDir}}-huly"
+    },
+    {
+      "matchPackageNames": [
+        "wrangler",
+        "@cloudflare/vite-plugin",
+        "@cloudflare/workers-types"
+      ],
+      "matchUpdateTypes": [
+          "minor",
+          "patch"
+      ],
+      "groupName": "{{parentDir}}-cloudflare"
+    },
+    {
+      "matchPackageNames": [
+        "better-auth",
+        "better-call",
+        "auth",
+        "@better-auth/telemetry",
+        "@better-auth/drizzle-adapter",
+        "@better-auth/memory-adapter",
+        "@better-auth/mongo-adapter",
+        "@better-auth/prisma-adapter",
+        "@better-auth/kysely-adapter",
+        "@better-auth/redis-storage",
+        "@better-auth/utils",
+        "@better-auth/passkey",
+        "@better-auth/sso",
+        "@better-auth/api-key",
+        "@better-auth/scim",
+        "@better-auth/oauth-provider",
+        "@better-auth/stripe",
+        "@better-auth/i18n",
+        "@better-auth/electron",
+        "@better-auth/expo"
+      ],
+      "groupName": "better-auth",
+      "prPriority": -1,
+      "automerge": false
     }
   ],
   "prConcurrentLimit": 5,
