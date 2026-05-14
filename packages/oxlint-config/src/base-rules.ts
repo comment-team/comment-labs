@@ -130,8 +130,6 @@ export const baseRules: DummyRuleMap = {
   'brettz9-js/no-useless-rest-spread': 'warn',
   'brettz9-js/prefer-for-of': 'off',
 
-  'i18next-js/no-literal-string': 'warn',
-
   'import-zod-js/prefer-zod-namespace': 'warn',
 
   'security-js/detect-unsafe-regex': 'error',

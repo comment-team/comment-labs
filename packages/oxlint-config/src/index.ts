@@ -4,6 +4,7 @@ import { baseRules } from './base-rules'
 import { plugins } from './plugins'
 import { globals } from './globals'
 import { jsPlugins } from './js-plugins'
+import { i18nextOverrides } from './overrides/i18next'
 import { playwrightOverrides } from './overrides/playwright'
 import { reactOverrides } from './overrides/react'
 import { reactNativeOverrides } from './overrides/react-native'
@@ -27,6 +28,7 @@ export const config: OxlintConfig = {
     }
   },
   overrides: [
+    i18nextOverrides,
     playwrightOverrides,
     reactOverrides,
     reactNativeOverrides,
