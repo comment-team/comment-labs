@@ -7,8 +7,8 @@ import Ajv from 'ajv'
 import Ajv2020 from 'ajv/dist/2020.js'
 import draft06MetaSchema from 'ajv/dist/refs/json-schema-draft-06.json' with { type: 'json' }
 import AjvDraft04 from 'ajv-draft-04'
-import { applyEdits, modify, parse as parseJson, printParseErrorCode, type ParseError } from 'jsonc-parser'
-import { parse as parseToml } from 'smol-toml'
+import { applyEdits, format, modify, parse as parseJson, printParseErrorCode, type ParseError } from 'jsonc-parser'
+import { parse as parseToml, stringify as stringifyToml } from 'smol-toml'
 import YAML from 'yaml'
 
 import { FileLocationError } from './reporting'
@@ -88,10 +88,6 @@ export async function parseDocument(filePath: string, schemaStore: SchemaStore):
 
   switch (extension) {
     case '.json':
-      return {
-        data: parseJsonWithLocation(content, false),
-        schemaHint: await readJsonSchemaHint(content, filePath, schemaStore, false)
-      }
     case '.jsonc':
     case '.json5':
       return {
@@ -124,7 +120,6 @@ export async function writeSchemaHint(filePath: string, schemaText: string): Pro
 
   switch (extension) {
     case '.json':
-      return addRecommendedJsonSchema(filePath, content, schemaText, false)
     case '.jsonc':
     case '.json5':
       return addRecommendedJsonSchema(filePath, content, schemaText, true)
@@ -135,6 +130,52 @@ export async function writeSchemaHint(filePath: string, schemaText: string): Pro
       return addRecommendedTomlSchema(filePath, content, schemaText)
     default:
       throw new Error(`Unsupported file extension for ${filePath}`)
+  }
+}
+
+export async function convertIndent(filePath: string, indent: { insertSpaces: boolean; tabSize: number }): Promise<void> {
+  const extension = getSupportedExtension(filePath)
+  if (extension === null) {
+    return
+  }
+
+  const content = await readFile(filePath, 'utf8')
+  if (content.length === 0) {
+    return
+  }
+
+  const eol = detectEol(content)
+
+  switch (extension) {
+    case '.json':
+    case '.jsonc':
+    case '.json5': {
+      const edits = format(content, undefined, {
+        eol,
+        insertSpaces: indent.insertSpaces,
+        tabSize: indent.tabSize
+      })
+      if (edits.length > 0) {
+        const nextContent = applyEdits(content, edits)
+        await writeFile(filePath, nextContent, 'utf8')
+      }
+      break
+    }
+    case '.yaml':
+    case '.yml': {
+      const data = YAML.parse(content)
+      const nextContent = YAML.stringify(data, null, {
+        indent: indent.insertSpaces ? indent.tabSize : 2
+      })
+      await writeFile(filePath, nextContent, 'utf8')
+      break
+    }
+    case '.toml': {
+      const data = parseToml(content)
+      const nextContent = stringifyToml(data)
+      await writeFile(filePath, nextContent, 'utf8')
+      break
+    }
   }
 }
 

@@ -5,8 +5,14 @@ import type AjvDraft04 from 'ajv-draft-04'
 
 export type ReporterMode = 'cli' | 'github'
 
+export type IndentOption = {
+  insertSpaces: boolean
+  tabSize: number
+}
+
 export type CliOptions = {
   addRecommended: boolean
+  indent?: IndentOption
   paths: string[]
   reporter: ReporterMode
   updateRecommended: boolean

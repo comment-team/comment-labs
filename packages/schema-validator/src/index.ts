@@ -7,6 +7,7 @@ import process from 'node:process'
 
 import { createLogger, printResult, toErrorMessage, toIssueLocation } from './reporting'
 import {
+  convertIndent,
   createValidators,
   getSupportedExtension,
   parseDocument,
@@ -34,6 +35,7 @@ function parseArgs(argv: string[]): CliOptions {
   let addRecommended = false
   let reporter: ReporterMode = isGitHubActions() ? 'github' : 'cli'
   let updateRecommended = false
+  let indent: { insertSpaces: boolean; tabSize: number } | undefined
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index]
@@ -59,6 +61,22 @@ function parseArgs(argv: string[]): CliOptions {
 
     if (argument === '--update-recommended') {
       updateRecommended = true
+      continue
+    }
+
+    if (argument === '--indent') {
+      const value = argv[index + 1]
+      if (value === undefined) {
+        throw new Error('Expected --indent to have a value')
+      }
+      indent = parseIndentValue(value)
+      index += 1
+      continue
+    }
+
+    if (argument.startsWith('--indent=')) {
+      const value = argument.slice('--indent='.length)
+      indent = parseIndentValue(value)
       continue
     }
 
@@ -92,10 +110,27 @@ function parseArgs(argv: string[]): CliOptions {
 
   return {
     addRecommended,
+    indent,
     paths: paths.length > 0 ? paths : [ process.cwd() ],
     reporter,
     updateRecommended
   }
+}
+
+function parseIndentValue(value: string): { insertSpaces: boolean; tabSize: number } {
+  if (value === 'tabs') {
+    return { insertSpaces: false, tabSize: 1 }
+  }
+  if (value === 'spaces') {
+    return { insertSpaces: true, tabSize: 2 }
+  }
+  if (value.startsWith('spaces-')) {
+    const num = Number(value.slice('spaces-'.length))
+    if (Number.isInteger(num) && num > 0) {
+      return { insertSpaces: true, tabSize: num }
+    }
+  }
+  throw new Error('Expected --indent to be one of: spaces, spaces-<number>, tabs')
 }
 
 function isGitHubActions(): boolean {
@@ -110,6 +145,7 @@ function printHelp(): void {
     'Options:',
     '  --add-recommended       Save recommended schema hints into files that lack one',
     '  --update-recommended    Replace existing schema hints with the current recommendation when it differs',
+    '  --indent <value>        Reformat all scanned files with the specified indentation (spaces, spaces-<n>, tabs)',
     '  --reporter <cli|github>  Output style. Default: cli',
     '  --github-actions         Shortcut for --reporter github',
     '  -h, --help               Show this help text',
@@ -222,6 +258,22 @@ async function run(options: CliOptions): Promise<RunResult> {
       })
     } finally {
       logger.incrementValidation(filePath)
+    }
+  }
+
+  if (options.indent) {
+    logger.progress(`Converting indentation for ${inputFiles.length} file(s)...`)
+    for (const filePath of inputFiles) {
+      try {
+        await convertIndent(filePath, options.indent)
+        logger.progress(`Updated indentation for ${path.relative(process.cwd(), filePath) || filePath}`)
+      } catch (error) {
+        issues.push({
+          filePath,
+          message: toErrorMessage(error),
+          ...toIssueLocation(error)
+        })
+      }
     }
   }
 
