@@ -16,6 +16,12 @@ export function gitignoreTemplate(): string {
     # dependencies
     node_modules/
 
+    # credentials
+    credentials.json
+    credentials/
+    *.keystore
+    *.jks
+
     # dotenv
     .dev.vars
     .env
@@ -57,7 +63,6 @@ export function gitignoreTemplate(): string {
     test-results/
 
     # etc
-    *.jks
     *.key
     *.mobileprovision
     *.orig.*
