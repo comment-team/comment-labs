@@ -160,6 +160,18 @@
     },
     {
       "matchPackageNames": [
+        "oxlint",
+        "oxlint-tsgolint",
+        "oxfmt"
+      ],
+      "matchUpdateTypes": [
+          "minor",
+          "patch"
+      ],
+      "groupName": "{{parentDir}}-oxc"
+    },
+    {
+      "matchPackageNames": [
         "better-auth",
         "better-call",
         "auth",
