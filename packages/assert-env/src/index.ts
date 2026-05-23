@@ -16,6 +16,7 @@ type InferEnvSchema<T extends EnvSchema> = {
 
 export interface AssertEnvOptions<O extends EnvSchema> {
   optional?: O
+  processEnv?: boolean
 }
 
 interface ValidationError {
@@ -124,6 +125,12 @@ export function assertEnv(
     const lines = errors.map(error => `- ${error.name}: ${error.message}`)
 
     throw new Error(`Invalid environment variables:\n${lines.join('\n')}`)
+  }
+
+  if (options?.processEnv) {
+    for (const [ name, value ] of Object.entries(result)) {
+      process.env[name] = String(value)
+    }
   }
 
   return result

@@ -272,4 +272,57 @@ describe('assertEnv', () => {
     expect(env.PORT).toBeUndefined()
     vi.unstubAllEnvs()
   })
+
+  it('does not mutate process.env by default', () => {
+    vi.stubEnv('FOO', 'bar')
+
+    assertEnv({ FOO: 'string' })
+
+    expect(process.env.FOO).toBe('bar')
+    vi.unstubAllEnvs()
+  })
+
+  it('adds required variables to process.env when processEnv is true', () => {
+    vi.stubEnv('REQUIRED_VAR', 'hello')
+
+    assertEnv({ REQUIRED_VAR: 'string' }, { processEnv: true })
+
+    expect(process.env.REQUIRED_VAR).toBe('hello')
+    vi.unstubAllEnvs()
+  })
+
+  it('adds optional variables to process.env when processEnv is true and they are present', () => {
+    vi.stubEnv('OPTIONAL_VAR', '42')
+
+    assertEnv(
+      {},
+      { optional: { OPTIONAL_VAR: 'number' }, processEnv: true }
+    )
+
+    expect(process.env.OPTIONAL_VAR).toBe('42')
+    vi.unstubAllEnvs()
+  })
+
+  it('does not add missing optional variables to process.env when processEnv is true', () => {
+    assertEnv(
+      {},
+      { optional: { MISSING_OPTIONAL: 'string' }, processEnv: true }
+    )
+
+    expect(process.env.MISSING_OPTIONAL).toBeUndefined()
+  })
+
+  it('stringifies non-string values when adding to process.env', () => {
+    vi.stubEnv('NUM', '123')
+    vi.stubEnv('BOOL', 'true')
+
+    assertEnv(
+      { NUM: 'number', BOOL: 'boolean' },
+      { processEnv: true }
+    )
+
+    expect(process.env.NUM).toBe('123')
+    expect(process.env.BOOL).toBe('true')
+    vi.unstubAllEnvs()
+  })
 })
