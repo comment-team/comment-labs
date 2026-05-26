@@ -43,7 +43,12 @@ export async function handlePackageLint(context: AppContext): Promise<void> {
       case 'oxlint-eslint':
         await maybeInstallOxlintDependencies(context, pkg)
         await maybeWriteOxlintConfig(context, pkg)
-        await maybeInstallEslintDependencies(context, pkg)
+        if (!(await maybeInstallEslintDependencies(context, pkg))) {
+          await maybeUpdateLintScript(context, pkg, 'oxlint')
+
+          break
+        }
+
         await maybeWriteEslintConfig(context, pkg)
         await maybeUpdateLintScript(context, pkg, 'oxlint && eslint --cache .')
         break
@@ -74,9 +79,7 @@ async function resolveLintMode(context: AppContext, pkg: WorkspacePackage): Prom
 
   const legacyOxlintEnabled = getPreference(context.preferences, `packages.${pkg.dirName}.oxlint.enabled`)
   if (legacyOxlintEnabled === true) {
-    const migratedMode = packageNeedsEslint(pkg) || hasEslintSetup(pkg)
-      ? 'oxlint-eslint'
-      : 'oxlint'
+    const migratedMode = hasEslintSetup(pkg) ? 'oxlint-eslint' : 'oxlint'
     await persistLintModePreference(context, modeKey, migratedMode)
 
     return migratedMode
@@ -103,7 +106,7 @@ async function resolveLintMode(context: AppContext, pkg: WorkspacePackage): Prom
 }
 
 function defaultLintMode(pkg: WorkspacePackage): LintMode {
-  if (packageNeedsEslint(pkg) || hasEslintSetup(pkg)) {
+  if (hasEslintSetup(pkg)) {
     return 'oxlint-eslint'
   }
 
@@ -141,11 +144,11 @@ async function maybeInstallOxlintDependencies(context: AppContext, pkg: Workspac
   ])
 }
 
-async function maybeInstallEslintDependencies(context: AppContext, pkg: WorkspacePackage): Promise<void> {
+async function maybeInstallEslintDependencies(context: AppContext, pkg: WorkspacePackage): Promise<boolean> {
   const devDependencies = pkg.packageJson.devDependencies ?? {}
   const hasAll = eslintPackages.every(name => typeof devDependencies[name] === 'string')
   if (hasAll) {
-    return
+    return true
   }
 
   if (!(await shouldApplyStep(
@@ -154,13 +157,15 @@ async function maybeInstallEslintDependencies(context: AppContext, pkg: Workspac
     `Install eslint dependencies in ${pkg.dirName}?`,
     `Aborted while installing eslint dependencies for ${pkg.dirName}.`
   ))) {
-    return
+    return false
   }
 
   await runWorkspacePnpmAddAndRefresh(context, pkg, [
     '-D',
     ...eslintPackages
   ])
+
+  return true
 }
 
 async function maybeRemoveEslint(context: AppContext, pkg: WorkspacePackage): Promise<void> {
@@ -359,16 +364,6 @@ function normalizeScaffoldedFile(content: string): string {
   }
 
   return content.endsWith('\n') ? content : `${content}\n`
-}
-
-function packageNeedsEslint(pkg: WorkspacePackage): boolean {
-  const allDependencies = {
-    ...pkg.packageJson.dependencies,
-    ...pkg.packageJson.devDependencies,
-    ...pkg.packageJson.peerDependencies
-  }
-
-  return typeof allDependencies.astro === 'string' || typeof allDependencies.vue === 'string'
 }
 
 function hasEslintSetup(pkg: WorkspacePackage): boolean {
