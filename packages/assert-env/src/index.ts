@@ -14,8 +14,17 @@ type InferEnvSchema<T extends EnvSchema> = {
   [K in keyof T]: TypeMap[T[K]]
 }
 
-export interface AssertEnvOptions<O extends EnvSchema> {
+type EnvDefaults<O extends EnvSchema> = Partial<InferEnvSchema<O>>
+
+type OptionalResult<O extends EnvSchema, D extends EnvDefaults<O> = {}> = {
+  [K in keyof O as K extends keyof D ? never : K]?: TypeMap[O[K]] | undefined
+} & {
+  [K in keyof O as K extends keyof D ? K : never]: TypeMap[O[K]]
+}
+
+export interface AssertEnvOptions<O extends EnvSchema, D extends EnvDefaults<O> = {}> {
   optional?: O
+  defaults?: D
   processEnv?: boolean
 }
 
@@ -79,10 +88,10 @@ function assertSingleEnv(
 }
 
 export function assertEnv<R extends EnvSchema>(required: R): InferEnvSchema<R>
-export function assertEnv<R extends EnvSchema, O extends EnvSchema>(
+export function assertEnv<R extends EnvSchema, O extends EnvSchema, D extends EnvDefaults<O> = {}>(
   required: R,
-  options: AssertEnvOptions<O>
-): InferEnvSchema<R> & { [K in keyof O]?: TypeMap[O[K]] }
+  options: AssertEnvOptions<O, D>
+): InferEnvSchema<R> & OptionalResult<O, D>
 export function assertEnv(
   required: EnvSchema,
   options?: AssertEnvOptions<EnvSchema>
@@ -104,6 +113,9 @@ export function assertEnv(
       const raw = process.env[name]
 
       if (raw === undefined || raw.trim() === '') {
+        if (options.defaults !== undefined && name in options.defaults) {
+          result[name] = (options.defaults as Record<string, string | number | boolean>)[name]!
+        }
         continue
       }
 

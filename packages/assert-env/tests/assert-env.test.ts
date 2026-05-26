@@ -225,6 +225,120 @@ describe('assertEnv', () => {
     expect(env.PORT).toBeUndefined()
   })
 
+  it('uses default value for optional variable when env is missing', () => {
+    const env = assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
+    )
+
+    expect(env.DEBUG).toBe(false)
+  })
+
+  it('uses default value for optional variable when env is empty string', () => {
+    vi.stubEnv('DEBUG', '')
+
+    const env = assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
+    )
+
+    expect(env.DEBUG).toBe(false)
+    vi.unstubAllEnvs()
+  })
+
+  it('uses default value for optional variable when env is whitespace-only', () => {
+    vi.stubEnv('DEBUG', '   ')
+
+    const env = assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
+    )
+
+    expect(env.DEBUG).toBe(false)
+    vi.unstubAllEnvs()
+  })
+
+  it('prefers env value over default when both are present', () => {
+    vi.stubEnv('DEBUG', 'true')
+
+    const env = assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
+    )
+
+    expect(env.DEBUG).toBe(true)
+    vi.unstubAllEnvs()
+  })
+
+  it('supports string defaults for optional variables', () => {
+    const env = assertEnv(
+      {},
+      { optional: { NAME: 'string' }, defaults: { NAME: 'default-name' } }
+    )
+
+    expect(env.NAME).toBe('default-name')
+  })
+
+  it('supports number defaults for optional variables', () => {
+    const env = assertEnv(
+      {},
+      { optional: { PORT: 'number' }, defaults: { PORT: 3000 } }
+    )
+
+    expect(env.PORT).toBe(3000)
+  })
+
+  it('still allows undefined for optional variables without defaults', () => {
+    const env = assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' } }
+    )
+
+    expect(env.DEBUG).toBeUndefined()
+  })
+
+  it('throws when an optional variable with default has invalid env value', () => {
+    vi.stubEnv('DEBUG', 'maybe')
+
+    expect(() => assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
+    )).toThrow(
+      'Invalid environment variables:\n- DEBUG: expected boolean, got "maybe"'
+    )
+    vi.unstubAllEnvs()
+  })
+
+  it('adds optional variables with defaults to process.env when processEnv is true', () => {
+    assertEnv(
+      {},
+      { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: true }, processEnv: true }
+    )
+
+    expect(process.env.DEBUG).toBe('true')
+  })
+
+  it('combines required, optional with defaults, and optional without defaults', () => {
+    vi.stubEnv('REQUIRED', 'hello')
+    vi.stubEnv('WITH_DEFAULT', 'env-value')
+
+    const env = assertEnv(
+      { REQUIRED: 'string' },
+      {
+        optional: {
+          WITH_DEFAULT: 'string',
+          WITHOUT_DEFAULT: 'number'
+        },
+        defaults: { WITH_DEFAULT: 'default-value' }
+      }
+    )
+
+    expect(env.REQUIRED).toBe('hello')
+    expect(env.WITH_DEFAULT).toBe('env-value')
+    expect(env.WITHOUT_DEFAULT).toBeUndefined()
+    vi.unstubAllEnvs()
+  })
+
   it('omits optional variables when empty string', () => {
     vi.stubEnv('DEBUG', '')
 
