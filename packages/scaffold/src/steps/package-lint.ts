@@ -3,46 +3,58 @@ import path from 'node:path'
 
 import { applyFileDecision, exists } from '../core/filesystem'
 import type { WorkspacePackage } from '../core/package-step'
-import { askEphemeralStep, askStep } from '../core/prompts'
+import { askSelect } from '../core/prompts'
+import { getPreference, persistPreferences, setPreference } from '../core/preferences'
 import { applyProtectedFileStep, decideFileStep, decideProtectedFileStep, shouldApplyStep } from '../core/step-helpers'
 import type { AppContext, PackageJson } from '../core/types'
-import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspacePackage, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
+import { discoverWorkspacePackages, formatWorkspacePackageJson, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
 import { eslintConfigTemplate, legacyBundledEslintReexport } from '../templates/eslint-config'
 import { oxlintConfigTemplate } from '../templates/oxlint-config'
-import { runPnpmAdd, runPnpmRemove } from './pnpm'
+import { runWorkspacePnpmAddAndRefresh, runWorkspacePnpmRemoveAndRefresh } from './pnpm'
 
 
 const eslintPackages = [ 'eslint', 'bundled-eslint-config', 'eslint-plugin-oxlint' ] as const
+const oxlintPackages = [ 'oxlint', 'oxlint-tsgolint', '@comment-labs/oxlint-config' ] as const
 const eslintConfigFiles = [ 'eslint.config.js', 'eslint.config.ts' ] as const
+const oxlintConfigFiles = [ 'oxlint.config.ts' ] as const
+
+const lintModeOptions = [ 'oxlint', 'oxlint-eslint', 'skip', 'remove-managed' ] as const
+type LintMode = (typeof lintModeOptions)[number]
 
 
 export async function handlePackageLint(context: AppContext): Promise<void> {
-  const packages = await discoverWorkspacePackages(context.cwd)
+  const packages = await discoverWorkspacePackages(context)
 
   for (const pkg of packages) {
     if (!shouldConsiderLintSetup(pkg)) {
       continue
     }
 
-    const wantsOxlint = await askBooleanLikeStep(
-      context,
-      `packages.${pkg.dirName}.oxlint.enabled`,
-      `Set up oxlint for ${pkg.dirName}?`,
-      `Aborted while deciding oxlint setup for ${pkg.dirName}.`
-    )
-    if (wantsOxlint) {
-      await maybeInstallOxlintDependencies(context, pkg)
-      await maybeWriteOxlintConfig(context, pkg)
-    }
+    const mode = await resolveLintMode(context, pkg)
 
-    if (!packageNeedsEslint(pkg)) {
-      await maybeRemoveEslint(context, pkg)
-      continue
-    }
+    switch (mode) {
+      case 'oxlint':
+        await maybeInstallOxlintDependencies(context, pkg)
+        await maybeWriteOxlintConfig(context, pkg)
+        await maybeRemoveEslint(context, pkg)
+        await maybeUpdateLintScript(context, pkg, 'oxlint')
+        break
 
-    await maybeInstallEslintDependencies(context, pkg)
-    await maybeWriteEslintConfig(context, pkg)
-    await maybeUpdateLintScript(context, pkg, 'oxlint && eslint --cache .')
+      case 'oxlint-eslint':
+        await maybeInstallOxlintDependencies(context, pkg)
+        await maybeWriteOxlintConfig(context, pkg)
+        await maybeInstallEslintDependencies(context, pkg)
+        await maybeWriteEslintConfig(context, pkg)
+        await maybeUpdateLintScript(context, pkg, 'oxlint && eslint --cache .')
+        break
+
+      case 'remove-managed':
+        await maybeRemoveManagedLintSetup(context, pkg)
+        break
+
+      case 'skip':
+        break
+    }
   }
 }
 
@@ -53,11 +65,63 @@ function shouldConsiderLintSetup(pkg: WorkspacePackage): boolean {
     || pkg.packageJson.name?.includes('oxlint') === true
 }
 
+async function resolveLintMode(context: AppContext, pkg: WorkspacePackage): Promise<LintMode> {
+  const modeKey = `packages.${pkg.dirName}.lint.mode`
+  const storedMode = getPreference(context.preferences, modeKey)
+  if (isLintMode(storedMode)) {
+    return storedMode
+  }
+
+  const legacyOxlintEnabled = getPreference(context.preferences, `packages.${pkg.dirName}.oxlint.enabled`)
+  if (legacyOxlintEnabled === true) {
+    const migratedMode = packageNeedsEslint(pkg) || hasEslintSetup(pkg)
+      ? 'oxlint-eslint'
+      : 'oxlint'
+    await persistLintModePreference(context, modeKey, migratedMode)
+
+    return migratedMode
+  }
+
+  if (legacyOxlintEnabled === false) {
+    await persistLintModePreference(context, modeKey, 'skip')
+
+    return 'skip'
+  }
+
+  return await askSelect(
+    context,
+    modeKey,
+    `Select lint setup for ${pkg.dirName}`,
+    [
+      { title: 'Oxlint only', value: 'oxlint' },
+      { title: 'Oxlint + ESLint', value: 'oxlint-eslint' },
+      { title: 'Leave unchanged', value: 'skip' },
+      { title: 'Remove managed lint setup', value: 'remove-managed' }
+    ],
+    defaultLintMode(pkg)
+  )
+}
+
+function defaultLintMode(pkg: WorkspacePackage): LintMode {
+  if (packageNeedsEslint(pkg) || hasEslintSetup(pkg)) {
+    return 'oxlint-eslint'
+  }
+
+  return 'oxlint'
+}
+
+function isLintMode(value: unknown): value is LintMode {
+  return typeof value === 'string' && lintModeOptions.some(mode => mode === value)
+}
+
+async function persistLintModePreference(context: AppContext, key: string, mode: LintMode): Promise<void> {
+  context.preferences = setPreference(context.preferences, key, mode)
+  await persistPreferences(context)
+}
+
 async function maybeInstallOxlintDependencies(context: AppContext, pkg: WorkspacePackage): Promise<void> {
   const devDependencies = pkg.packageJson.devDependencies ?? {}
-  const hasAll = typeof devDependencies.oxlint === 'string'
-    && typeof devDependencies['oxlint-tsgolint'] === 'string'
-    && typeof devDependencies['@comment-labs/oxlint-config'] === 'string'
+  const hasAll = oxlintPackages.every(name => typeof devDependencies[name] === 'string')
   if (hasAll) {
     return
   }
@@ -71,20 +135,15 @@ async function maybeInstallOxlintDependencies(context: AppContext, pkg: Workspac
     return
   }
 
-  runPnpmAdd(pkg.dirPath, [
+  await runWorkspacePnpmAddAndRefresh(context, pkg, [
     '-D',
-    'oxlint',
-    'oxlint-tsgolint',
-    '@comment-labs/oxlint-config'
+    ...oxlintPackages
   ])
-  await refreshWorkspacePackage(pkg)
 }
 
 async function maybeInstallEslintDependencies(context: AppContext, pkg: WorkspacePackage): Promise<void> {
   const devDependencies = pkg.packageJson.devDependencies ?? {}
-  const hasAll = typeof devDependencies.eslint === 'string'
-    && typeof devDependencies['bundled-eslint-config'] === 'string'
-    && typeof devDependencies['eslint-plugin-oxlint'] === 'string'
+  const hasAll = eslintPackages.every(name => typeof devDependencies[name] === 'string')
   if (hasAll) {
     return
   }
@@ -98,56 +157,112 @@ async function maybeInstallEslintDependencies(context: AppContext, pkg: Workspac
     return
   }
 
-  runPnpmAdd(pkg.dirPath, [
+  await runWorkspacePnpmAddAndRefresh(context, pkg, [
     '-D',
-    'eslint',
-    'bundled-eslint-config',
-    'eslint-plugin-oxlint'
+    ...eslintPackages
   ])
-  await refreshWorkspacePackage(pkg)
 }
 
 async function maybeRemoveEslint(context: AppContext, pkg: WorkspacePackage): Promise<void> {
   const installedPackages = eslintPackages.filter(name => typeof pkg.packageJson.devDependencies?.[name] === 'string')
   const existingFiles = await getExistingEslintConfigFiles(pkg)
   const lintScript = pkg.packageJson.scripts?.lint
-  const hasEslintLintScript = typeof lintScript === 'string' && lintScript !== 'oxlint'
+  const hasEslintLintScript = typeof lintScript === 'string' && lintScript.includes('eslint')
   if (installedPackages.length === 0 && existingFiles.length === 0 && !hasEslintLintScript) {
     return
   }
 
-  const decision = await askEphemeralStep(
-    `Remove eslint setup from ${pkg.dirName} and use oxlint only?`,
-    context.autoApprove
+  const decision = await decideFileStep(
+    context,
+    `packages.${pkg.dirName}.eslint.remove`,
+    `Remove managed eslint setup from ${pkg.dirName} and use oxlint only?`,
+    `Aborted while removing eslint from ${pkg.dirName}.`,
+    {
+      title: `${pkg.dirName}/package.json`,
+      before: formatWorkspacePackageJson(pkg, pkg.packageJson),
+      after: formatWorkspacePackageJson(pkg, withoutManagedLintDependencies(pkg.packageJson, eslintPackages, 'oxlint'))
+    }
   )
-  if (decision === 'abort') {
-    throw new Error(`Aborted while removing eslint from ${pkg.dirName}.`)
-  }
-
   if (decision !== 'apply') {
     return
   }
 
-  if (installedPackages.length > 0) {
-    runPnpmRemove(pkg.dirPath, [ ...installedPackages ])
-    await refreshWorkspacePackage(pkg)
+  await removeManagedLintArtifacts(context, pkg, installedPackages, existingFiles, 'oxlint')
+}
+
+async function maybeRemoveManagedLintSetup(context: AppContext, pkg: WorkspacePackage): Promise<void> {
+  const installedPackages = [
+    ...oxlintPackages,
+    ...eslintPackages
+  ].filter(name => typeof pkg.packageJson.devDependencies?.[name] === 'string')
+  const existingFiles = [
+    ...await getExistingOxlintConfigFiles(pkg),
+    ...await getExistingEslintConfigFiles(pkg)
+  ]
+  const lintScript = pkg.packageJson.scripts?.lint
+  const hasManagedLintScript = typeof lintScript === 'string' && isManagedLintScript(lintScript)
+  if (installedPackages.length === 0 && existingFiles.length === 0 && !hasManagedLintScript) {
+    return
   }
 
-  for (const filePath of existingFiles) {
+  const nextPackageJson = withoutManagedLintDependencies(
+    pkg.packageJson,
+    installedPackages,
+    hasManagedLintScript ? undefined : lintScript
+  )
+  const before = formatWorkspacePackageJson(pkg, pkg.packageJson)
+  const after = formatWorkspacePackageJson(pkg, nextPackageJson)
+  const decision = await decideFileStep(
+    context,
+    `packages.${pkg.dirName}.lint.removeManaged`,
+    `Remove managed lint setup from ${pkg.dirName}?`,
+    `Aborted while removing managed lint setup from ${pkg.dirName}.`,
+    {
+      title: `${pkg.dirName}/package.json`,
+      before,
+      after
+    }
+  )
+  if (decision !== 'apply') {
+    await applyFileDecision(
+      context,
+      decision,
+      pkg.packageJsonPath,
+      before,
+      after
+    )
+
+    return
+  }
+
+  await removeManagedLintArtifacts(
+    context,
+    pkg,
+    installedPackages,
+    existingFiles,
+    hasManagedLintScript ? undefined : lintScript
+  )
+}
+
+async function removeManagedLintArtifacts(
+  context: AppContext,
+  pkg: WorkspacePackage,
+  packageNames: string[],
+  filePaths: string[],
+  nextLintScript?: string
+): Promise<void> {
+  if (packageNames.length > 0) {
+    await runWorkspacePnpmRemoveAndRefresh(context, pkg, packageNames)
+  }
+
+  for (const filePath of filePaths) {
     await unlink(filePath)
     context.changedFiles.add(filePath)
   }
 
-  if (lintScript !== 'oxlint') {
-    const nextPackageJson: PackageJson = structuredClone(pkg.packageJson)
-    nextPackageJson.scripts = {
-      ...nextPackageJson.scripts,
-      lint: 'oxlint'
-    }
-
-    if (await writeWorkspacePackageJson(pkg, nextPackageJson)) {
-      context.changedFiles.add(pkg.packageJsonPath)
-    }
+  const nextPackageJson = withoutManagedLintDependencies(pkg.packageJson, packageNames, nextLintScript)
+  if (await writeWorkspacePackageJson(pkg, nextPackageJson)) {
+    context.changedFiles.add(pkg.packageJsonPath)
   }
 }
 
@@ -238,20 +353,6 @@ async function maybeUpdateLintScript(context: AppContext, pkg: WorkspacePackage,
   }
 }
 
-async function askBooleanLikeStep(
-  context: AppContext,
-  key: string,
-  message: string,
-  abortMessage: string
-): Promise<boolean> {
-  const decision = await askStep(context, key, message)
-  if (decision === 'abort') {
-    throw new Error(abortMessage)
-  }
-
-  return decision === 'apply'
-}
-
 function normalizeScaffoldedFile(content: string): string {
   if (content.length === 0) {
     return ''
@@ -268,6 +369,62 @@ function packageNeedsEslint(pkg: WorkspacePackage): boolean {
   }
 
   return typeof allDependencies.astro === 'string' || typeof allDependencies.vue === 'string'
+}
+
+function hasEslintSetup(pkg: WorkspacePackage): boolean {
+  return eslintPackages.some(name => typeof pkg.packageJson.devDependencies?.[name] === 'string')
+    || (typeof pkg.packageJson.scripts?.lint === 'string' && pkg.packageJson.scripts.lint.includes('eslint'))
+}
+
+function withoutManagedLintDependencies(
+  packageJson: PackageJson,
+  packageNames: readonly string[],
+  nextLintScript?: string
+): PackageJson {
+  const nextPackageJson: PackageJson = structuredClone(packageJson)
+  const packageNamesToRemove = new Set(packageNames)
+  const devDependencies = Object.fromEntries(
+    Object.entries(nextPackageJson.devDependencies ?? {})
+      .filter(([ packageName ]) => !packageNamesToRemove.has(packageName))
+  )
+
+  nextPackageJson.devDependencies = devDependencies
+  if (Object.keys(devDependencies).length === 0) {
+    delete nextPackageJson.devDependencies
+  }
+
+  if (nextLintScript === undefined) {
+    if (nextPackageJson.scripts) {
+      delete nextPackageJson.scripts.lint
+      if (Object.keys(nextPackageJson.scripts).length === 0) {
+        delete nextPackageJson.scripts
+      }
+    }
+  } else {
+    nextPackageJson.scripts = {
+      ...nextPackageJson.scripts,
+      lint: nextLintScript
+    }
+  }
+
+  return nextPackageJson
+}
+
+function isManagedLintScript(value: string): boolean {
+  return value === 'oxlint' || value === 'oxlint && eslint --cache .' || value.includes('eslint')
+}
+
+async function getExistingOxlintConfigFiles(pkg: WorkspacePackage): Promise<string[]> {
+  const results: string[] = []
+
+  for (const fileName of oxlintConfigFiles) {
+    const filePath = path.join(pkg.dirPath, fileName)
+    if (await exists(filePath)) {
+      results.push(filePath)
+    }
+  }
+
+  return results
 }
 
 async function getExistingEslintConfigFiles(pkg: WorkspacePackage): Promise<string[]> {

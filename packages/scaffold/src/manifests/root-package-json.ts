@@ -44,6 +44,17 @@ export async function writePackageJson(context: AppContext, packageJson: Package
   }
 }
 
+export async function refreshRootPackageJson(context: AppContext): Promise<void> {
+  const packageState = await readPackageJson(context.packageJsonPath)
+  if (!packageState.json) {
+    throw new Error('package.json is required after running a root package command.')
+  }
+
+  context.packageJson = packageState.json
+  context.packageJsonIndent = packageState.indent
+  context.packageJsonNewline = packageState.newline
+}
+
 export async function updateRootPackageJson(
   context: AppContext,
   updater: (packageJson: PackageJson) => PackageJson

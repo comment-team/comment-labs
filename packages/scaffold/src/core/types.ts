@@ -49,4 +49,5 @@ export type AppContext = {
   preferences: StoredPreferences
   changedFiles: Set<string>
   persistPreferencesOnExit: boolean
+  workspacePackages: import('./package-step').WorkspacePackage[] | null
 }

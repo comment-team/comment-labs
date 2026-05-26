@@ -6,19 +6,9 @@ import { getGitContext } from './core/git'
 import { logError, logInfo, logSuccess, logWarn } from './core/log'
 import { cancelled } from './core/prompts'
 import { persistPreferences, readPreferences } from './core/preferences'
+import { runScaffoldFlow } from './core/scaffold-flow'
 import type { AppContext } from './core/types'
 import { readPackageJson } from './manifests/root-package-json'
-import { handleCodeowners } from './steps/codeowners'
-import { handleEmptyFolder } from './steps/empty-folder'
-import { handleEditorConfig, handleGitattributes, handleGitignore, handleRenovate } from './steps/git-files'
-import { handleKnip } from './steps/knip'
-import { handleNpmrc } from './steps/npmrc'
-import { handlePackageLint } from './steps/package-lint'
-import { handleWorkspacePackageJsonSchema } from './steps/package-manifests'
-import { handlePackageJson } from './steps/package-json'
-import { handlePackageTypescript } from './steps/package-typescript'
-import { handleChangesets, handlePnpmPlugin } from './steps/pnpm'
-import { handleWorkspace, inferMonorepo } from './steps/workspace'
 
 
 async function main(): Promise<void> {
@@ -43,26 +33,11 @@ async function main(): Promise<void> {
       packageJsonNewline: packageState.newline,
       preferences: preferenceState.preferences,
       changedFiles: new Set<string>(),
-      persistPreferencesOnExit: true
+      persistPreferencesOnExit: true,
+      workspacePackages: null
     }
 
-    await handleEmptyFolder(context)
-    await handlePackageJson(context)
-    await handleRenovate(context)
-    await handleGitignore(context)
-    await handleGitattributes(context)
-    await handleEditorConfig(context)
-
-    const monorepo = await inferMonorepo(context)
-    await handleWorkspace(context, monorepo)
-    await handleCodeowners(context)
-    await handlePnpmPlugin(context)
-    await handleChangesets(context)
-    await handleKnip(context)
-    await handleNpmrc(context)
-    await handleWorkspacePackageJsonSchema(context)
-    await handlePackageTypescript(context)
-    await handlePackageLint(context)
+    await runScaffoldFlow(context)
 
     if (context.changedFiles.size === 0) {
       logInfo('No changes were applied.')

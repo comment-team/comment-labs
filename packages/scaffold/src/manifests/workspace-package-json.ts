@@ -3,13 +3,19 @@ import path from 'node:path'
 
 import { exists, writeTextFile } from '../core/filesystem'
 import { detectIndent, isPackageJson } from '../core/utils'
-import type { PackageJson } from '../core/types'
+import type { AppContext, PackageJson } from '../core/types'
 import type { WorkspacePackage } from '../core/package-step'
 
 
-export async function discoverWorkspacePackages(cwd: string): Promise<WorkspacePackage[]> {
-  const packagesRoot = path.join(cwd, 'packages')
+export async function discoverWorkspacePackages(context: AppContext): Promise<WorkspacePackage[]> {
+  if (context.workspacePackages !== null) {
+    return context.workspacePackages
+  }
+
+  const packagesRoot = path.join(context.cwd, 'packages')
   if (!(await exists(packagesRoot))) {
+    context.workspacePackages = []
+
     return []
   }
 
@@ -40,7 +46,13 @@ export async function discoverWorkspacePackages(cwd: string): Promise<WorkspaceP
     })
   }
 
+  context.workspacePackages = results
+
   return results
+}
+
+export function invalidateWorkspacePackages(context: AppContext): void {
+  context.workspacePackages = null
 }
 
 export async function writeWorkspacePackageJson(pkg: WorkspacePackage, packageJson: PackageJson): Promise<boolean> {

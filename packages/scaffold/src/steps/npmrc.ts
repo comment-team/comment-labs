@@ -48,7 +48,7 @@ export async function handleNpmrc(context: AppContext): Promise<void> {
     return
   }
 
-  if (!usesPluginDefaults(context)) {
+  if (!(await usesPluginDefaults(context))) {
     return
   }
 

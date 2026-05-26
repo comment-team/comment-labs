@@ -8,6 +8,9 @@ import { logInfo } from '../core/log'
 import { askSelect } from '../core/prompts'
 import { decideFileStep, shouldApplyStep } from '../core/step-helpers'
 import type { AppContext } from '../core/types'
+import type { WorkspacePackage } from '../core/package-step'
+import { refreshRootPackageJson } from '../manifests/root-package-json'
+import { refreshWorkspacePackage } from '../manifests/workspace-package-json'
 import { changesetConfigTemplate } from '../templates/changesets'
 
 
@@ -15,11 +18,7 @@ const COMMAND_TIMEOUT_MS = 60_000
 const pluginPackageName = '@comment-labs/pnpm-plugin-defaults'
 
 export async function handlePnpmPlugin(context: AppContext): Promise<void> {
-  if (usesPluginDefaults(context)) {
-    return
-  }
-
-  if (await isPluginInWorkspaceConfig(context.cwd)) {
+  if (await usesPluginDefaults(context)) {
     return
   }
 
@@ -27,7 +26,7 @@ export async function handlePnpmPlugin(context: AppContext): Promise<void> {
     return
   }
 
-  runPnpmAdd(context.cwd, [ '--config', pluginPackageName ])
+  await runRootPnpmAddAndRefresh(context, [ '--config', pluginPackageName ])
 }
 
 async function isPluginInWorkspaceConfig(cwd: string): Promise<boolean> {
@@ -66,7 +65,7 @@ export async function handleChangesets(context: AppContext): Promise<void> {
   const changesetReadmePath = path.join(context.cwd, '.changeset', 'README.md')
 
   if (needsChangesetsInstall(context, changelogRepo)) {
-    runPnpmAdd(context.cwd, [
+    await runRootPnpmAddAndRefresh(context, [
       '-D',
       '@changesets/cli',
       ...(changelogRepo !== undefined ? [ '@changesets/changelog-github' ] : [])
@@ -100,8 +99,9 @@ export async function handleChangesets(context: AppContext): Promise<void> {
   await applyFileDecision(context, decision, changesetsConfigPath, before, after)
 }
 
-export function usesPluginDefaults(context: AppContext): boolean {
+export async function usesPluginDefaults(context: AppContext): Promise<boolean> {
   return typeof context.packageJson?.configDependencies?.[pluginPackageName] === 'string'
+    || await isPluginInWorkspaceConfig(context.cwd)
 }
 
 function needsChangesetsInstall(context: AppContext, changelogRepo?: string): boolean {
@@ -134,6 +134,29 @@ export function runPnpmRemove(cwd: string, args: string[]): void {
 
     throw new Error(`pnpm remove failed: ${message}`, { cause: error })
   }
+}
+
+export async function runRootPnpmAddAndRefresh(context: AppContext, args: string[]): Promise<void> {
+  runPnpmAdd(context.cwd, args)
+  await refreshRootPackageJson(context)
+}
+
+export async function runWorkspacePnpmAddAndRefresh(
+  _context: AppContext,
+  pkg: WorkspacePackage,
+  args: string[]
+): Promise<void> {
+  runPnpmAdd(pkg.dirPath, args)
+  await refreshWorkspacePackage(pkg)
+}
+
+export async function runWorkspacePnpmRemoveAndRefresh(
+  _context: AppContext,
+  pkg: WorkspacePackage,
+  args: string[]
+): Promise<void> {
+  runPnpmRemove(pkg.dirPath, args)
+  await refreshWorkspacePackage(pkg)
 }
 
 function runPnpmCommand(cwd: string, args: string[]): void {

@@ -8,6 +8,7 @@ import { askBoolean, askStep, runMultiselectPrompt } from '../core/prompts'
 import { getPreference, persistPreferences, setPreference } from '../core/preferences'
 import { decideFileStep } from '../core/step-helpers'
 import type { AppContext, JsonValue, WorkspacePackageSelection } from '../core/types'
+import { invalidateWorkspacePackages } from '../manifests/workspace-package-json'
 
 
 const workspaceSchema = 'https://www.schemastore.org/pnpm-workspace.json'
@@ -51,44 +52,24 @@ export async function handleWorkspace(context: AppContext, monorepo: boolean): P
   }
 
   const existingWorkspace = (await exists(workspacePath)) ? await readFile(workspacePath, 'utf8') : ''
-  const hasSchema = workspaceHasSchemaComment(existingWorkspace)
-  const nextWorkspaceWithPackages = await buildWorkspaceFile(workspacePath, packagesGlobs, hasSchema)
-  if (nextWorkspaceWithPackages !== existingWorkspace) {
+  const nextWorkspace = await buildWorkspaceFile(workspacePath, packagesGlobs, true)
+  if (nextWorkspace !== existingWorkspace) {
     const decision = await decideFileStep(
       context,
       'workspace.file',
-      `Write pnpm-workspace.yaml${packagesGlobs.length > 0 ? ` with ${packagesGlobs.join(', ')}` : ''}?`,
+      `Write pnpm-workspace.yaml${packagesGlobs.length > 0 ? ` with ${packagesGlobs.join(', ')}` : ''} and schema metadata?`,
       'Aborted before writing pnpm-workspace.yaml.',
       {
         title: 'pnpm-workspace.yaml',
         before: existingWorkspace,
-        after: nextWorkspaceWithPackages
+        after: nextWorkspace
       }
     )
-    await applyFileDecision(context, decision, workspacePath, existingWorkspace, nextWorkspaceWithPackages)
-  }
-
-  const workspaceAfterPackages = (await exists(workspacePath)) ? await readFile(workspacePath, 'utf8') : ''
-  const nextWorkspaceWithSchema = await buildWorkspaceFile(workspacePath, packagesGlobs, true)
-  if (nextWorkspaceWithSchema === workspaceAfterPackages) {
-    return
-  }
-
-  const decision = await askStep(
-    context,
-    'workspace.schema',
-    'Add the pnpm-workspace.yaml schema comment?',
-    {
-      title: 'pnpm-workspace.yaml',
-      before: workspaceAfterPackages,
-      after: nextWorkspaceWithSchema
+    await applyFileDecision(context, decision, workspacePath, existingWorkspace, nextWorkspace)
+    if (decision !== 'skip') {
+      invalidateWorkspacePackages(context)
     }
-  )
-  if (decision === 'abort') {
-    throw new Error('Aborted before writing pnpm-workspace.yaml schema.')
   }
-
-  await applyFileDecision(context, decision, workspacePath, workspaceAfterPackages, nextWorkspaceWithSchema)
 }
 
 async function selectWorkspacePackages(
@@ -260,12 +241,6 @@ async function workspaceSelectsAllPackages(workspacePath: string): Promise<boole
   } catch {
     return false
   }
-}
-
-function workspaceHasSchemaComment(raw: string): boolean {
-  const firstLine = raw.replaceAll('\r\n', '\n').split('\n')[0]
-
-  return firstLine === workspaceSchemaComment
 }
 
 function arraysEqual(left: string[], right: string[]): boolean {

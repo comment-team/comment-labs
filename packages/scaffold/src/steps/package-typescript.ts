@@ -8,8 +8,8 @@ import { applyProtectedFileStep, decideFileStep, decideProtectedFileStep, should
 import type { AppContext, JsonValue, PackageJson } from '../core/types'
 import { detectIndent } from '../core/utils'
 import { typescriptRangeNeedsUpdate } from '../core/version'
-import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspacePackage, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
-import { runPnpmAdd } from './pnpm'
+import { discoverWorkspacePackages, formatWorkspacePackageJson, writeWorkspacePackageJson } from '../manifests/workspace-package-json'
+import { runWorkspacePnpmAddAndRefresh } from './pnpm'
 
 
 const presetOptions = [ 'astro-workers', 'base', 'node', 'react', 'react-astro', 'react-astro-workers', 'react-native', 'react-workers', 'workers' ] as const
@@ -89,7 +89,7 @@ const presetIncludes: Record<PresetName, string[]> = {
 }
 
 export async function handlePackageTypescript(context: AppContext): Promise<void> {
-  const packages = await discoverWorkspacePackages(context.cwd)
+  const packages = await discoverWorkspacePackages(context)
 
   for (const pkg of packages) {
     const tsRange = pkg.packageJson.devDependencies?.typescript
@@ -151,8 +151,7 @@ async function maybeEnsureTsconfigDependency(context: AppContext, pkg: Workspace
     return false
   }
 
-  runPnpmAdd(pkg.dirPath, [ '-D', '@comment-labs/tsconfig@latest' ])
-  await refreshWorkspacePackage(pkg)
+  await runWorkspacePnpmAddAndRefresh(context, pkg, [ '-D', '@comment-labs/tsconfig@latest' ])
 
   return true
 }

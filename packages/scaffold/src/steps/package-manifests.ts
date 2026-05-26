@@ -5,7 +5,7 @@ import { discoverWorkspacePackages, formatWorkspacePackageJson, refreshWorkspace
 
 
 export async function handleWorkspacePackageJsonSchema(context: AppContext): Promise<void> {
-  const packages = await discoverWorkspacePackages(context.cwd)
+  const packages = await discoverWorkspacePackages(context)
 
   for (const pkg of packages) {
     const before = `${JSON.stringify(pkg.packageJson, null, pkg.indent)}${pkg.newline}`

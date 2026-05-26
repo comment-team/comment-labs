@@ -6,7 +6,7 @@ import { askStep } from '../core/prompts'
 import { shouldApplyStep } from '../core/step-helpers'
 import type { AppContext } from '../core/types'
 import { knipTemplate } from '../templates/knip'
-import { getInstalledPackageVersion, runPnpmAdd } from './pnpm'
+import { getInstalledPackageVersion, runRootPnpmAddAndRefresh } from './pnpm'
 
 
 export async function handleKnip(context: AppContext): Promise<void> {
@@ -15,7 +15,7 @@ export async function handleKnip(context: AppContext): Promise<void> {
       return
     }
 
-    runPnpmAdd(context.cwd, [ '-D', 'knip' ])
+    await runRootPnpmAddAndRefresh(context, [ '-D', 'knip' ])
   }
 
   const packageVersion = getInstalledPackageVersion(context.cwd, 'knip')
