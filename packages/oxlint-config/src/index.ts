@@ -9,6 +9,7 @@ import { playwrightOverrides } from './overrides/playwright'
 import { reactOverrides } from './overrides/react'
 import { reactNativeOverrides } from './overrides/react-native'
 import { scriptsOverrides } from './overrides/scripts'
+import { declarationsOverrides } from './overrides/declarations'
 
 
 export const config: OxlintConfig = {
@@ -28,6 +29,7 @@ export const config: OxlintConfig = {
     }
   },
   overrides: [
+    declarationsOverrides,
     i18nextOverrides,
     playwrightOverrides,
     reactOverrides,
