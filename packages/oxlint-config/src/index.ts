@@ -1,6 +1,7 @@
 import type { OxlintConfig } from 'oxlint'
 import { categories } from './categories'
 import { baseRules } from './base-rules'
+import { stylisticRules } from './stylistic-rules'
 import { plugins } from './plugins'
 import { globals } from './globals'
 import { jsPlugins } from './js-plugins'
@@ -20,7 +21,10 @@ export const config: OxlintConfig = {
   },
   plugins,
   jsPlugins,
-  rules: baseRules,
+  rules: {
+    ...baseRules,
+    ...stylisticRules
+  },
   globals,
   categories,
   settings: {
