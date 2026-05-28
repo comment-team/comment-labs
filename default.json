@@ -137,14 +137,17 @@
     },
     {
       "matchDepNames": [
+        "@hcengineering/activity",
         "@hcengineering/api-client",
         "@hcengineering/contact",
         "@hcengineering/core",
         "@hcengineering/tags",
+        "@hcengineering/task",
         "@hcengineering/tools",
         "@hcengineering/tracker"
       ],
-      "groupName": "{{parentDir}}-huly"
+      "groupName": "{{parentDir}}-huly",
+      "prPriority": -1
     },
     {
       "matchPackageNames": [
