@@ -139,10 +139,12 @@
       "matchDepNames": [
         "@hcengineering/activity",
         "@hcengineering/api-client",
+        "@hcengineering/card",
         "@hcengineering/contact",
         "@hcengineering/core",
         "@hcengineering/tags",
         "@hcengineering/task",
+        "@hcengineering/time",
         "@hcengineering/tools",
         "@hcengineering/tracker"
       ],
