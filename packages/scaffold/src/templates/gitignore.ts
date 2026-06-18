@@ -49,6 +49,7 @@ export function gitignoreTemplate(): string {
 
     # cache
     .npm
+    .pnpm-store/
     .*cache
     *.tsbuildinfo
 

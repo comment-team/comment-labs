@@ -23,3 +23,6 @@ configDependencies:
 peerDependencyRules:
   allowedVersions:
     eslint: ^10.0.0
+
+trustPolicyExclude:
+  - semver@6.3.1
