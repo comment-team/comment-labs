@@ -82,60 +82,6 @@
       "groupName": "lucide"
     },
     {
-      "matchFileNames": [
-        "packages/*app*/package.json"
-      ],
-      "ignoreDeps": [
-        "@react-native-async-storage/async-storage",
-        "@react-native-community/slider",
-        "@sentry/react-native",
-        "@shopify/react-native-skia",
-        "@stripe/stripe-react-native",
-        "@types/react",
-        "@types/react-dom",
-        "babel-preset-expo",
-        "expo",
-        "expo-location",
-        "react",
-        "react-dom",
-        "react-native",
-        "react-native-gesture-handler",
-        "react-native-keyboard-controller",
-        "react-native-maps",
-        "react-native-pager-view",
-        "react-native-reanimated",
-        "react-native-safe-area-context",
-        "react-native-screens",
-        "react-native-svg",
-        "react-native-webview",
-        "react-test-renderer",
-        "typescript"
-      ]
-    },
-    {
-      "matchDepTypes": [ "dependencies" ],
-      "matchFileNames": [
-        "packages/*app*/package.json"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "dependencies-{{parentDir}}",
-      "commitMessageSuffix": "({{parentDir}})"
-    },
-    {
-      "matchDepTypes": [ "devDependencies" ],
-      "matchFileNames": [
-        "packages/*app*/package.json"
-      ],
-      "matchUpdateTypes": [
-          "minor",
-          "patch"
-      ],
-      "groupName": "{{parentDir}}-devDependencies"
-    },
-    {
       "matchDepNames": [
         "@hcengineering/activity",
         "@hcengineering/api-client",
@@ -201,6 +147,15 @@
       "groupName": "better-auth",
       "prPriority": -1,
       "automerge": false
+    },
+    {
+      "matchPackageNames": [ "eslint", "bundled-eslint-config" ],
+      "groupName": "eslint"
+    },
+    {
+      "matchFileNames": ["pnpm-workspace.yaml"],
+      "groupName": "pnpm-workspace",
+      "prPriority": -10
     }
   ],
   "prConcurrentLimit": 5,
