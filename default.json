@@ -101,7 +101,8 @@
       "matchPackageNames": [
         "wrangler",
         "@cloudflare/vite-plugin",
-        "@cloudflare/workers-types"
+        "@cloudflare/workers-types",
+        "@cloudflare/vitest-pool-workers"
       ],
       "matchUpdateTypes": [
           "minor",
