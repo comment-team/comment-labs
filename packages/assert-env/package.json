@@ -32,7 +32,7 @@
     "oxlint-tsgolint": "catalog:lint",
     "tsdown": "catalog:toolchain",
     "typescript": "catalog:toolchain",
-    "vitest": "catalog:toolchain"
+    "vitest": "catalog:test"
   },
   "publishConfig": {
     "access": "public"
