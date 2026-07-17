@@ -48,7 +48,7 @@
     "oxlint-tsgolint": "catalog:lint",
     "tsdown": "catalog:toolchain",
     "typescript": "catalog:toolchain",
-    "vitest": "catalog:toolchain"
+    "vitest": "catalog:test"
   },
   "peerDependencies": {
     "oxlint": "^1.62.0",
