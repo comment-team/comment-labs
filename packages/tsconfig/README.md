@@ -1,6 +1,6 @@
 # @comment-labs/tsconfig
 
-Base TypeScript configurations for comment-labs projects.
+Shared TypeScript configuration presets for comment-labs projects.
 
 ## Installation
 
@@ -8,9 +8,11 @@ Base TypeScript configurations for comment-labs projects.
 pnpm add -D @comment-labs/tsconfig typescript
 ```
 
+TypeScript `^5.9.2 || ^6.x` is required.
+
 ## Usage
 
-Extend one of the preset configurations in your `tsconfig.json`:
+Create a `tsconfig.json` in your project and extend the preset that matches your target runtime:
 
 ```json
 {
@@ -24,21 +26,28 @@ Extend one of the preset configurations in your `tsconfig.json`:
 }
 ```
 
-## Available Presets
+Then type-check with:
 
-- `@comment-labs/tsconfig/base` - Base configuration for any project
-- `@comment-labs/tsconfig/node` - Node.js projects
-- `@comment-labs/tsconfig/react` - React web projects
-- `@comment-labs/tsconfig/react-native` - React Native / Expo projects
-- `@comment-labs/tsconfig/workers` - Cloudflare Workers
+```bash
+pnpm tsc --noEmit
+```
 
-## Base Configuration Features
+## Picking a preset
 
-- ES2023 target
-- Strict type checking enabled
-- Bundler module resolution
-- Isolated modules
-- Import path aliasing support (`#/*`)
+| Project type | Extend path |
+|---|---|
+| Node.js | `@comment-labs/tsconfig/node` |
+| Cloudflare Workers | `@comment-labs/tsconfig/workers` |
+| Workers with React | `@comment-labs/tsconfig/react-workers` |
+| Astro | `@comment-labs/tsconfig/astro-workers` |
+| Astro with React | `@comment-labs/tsconfig/react-astro` |
+| Astro with React on Workers | `@comment-labs/tsconfig/react-astro-workers` |
+| React web | `@comment-labs/tsconfig/react` |
+| React Native / Expo | `@comment-labs/tsconfig/react-native` |
+
+If none of these fit, fall back to `@comment-labs/tsconfig/base`.
+
+All presets enable strict type checking, bundler module resolution, isolated modules and target `ES2023`.
 
 ## License
 
