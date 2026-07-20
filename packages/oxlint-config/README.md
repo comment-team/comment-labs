@@ -16,6 +16,7 @@ Create an `oxlint.config.ts` file in your project root:
 import { defineConfig } from 'oxlint'
 import { config } from '@comment-labs/oxlint-config'
 
+
 export default defineConfig(config)
 ```
 
@@ -25,6 +26,16 @@ export default defineConfig(config)
 - Import and JSDoc plugin support
 - Vitest compatibility
 - Optimized for correctness and performance
+
+Add a lint script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "lint": "oxlint"
+  }
+}
+```
 
 ## License
 
