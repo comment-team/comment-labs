@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@brettz9/eslint-plugin": "^3.0.0",
-    "@e18e/eslint-plugin": "^0.4.1",
+    "@e18e/eslint-plugin": "^0.5.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "empathic": "^2.0.1",
     "eslint-plugin-i18next": "^6.1.5",
