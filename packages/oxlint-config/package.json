@@ -43,7 +43,7 @@
     "@comment-labs/tsconfig": "workspace:*",
     "@types/eslint-plugin-security": "3.0.1",
     "@types/node": "catalog:types",
-    "eslint": "10.3.0",
+    "eslint": "10.7.0",
     "oxlint": "catalog:lint",
     "oxlint-tsgolint": "catalog:lint",
     "tsdown": "catalog:toolchain",
