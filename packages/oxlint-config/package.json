@@ -51,8 +51,8 @@
     "vitest": "catalog:toolchain"
   },
   "peerDependencies": {
-    "oxlint": "^1.62.0",
-    "oxlint-tsgolint": ">=0.22.0"
+    "oxlint": "^1.74.0",
+    "oxlint-tsgolint": ">=0.25.0"
   },
   "publishConfig": {
     "access": "public"
