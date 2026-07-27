@@ -29,7 +29,7 @@
     "empathic": "^2.0.1",
     "eslint-plugin-i18next": "^6.1.5",
     "eslint-plugin-import-zod": "^1.2.1",
-    "eslint-plugin-jsdoc": "^62.9.0",
+    "eslint-plugin-jsdoc": "^63.2.2",
     "eslint-plugin-playwright": "^2.10.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-native": "^5.0.0",
