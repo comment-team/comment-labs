@@ -10,7 +10,7 @@ const convertGlobals = (input: Record<string, boolean>): OxlintGlobals => {
     result[key] = value ? 'writable' : 'readonly'
   }
 
-  return result as OxlintGlobals
+  return result
 }
 
 const base: OxlintGlobals = convertGlobals(globalsPkg['shared-node-browser'])

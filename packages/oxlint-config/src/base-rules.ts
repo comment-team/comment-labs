@@ -96,6 +96,13 @@ export const baseRules: DummyRuleMap = {
   'import/no-nodejs-modules': 'off',
   'import/unambiguous': 'off',
 
+  'node/no-top-level-await': 'off',
+  'node/no-sync': [
+    'warn', {
+      ignores: [ 'execSync' ]
+    }
+  ],
+
   'react/react-in-jsx-scope': 'off',
   'react/jsx-filename-extension': [ 'error', { extensions: [ 'jsx', 'tsx' ] }],
 
@@ -106,7 +113,15 @@ export const baseRules: DummyRuleMap = {
 
   'vitest/prefer-called-times': 'off',
   'vitest/prefer-strict-boolean-matchers': 'off',
+  'vitest/prefer-expect-assertions': [
+    'warn', {
+      onlyFunctionsWithExpectInCallback: true,
+      onlyFunctionsWithExpectInLoop: true
+    }
+  ],
   'vitest/require-test-timeout': 'off',
+  'vitest/no-importing-vitest-globals': 'off',
+  'vitest/no-conditional-in-test': 'off',
 
   'jsdoc/require-param-type': 'off',
   'jsdoc/require-returns': 'off',
@@ -117,8 +132,20 @@ export const baseRules: DummyRuleMap = {
   'unicorn/no-array-method-this-argument': 'warn',
   'unicorn/no-await-expression-member': 'warn',
   'unicorn/no-invalid-fetch-options': 'off',
-
-  'vitest/no-importing-vitest-globals': 'off',
+  'unicorn/import-style': [
+    'warn', {
+      extendDefaultStyles: false,
+      styles: {
+        'path': { named: true, default: false },
+        'util': { named: true, default: false }
+      }
+    }
+  ],
+  'unicorn/max-nested-calls': [
+'warn', {
+    max: 5
+  }
+],
 
   // custom rules
   'comment-labs-js/no-self-assign': 'error',
