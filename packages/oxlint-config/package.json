@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/oxlint-config",
-  "version": "1.0.0-beta.18",
+  "version": "1.0.0-beta.20",
   "description": "Oxlint configuration for comment-labs projects",
   "license": "Apache-2.0",
   "type": "module",
@@ -52,7 +52,7 @@
   },
   "peerDependencies": {
     "oxlint": "^1.75.0",
-    "oxlint-tsgolint": ">=7.0.2001"
+    "oxlint-tsgolint": "^7.0.2001"
   },
   "publishConfig": {
     "access": "public"

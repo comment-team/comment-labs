@@ -5,8 +5,8 @@ catalogs:
   lint:
     bundled-eslint-config: 0.8.1
     eslint: 10.1.0
-    eslint-plugin-oxlint: 1.57.0
-    oxlint: 1.61.0
+    eslint-plugin-oxlint: 1.75.0
+    oxlint: 1.75.0
     oxlint-tsgolint: 7.0.2001
   toolchain:
     tsdown: 0.22.14
