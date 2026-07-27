@@ -112,6 +112,15 @@
     },
     {
       "matchPackageNames": [
+        "@cloudflare/workers-types"
+      ],
+      "matchUpdateTypes": [
+          "major"
+      ],
+      "groupName": "{{parentDir}}-cloudflare"
+    },
+    {
+      "matchPackageNames": [
         "oxlint",
         "oxlint-tsgolint",
         "oxfmt"
