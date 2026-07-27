@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/localdrive",
+  "version": "0.1.0-beta.3",
+  "description": "Local PostgreSQL Hyperdrive emulation for Vitest",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./vitest": {
+      "types": "./dist/vitest.d.mts",
+      "import": "./dist/vitest.mjs"
+    },
+    "./cloudflare-test": {
+      "types": "./dist/cloudflare-test-client.d.mts",
+      "import": "./dist/cloudflare-test-client.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "coverage": "vitest run --coverage",
+    "lint": "oxlint",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "catalog:test",
+    "@cloudflare/workers-types": "catalog:types",
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "@vitest/coverage-v8": "catalog:test",
+    "@vitest/runner": "catalog:test",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:test"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.4",
+    "@electric-sql/pglite-socket": "0.2.7",
+    "postgres": "3.4.7",
+    "tinyglobby": "0.2.17"
+  }
+}

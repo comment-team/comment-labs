@@ -1,6 +1,7 @@
 export { Localdrive } from './localdrive'
 export type {
   LocaldriveBindingOptions,
+  LocaldriveConnectionStringOptions,
   LocaldriveConnections,
   LocaldriveController,
   LocaldriveDatabase,

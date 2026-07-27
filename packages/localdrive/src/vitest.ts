@@ -3,6 +3,7 @@ import { Localdrive } from './localdrive'
 import type { LocaldriveOptions } from './types'
 
 
+export { localdriveCloudflareTest } from './cloudflare-test'
 export { localdrivePlugin } from './plugin'
 
 export function localdrive(options: LocaldriveOptions): Localdrive {
