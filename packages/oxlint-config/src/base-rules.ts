@@ -143,10 +143,10 @@ export const baseRules: DummyRuleMap = {
     }
   ],
   'unicorn/max-nested-calls': [
-'warn', {
-    max: 5
-  }
-],
+    'warn', {
+      max: 5
+    }
+  ],
 
   // custom rules
   'comment-labs-js/no-self-assign': 'error',
