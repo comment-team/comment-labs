@@ -1,12 +1,23 @@
+import process from 'node:process'
 import { cloudflareTest } from '@cloudflare/vitest-pool-workers'
 import type { ProvidedContext } from 'vitest'
 import type { Vite, VitestPluginContext } from 'vitest/node'
 import { Localdrive } from './localdrive'
-import { localdriveCloudflarePool } from './cloudflare-pool'
+import { closeActiveDatabases, localdriveCloudflarePool } from './cloudflare-pool'
 import { localdrivePlugin } from './plugin'
 import { registerLocaldrive, unregisterLocaldrive } from './registry'
 import type { LocaldriveCloudflareTestOptions, LocaldriveConnections } from './types'
 
+
+const hyperdriveLocalPrefix = 'CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_'
+const placeholderConnectionString = 'postgresql://localdrive@127.0.0.1:1/postgres'
+
+function closeDatabasesOnSignal(): void {
+  // eslint-disable-next-line promise/prefer-await-to-then
+  closeActiveDatabases().catch(() => {
+    // Best-effort cleanup on process termination signals.
+  })
+}
 
 export function localdriveCloudflareTest(options: LocaldriveCloudflareTestOptions): Vite.PluginOption {
   const { databaseScope = 'project', cloudflare, ...localdriveOptions } = options
@@ -31,7 +42,11 @@ function projectScopePlugins(
     : (context: InjectContext): ResolvedCloudflareTestOptions =>
       mergeHyperdrives(cloudflare, context.inject('localdrive'))
 
-  return [ localdrivePlugin(localdriveOptions), cloudflareTest(cloudflareOptions) ]
+  return [
+    hyperdrivePlaceholderPlugin(localdriveOptions.bindings),
+    localdrivePlugin(localdriveOptions),
+    cloudflareTest(cloudflareOptions)
+  ]
 }
 
 function fileScopePlugins(
@@ -39,6 +54,7 @@ function fileScopePlugins(
   cloudflare: LocaldriveCloudflareTestOptions['cloudflare']
 ): Vite.Plugin[] {
   return [
+    hyperdrivePlaceholderPlugin(localdriveOptions.bindings),
     cloudflareTest(cloudflare),
     {
       name: 'localdrive-cloudflare-test',
@@ -46,6 +62,9 @@ function fileScopePlugins(
       async configureVitest(context: VitestPluginContext) {
         const controller = new Localdrive(localdriveOptions)
         await controller.initialize()
+
+        process.once('SIGINT', closeDatabasesOnSignal)
+        process.once('SIGTERM', closeDatabasesOnSignal)
 
         registerLocaldrive(context.project.name, controller)
         context.project.config.pool = 'localdrive-cloudflare-pool'
@@ -61,6 +80,29 @@ function fileScopePlugins(
       }
     }
   ]
+}
+
+function hyperdrivePlaceholderPlugin(
+  bindings: LocaldriveCloudflareTestOptions['bindings']
+): Vite.Plugin {
+  return {
+    name: 'localdrive-cloudflare-hyperdrive-placeholder',
+    configureVitest(context: VitestPluginContext) {
+      const previous = new Map<string, string | undefined>()
+
+      for (const name of Object.keys(bindings)) {
+        const key = `${hyperdriveLocalPrefix}${name}`
+        previous.set(key, process.env[key])
+        process.env[key] = placeholderConnectionString
+      }
+
+      context.vitest.onClose(() => {
+        for (const [ key, value ] of previous) {
+          process.env[key] = value
+        }
+      })
+    }
+  }
 }
 
 function mergeHyperdrives(

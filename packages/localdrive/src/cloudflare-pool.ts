@@ -1,6 +1,4 @@
-import process from 'node:process'
 import { cloudflarePool } from '@cloudflare/vitest-pool-workers'
-import type { FileSpecification } from '@vitest/runner'
 import type { PoolOptions, PoolRunnerInitializer, PoolWorker, WorkerRequest } from 'vitest/node'
 import { getLocaldrive } from './registry'
 import type { LocaldriveCloudflareTestOptions, LocaldriveDatabase } from './types'
@@ -12,25 +10,18 @@ type ResolvedCloudflarePoolOptions = Awaited<ReturnType<CloudflarePoolFunction>>
 
 const activeDatabases = new Set<LocaldriveDatabase>()
 
-process.once('SIGINT', () => {
-  void Promise.all(Array.from(activeDatabases, async database => await database.close()))
-    .finally(() => activeDatabases.clear())
-})
+export async function closeActiveDatabases(): Promise<void> {
+  const databases = [ ...activeDatabases ]
+  activeDatabases.clear()
 
-process.once('SIGTERM', () => {
-  void Promise.all(Array.from(activeDatabases, async database => await database.close()))
-    .finally(() => activeDatabases.clear())
-})
+  await Promise.all(databases.map(async database => await database.close()))
+}
 
 function isStartedMessage(message: unknown): boolean {
   return typeof message === 'object'
     && message !== null
     && '__vitest_worker_response__' in message
     && (message as Record<string, unknown>).type === 'started'
-}
-
-function getFilePath(files: FileSpecification[] | undefined): string | undefined {
-  return files?.[0]?.filepath
 }
 
 class LocaldriveCloudflarePoolWorker implements PoolWorker {
@@ -68,12 +59,11 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
 
       case 'run':
       case 'collect':
-        this.runWithLocaldrive(message).catch(error => this.errorCallback?.(error))
-
-        return
-
       case 'stop':
-        this.handleStop(message).catch(error => this.errorCallback?.(error))
+        // eslint-disable-next-line promise/prefer-await-to-then, promise/prefer-await-to-callbacks
+        this.handleWork(message).catch((error: unknown) => {
+          this.errorCallback?.(error)
+        })
 
         return
 
@@ -87,7 +77,13 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
     }
   }
 
-  private async runWithLocaldrive(message: WorkerRequest): Promise<void> {
+  private async handleWork(message: WorkerRequest): Promise<void> {
+    if (message.type === 'stop') {
+      this.handleStop(message)
+
+      return
+    }
+
     if (message.type !== 'run' && message.type !== 'collect') {
       return
     }
@@ -97,8 +93,6 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
     if (localdrive === undefined) {
       throw new Error('[localdrive] Localdrive controller was not provided to the project')
     }
-
-    getFilePath(message.context.files)
 
     try {
       this.databases = await localdrive.createTestDatabases()
@@ -117,18 +111,9 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
 
       await this.inner.start()
 
-      this.inner.on('message', innerMessage => {
-        if (isStartedMessage(innerMessage)) {
-          // We already sent a fake "started" response when the Vitest start
-          // message arrived. Ignore the inner worker's started message to
-          // avoid confusing Vitest's PoolRunner.
-          return
-        }
-
-        this.messageCallback?.(innerMessage)
-      })
-      this.inner.on('error', error => this.errorCallback?.(error))
-      this.inner.on('exit', () => this.exitCallback?.())
+      this.inner.on('message', innerMessage => this.handleInnerMessage(innerMessage))
+      this.inner.on('error', error => this.handleInnerError(error))
+      this.inner.on('exit', () => this.handleInnerExit())
 
       if (this.startMessage !== undefined) {
         this.inner.send(this.startMessage)
@@ -149,7 +134,7 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
     }
   }
 
-  private async handleStop(message: WorkerRequest): Promise<void> {
+  private handleStop(message: WorkerRequest): void {
     if (this.inner === undefined) {
       this.messageCallback?.({
         __vitest_worker_response__: true,
@@ -160,6 +145,25 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
     }
 
     this.inner.send(message)
+  }
+
+  private handleInnerMessage(message: unknown): void {
+    if (isStartedMessage(message)) {
+      // We already sent a fake "started" response when the Vitest start
+      // message arrived. Ignore the inner worker's started message to
+      // avoid confusing Vitest's PoolRunner.
+      return
+    }
+
+    this.messageCallback?.(message)
+  }
+
+  private handleInnerError(error: unknown): void {
+    this.errorCallback?.(error)
+  }
+
+  private handleInnerExit(): void {
+    this.exitCallback?.()
   }
 
   async stop(): Promise<void> {
@@ -187,23 +191,32 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
     )
   }
 
+  // eslint-disable-next-line promise/prefer-await-to-callbacks
   on(event: string, callback: (...args: unknown[]) => void): void {
-    if (event === 'message') {
-      this.messageCallback = callback
-    } else if (event === 'error') {
-      this.errorCallback = callback
-    } else if (event === 'exit') {
-      this.exitCallback = callback
+    switch (event) {
+      case 'message':
+        this.messageCallback = callback
+        break
+      case 'error':
+        this.errorCallback = callback
+        break
+      case 'exit':
+        this.exitCallback = callback
+        break
     }
   }
 
   off(event: string, _callback: (...args: unknown[]) => void): void {
-    if (event === 'message') {
-      this.messageCallback = undefined
-    } else if (event === 'error') {
-      this.errorCallback = undefined
-    } else if (event === 'exit') {
-      this.exitCallback = undefined
+    switch (event) {
+      case 'message':
+        this.messageCallback = undefined
+        break
+      case 'error':
+        this.errorCallback = undefined
+        break
+      case 'exit':
+        this.exitCallback = undefined
+        break
     }
   }
 

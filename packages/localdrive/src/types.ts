@@ -40,17 +40,17 @@ export interface LocaldriveCloudflareTestOptions extends LocaldriveOptions {
 
 export interface LocaldriveDatabase {
   readonly connectionString: string
-  testQuery<T extends Record<string, unknown> = Record<string, unknown>>(
+  testQuery: <T extends Record<string, unknown> = Record<string, unknown>>(
     query: string,
     params?: unknown[]
-  ): Promise<T[]>
-  close(): Promise<void>
+  ) => Promise<T[]>
+  close: () => Promise<void>
 }
 
 export interface LocaldriveController {
-  initialize(): Promise<void>
-  createTestDatabases(): Promise<Record<string, LocaldriveDatabase>>
-  close(): Promise<void>
+  initialize: () => Promise<void>
+  createTestDatabases: () => Promise<Record<string, LocaldriveDatabase>>
+  close: () => Promise<void>
 }
 
 export type LocaldriveConnections = Record<string, string>

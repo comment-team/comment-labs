@@ -4,7 +4,7 @@ import { glob } from 'tinyglobby'
 import type { SqlSource } from './types'
 
 
-const globPattern = /[!*?[\]{}]/
+const globPattern = /[!*?[\]{}]/u
 
 export async function readSql(source: SqlSource | undefined, cwd: string): Promise<string[]> {
   if (source === undefined) {

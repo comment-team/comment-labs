@@ -7,7 +7,7 @@ import { Localdrive } from '../src/index'
 import { localdrive } from '../src/vitest'
 
 
-const postgresWithPasswordPattern = /^postgresql:\/\/postgres:secret@/
+const postgresWithPasswordPattern = /^postgresql:\/\/postgres:secret@/u
 
 async function fixture(files: Record<string, string>): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'localdrive-'))
