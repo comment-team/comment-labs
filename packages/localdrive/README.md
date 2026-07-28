@@ -1,6 +1,12 @@
 # @comment-labs/localdrive
 
-Local PostgreSQL database clones for testing, backed by [PGlite](https://pglite.dev/). It is designed to emulate [Cloudflare Hyperdrive](https://developers.cloudflare.com/hyperdrive/) bindings inside Vitest, including the `@cloudflare/vitest-pool-workers` pool.
+Fresh, isolated local PostgreSQL databases for tests. It uses [PGlite](https://pglite.dev/) under the hood so you can run real PostgreSQL queries without installing or configuring a server, and it exposes the databases as [Cloudflare Hyperdrive](https://developers.cloudflare.com/hyperdrive/)-style bindings inside Vitest.
+
+Use it when:
+
+- Your tests need a real PostgreSQL-compatible engine, but you want them to start instantly and clean up automatically.
+- You write Cloudflare Worker tests with `@cloudflare/vitest-pool-workers` and need Hyperdrive bindings that point to real, isolated databases.
+- You want each test file to get its own database clone without setting up Docker.
 
 ## Install
 
@@ -11,12 +17,14 @@ pnpm add -D @comment-labs/localdrive
 Peer dependencies must also be installed:
 
 ```sh
-pnpm add -D vitest @cloudflare/vitest-pool-workers
+pnpm add -D vitest
 ```
+
+For Cloudflare Worker tests you will also need `@cloudflare/vitest-pool-workers` and `nodejs_compat` enabled.
 
 ## Programmatic API
 
-Use the `Localdrive` controller directly when you need low-level control or are not using Vitest.
+Use the `Localdrive` controller directly when you are not using the Vitest plugin or need full control over the lifecycle.
 
 ```ts
 import { Localdrive } from '@comment-labs/localdrive'
@@ -33,27 +41,48 @@ const localdrive = new Localdrive({
 
 await localdrive.initialize()
 
-// Each call creates a fresh clone of the migration template.
+// Each call returns a fresh clone of the migration template.
 const databases = await localdrive.createTestDatabases()
 
-await databases.DB.testQuery('SELECT * FROM users')
-await databases.DB.close()
+const rows = await databases.DB.testQuery<{ name: string }>('SELECT name FROM users')
 
+await databases.DB.close()
 await localdrive.close()
 ```
 
+### `LocaldriveOptions`
+
+| Option     | Type                                       | Description                                                              |
+| ---------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| `bindings` | `Record<string, LocaldriveBindingOptions>` | Required. One entry for each database you want to expose.                |
+| `cwd`      | `string`                                   | Base directory for relative migration/snapshot paths. Defaults to `cwd`. |
+
 ### `LocaldriveBindingOptions`
 
-| Option           | Description                                                       |
-| ---------------- | ----------------------------------------------------------------- |
-| `migrations`     | SQL files applied once when the migration template is initialized. |
-| `snapshot`       | SQL files applied once after migrations on the template.          |
-| `beforeEach`     | SQL files applied to every cloned database before it is used.     |
-| `connectionString` | Optional `{ username?, password? }` for the generated URL.      |
+| Option             | Type                                              | Description                                                                         |
+| ------------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `migrations`       | `string \| string[]`                              | SQL files applied once to build the template database.                            |
+| `snapshot`         | `string \| string[]`                              | SQL files applied once after migrations on the template.                            |
+| `beforeEach`       | `string \| string[]`                              | SQL files applied to every cloned database before it is used.                     |
+| `connectionString` | `{ username?: string; password?: string }`      | Optional credentials to include in the generated connection string.                 |
+
+### `Localdrive` methods
+
+| Method                  | Returns                              | Description                                              |
+| ----------------------- | ------------------------------------ | -------------------------------------------------------- |
+| `initialize()`          | `Promise<void>`                      | Applies migrations and snapshots once.                   |
+| `createTestDatabases()` | `Promise<Record<string, LocaldriveDatabase>>` | Creates a fresh clone for every binding.                |
+| `close()`               | `Promise<void>`                      | Shuts down the template database and cleans up sockets. |
+
+A `LocaldriveDatabase` gives you:
+
+- `connectionString` — the full PostgreSQL URL for the clone.
+- `testQuery<T>(query, params?)` — a small helper that runs a query and returns typed rows.
+- `close()` — closes that clone.
 
 ## Vitest plugin
 
-`localdrivePlugin()` creates one database clone per binding for an entire Vitest project. The connection strings are provided through Vitest's `inject('localdrive')` API and can be wired into `cloudflareTest()` with `localdrivePoolOptions()`.
+`localdrivePlugin()` creates one database clone per binding for the whole Vitest project. Connection strings are exposed through Vitest's `inject('localdrive')` context and can be wired into `cloudflareTest()` with `localdrivePoolOptions()`.
 
 ```ts
 import { localdrivePlugin, localdrivePoolOptions } from '@comment-labs/localdrive/vitest'
@@ -63,7 +92,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [
     localdrivePlugin({
-      bindings: { DB: { migrations: 'drizzle/*.sql' } }
+      bindings: {
+        DB: { migrations: 'drizzle/*.sql' }
+      }
     }),
     cloudflareTest(({ inject }) => ({
       main: './src/index.ts',
@@ -77,82 +108,17 @@ export default defineConfig({
 })
 ```
 
-## Cloudflare test helper
-
-`@comment-labs/localdrive/cloudflare-test` exports a small client that turns a Hyperdrive binding into a query function, so you don't have to set up a Postgres driver in every test file.
-
-```ts
-/// <reference types="@cloudflare/workers-types" />
-import { createLocaldriveClient } from '@comment-labs/localdrive/cloudflare-test'
-import { env } from 'cloudflare:test'
-import { describe, expect, it } from 'vitest'
-
-function connectionString(binding: string | { connectionString?: string }): string {
-  return typeof binding === 'string' ? binding : binding.connectionString ?? ''
-}
-
-describe('users', () => {
-  it('seeds and reads rows', async () => {
-    const db = createLocaldriveClient(connectionString(env.FLAGSHIP_DB))
-
-    try {
-      await db.query('INSERT INTO users (name) VALUES ($1)', [ 'alice' ])
-      const users = await db.query<{ name: string }>('SELECT name FROM users')
-
-      expect(users).toHaveLength(1)
-      expect(users[0]?.name).toBe('alice')
-    } finally {
-      await db.end()
-    }
-  })
-})
-```
-
-The helper uses `postgres` under the hood, so `nodejs_compat` must be enabled.
+A shortcut `localdrive(options)` is also exported from `@comment-labs/localdrive/vitest` for one-line creation.
 
 ## Cloudflare test integration
 
-`localdriveCloudflareTest()` is the recommended high-level API for Cloudflare worker tests. It adds a `databaseScope` option that selects between the two lifecycles described below.
-
-### Project scope
-
-One database clone per binding is created when the Vitest project starts and shared by every test file. This matches the manual `localdrivePlugin()` + `cloudflareTest()` composition above.
+`localdriveCloudflareTest()` is the recommended high-level helper for Cloudflare Worker tests. It composes `localdrivePlugin()`, `cloudflareTest()`, and the file-scope pool for you.
 
 ```ts
 import { localdriveCloudflareTest } from '@comment-labs/localdrive/vitest'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [
-    localdriveCloudflareTest({
-      bindings: {
-        DB: { migrations: 'drizzle/*.sql' }
-      },
-      databaseScope: 'project',
-      cloudflare: {
-        main: './src/index.ts',
-        miniflare: {
-          compatibilityDate: '2026-02-01',
-          compatibilityFlags: [ 'nodejs_compat' ]
-        }
-      }
-    })
-  ]
-})
-```
-
-### File scope
-
-A fresh database clone is created for **each test file**. The migration template is still initialized once per project, so only the cheap clone/socket/Hyperdrive layer repeats per file. Files can be run in parallel and safely truncate tables without affecting other files.
-
-```ts
-import { localdriveCloudflareTest } from '@comment-labs/localdrive/vitest'
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    fileParallelism: true
-  },
   plugins: [
     localdriveCloudflareTest({
       bindings: {
@@ -161,7 +127,6 @@ export default defineConfig({
           connectionString: { password: 'password' }
         }
       },
-      databaseScope: 'file',
       cloudflare: {
         main: './src/index.ts',
         miniflare: {
@@ -174,7 +139,48 @@ export default defineConfig({
 })
 ```
 
-Inside the worker, the binding behaves like a normal Hyperdrive binding:
+You can also point it at a Wrangler config instead of defining `main`/`miniflare`:
+
+```ts
+localdriveCloudflareTest({
+  bindings: {
+    FLAGSHIP_DB: { migrations: 'drizzle/*.sql' }
+  },
+  cloudflare: {
+    wrangler: { configPath: './wrangler.toml' }
+  }
+})
+```
+
+Localdrive reads the Wrangler file and sets a temporary `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_<binding>` placeholder for every Hyperdrive binding it finds, so Wrangler config validation passes. The real per-project or per-file URL is still injected before Miniflare starts.
+
+### `databaseScope`
+
+- `"file"` (default) — a fresh clone is created for each test file. Use this for parallel files or when you want physical isolation between files.
+- `"project"` — one clone per binding shared by every test file. Fastest setup when your tests do not conflict.
+
+When using `"file"`, the whole test file still shares the same clone, so use UUIDs for rows or reset state between tests:
+
+```ts
+import { SELF } from 'cloudflare:test'
+import { afterEach, describe, it } from 'vitest'
+
+describe('users', () => {
+  afterEach(async () => {
+    await SELF.fetch(new Request('http://localhost/reset', { method: 'POST' }))
+  })
+
+  it('creates a user', async () => {
+    // ...
+  })
+})
+```
+
+Expose a matching endpoint in your Worker to truncate or reset the tables you touch during tests.
+
+### Accessing the binding inside the Worker
+
+The binding is passed to the Worker like a normal Hyperdrive binding:
 
 ```ts
 export default {
@@ -187,21 +193,27 @@ export default {
 }
 ```
 
-### Scope comparison
+## Cloudflare test helper
 
-| Scope       | Databases                                            | Best for                                    |
-| ----------- | ---------------------------------------------------- | ------------------------------------------- |
-| `project`   | One clone per binding, shared by all test files.     | Fastest setup; logical IDs already isolate. |
-| `file`      | One clone per binding, created for each test file.   | Parallel files, cleanup, physical isolation.  |
+`@comment-labs/localdrive/cloudflare-test` exports `createLocaldriveClient()`, a tiny Node-side wrapper around `postgres`. It is useful for maintenance scripts or utility code, not for opening a second connection inside an active Worker test runtime.
 
-## Cleanup and failures
+```ts
+import { createLocaldriveClient } from '@comment-labs/localdrive/cloudflare-test'
 
-The integration ensures cleanup with `try`/`finally` semantics:
+async function runMaintenance(connectionString: string): Promise<void> {
+  const db = createLocaldriveClient(connectionString)
 
-- Socket servers created for a cloned database are stopped after every file.
-- Cloned databases are closed after every file, even if the file fails.
-- Migration templates are closed when Vitest shuts down.
-- Active clones are tracked and closed on `SIGINT` and `SIGTERM`.
+  try {
+    await db.query('ANALYZE')
+  } finally {
+    await db.end()
+  }
+}
+```
+
+## Stopping
+
+When using the programmatic API, call `controller.close()` after your tests finish. This closes every clone and shuts down the template database. The Vitest plugin and `localdriveCloudflareTest()` handle this for you.
 
 ## License
 

@@ -27,8 +27,8 @@ export interface LocaldrivePluginOptions extends LocaldriveOptions {
 
 export interface LocaldriveCloudflareTestOptions extends LocaldriveOptions {
   /**
-   * Defaults to "project" for backwards-compatible behavior.
-   * "file" creates a fresh database clone for every test file.
+   * Defaults to "file" for per-file isolation.
+   * "project" creates one clone per binding shared by all test files.
    */
   databaseScope?: 'project' | 'file'
 
