@@ -108,7 +108,8 @@
           "minor",
           "patch"
       ],
-      "groupName": "{{parentDir}}-cloudflare"
+      "prPriority": 5,
+      "groupName": "cloudflare"
     },
     {
       "matchPackageNames": [
@@ -176,5 +177,5 @@
     "* 1-8 * * *"
   ],
   "timezone": "CET",
-  "updateNotScheduled": false
+  "updateNotScheduled": true
 }
