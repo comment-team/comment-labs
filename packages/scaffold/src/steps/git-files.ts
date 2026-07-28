@@ -10,6 +10,8 @@ import { gitignoreTemplate } from '../templates/gitignore'
 import { renovateTemplate } from '../templates/renovate'
 
 
+const commentTeamPresetPattern = /(^|>)comment-team\//
+
 export async function handleRenovate(context: AppContext): Promise<void> {
   if (context.git.githubRepo === null) {
     return
@@ -17,6 +19,10 @@ export async function handleRenovate(context: AppContext): Promise<void> {
 
   const renovatePath = path.join(context.cwd, '.github', 'renovate.json')
   const before = (await exists(renovatePath)) ? await readFile(renovatePath, 'utf8') : ''
+  if (hasCommentTeamRenovatePreset(before)) {
+    return
+  }
+
   const after = renovateTemplate()
   const decision = await decideFileStep(context, 'renovate', 'Write .github/renovate.json?', 'Aborted before renovate config.', {
     title: '.github/renovate.json',
@@ -24,6 +30,19 @@ export async function handleRenovate(context: AppContext): Promise<void> {
     after
   })
   await applyFileDecision(context, decision, renovatePath, before, after)
+}
+
+function hasCommentTeamRenovatePreset(content: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(content)
+    if (typeof parsed !== 'object' || parsed === null || !Array.isArray((parsed as { extends?: unknown }).extends)) {
+      return false
+    }
+
+    return ((parsed as { extends: unknown[] }).extends).some(entry => typeof entry === 'string' && commentTeamPresetPattern.test(entry))
+  } catch {
+    return false
+  }
 }
 
 export async function handleGitignore(context: AppContext): Promise<void> {

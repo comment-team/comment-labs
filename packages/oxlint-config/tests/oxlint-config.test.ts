@@ -80,6 +80,15 @@ describe('@comment-labs/oxlint-config', () => {
     expect(sortedRuleIds(rules, 'react/')).toMatchInlineSnapshot('[]')
   })
 
+  it('disables no-redeclare in ambient environment type declarations', () => {
+    const rules = [
+      ...lintRules('ambient', 'src/env.d.ts'),
+      ...lintRules('ambient', 'src/environment.d.ts')
+    ]
+    expect(sortedRuleIds(rules)).not.toContain('eslint/no-redeclare')
+    expect(sortedRuleIds(rules)).not.toContain('no-redeclare')
+  })
+
   it('flags direct self-references in initializers', () => {
     const messages = lintMessages('custom-rule', 'src/self-assign.js')
     const snapshot = messages

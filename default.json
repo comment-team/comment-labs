@@ -101,21 +101,34 @@
       "matchPackageNames": [
         "wrangler",
         "@cloudflare/vite-plugin",
-        "@cloudflare/workers-types"
+        "@cloudflare/workers-types",
+        "@cloudflare/vitest-pool-workers"
       ],
       "matchUpdateTypes": [
           "minor",
           "patch"
       ],
-      "groupName": "{{parentDir}}-cloudflare"
+      "prPriority": 5,
+      "groupName": "cloudflare"
+    },
+    {
+      "matchPackageNames": [
+        "@cloudflare/workers-types"
+      ],
+      "matchUpdateTypes": [
+          "major"
+      ],
+      "groupName": "cloudflare"
     },
     {
       "matchPackageNames": [
         "oxlint",
         "oxlint-tsgolint",
-        "oxfmt"
+        "oxfmt",
+        "@comment-labs/oxlint-config"
       ],
       "matchUpdateTypes": [
+          "major",
           "minor",
           "patch"
       ],
@@ -164,5 +177,5 @@
     "* 1-8 * * *"
   ],
   "timezone": "CET",
-  "updateNotScheduled": false
+  "updateNotScheduled": true
 }
