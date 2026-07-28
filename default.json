@@ -118,7 +118,7 @@
       "matchUpdateTypes": [
           "major"
       ],
-      "groupName": "{{parentDir}}-cloudflare"
+      "groupName": "cloudflare"
     },
     {
       "matchPackageNames": [
