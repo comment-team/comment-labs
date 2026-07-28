@@ -122,6 +122,7 @@ export const baseRules: DummyRuleMap = {
   'vitest/require-test-timeout': 'off',
   'vitest/no-importing-vitest-globals': 'off',
   'vitest/no-conditional-in-test': 'off',
+  'vitest/no-hooks': 'off',
 
   'jsdoc/require-param-type': 'off',
   'jsdoc/require-returns': 'off',
