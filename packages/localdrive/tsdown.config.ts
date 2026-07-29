@@ -2,7 +2,7 @@ import { defineConfig } from 'tsdown'
 
 
 export default defineConfig({
-  entry: [ 'src/index.ts', 'src/vitest.ts', 'src/cloudflare-test-client.ts' ],
+  entry: [ 'src/index.ts', 'src/vitest.ts', 'src/query-client.ts', 'src/cloudflare-test-client.ts' ],
   format: [ 'esm' ],
   dts: true,
   sourcemap: true,

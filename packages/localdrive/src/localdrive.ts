@@ -75,7 +75,7 @@ export class Localdrive implements LocaldriveController {
           throw new Error('Cloned database is not a PGlite instance')
         }
 
-        const server = new PGLiteSocketServer({ db: database, host: '127.0.0.1', port: 0 })
+        const server = new PGLiteSocketServer({ db: database, host: '127.0.0.1', maxConnections: 16, port: 0 })
         await server.start()
         databases[name] = new TestDatabase(database, server, template.options.connectionString)
       }

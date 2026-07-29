@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { Localdrive } from '../src/localdrive'
-import { createLocaldriveClient } from '../src/cloudflare-test-client'
+import { createLocaldriveClient } from '../src/query-client'
 
 
 describe('createLocaldriveClient', () => {

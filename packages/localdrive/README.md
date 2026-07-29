@@ -193,23 +193,29 @@ export default {
 }
 ```
 
-## Cloudflare test helper
+## Query helper
 
-`@comment-labs/localdrive/cloudflare-test` exports `createLocaldriveClient()`, a tiny Node-side wrapper around `postgres`. It is useful for maintenance scripts or utility code, not for opening a second connection inside an active Worker test runtime.
+`@comment-labs/localdrive/cloudflare-test` exports `createLocaldriveClient()`, a tiny wrapper around `postgres` that lets you run raw SQL inside your Cloudflare Worker tests:
 
 ```ts
+/// <reference types="@cloudflare/vitest-pool-workers/types" />
 import { createLocaldriveClient } from '@comment-labs/localdrive/cloudflare-test'
+import { env } from 'cloudflare:test'
+import { expect, it } from 'vitest'
 
-async function runMaintenance(connectionString: string): Promise<void> {
-  const db = createLocaldriveClient(connectionString)
+const db = createLocaldriveClient(env.DB)
 
-  try {
-    await db.query('ANALYZE')
-  } finally {
-    await db.end()
-  }
-}
+it('has the expected rows in the database', async () => {
+  const rows = await db.query<{ name: string }>('SELECT name FROM users')
+
+  expect(rows).toHaveLength(1)
+  expect(rows[0]?.name).toBe('alice')
+})
 ```
+
+The helper caches one `postgres` connection per binding and keeps it open for the lifetime of the test file. Calling `.end()` inside a Worker test is a no-op; the connection is closed automatically when the file-scope database shuts down.
+
+For Node-side tests, use `@comment-labs/localdrive/query` instead. It has the same API but closes the connection when you call `.end()`.
 
 ## Stopping
 
