@@ -3,23 +3,23 @@ packages:
 
 catalogs:
   lint:
-    bundled-eslint-config: 0.8.1
-    eslint: 10.1.0
-    eslint-plugin-oxlint: 1.75.0
-    oxlint: 1.75.0
+    bundled-eslint-config: 0.9.0
+    eslint: 10.8.0
+    eslint-plugin-oxlint: 1.76.0
+    oxlint: 1.76.0
     oxlint-tsgolint: 7.0.2001
   toolchain:
     tsdown: 0.22.14
     typescript: npm:typescript-native-bridge@6.0.3-bridge.7.tsgo.7.0.2
   test:
-    '@cloudflare/vitest-pool-workers': 0.18.5
+    '@cloudflare/vitest-pool-workers': 0.18.8
     '@vitest/coverage-v8': 4.1.10
     '@vitest/runner': 4.1.10
     vitest: 4.1.10
   types:
-    '@cloudflare/workers-types': 5.20260710.1
+    '@cloudflare/workers-types': 5.20260727.1
     '@types/cli-progress': 3.11.6
-    '@types/node': 25.5.0
+    '@types/node': 25.9.5
     '@types/prompts': 2.4.9
 
 configDependencies:
