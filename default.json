@@ -105,8 +105,8 @@
         "@cloudflare/vitest-pool-workers"
       ],
       "matchUpdateTypes": [
-          "minor",
-          "patch"
+        "minor",
+        "patch"
       ],
       "prPriority": 5,
       "groupName": "cloudflare"
@@ -116,9 +116,10 @@
         "@cloudflare/workers-types"
       ],
       "matchUpdateTypes": [
-          "major"
+        "major"
       ],
-      "groupName": "cloudflare"
+      "groupName": "cloudflare",
+      "separateMajorMinor": false
     },
     {
       "matchPackageNames": [
@@ -128,11 +129,12 @@
         "@comment-labs/oxlint-config"
       ],
       "matchUpdateTypes": [
-          "major",
-          "minor",
-          "patch"
+        "major",
+        "minor",
+        "patch"
       ],
-      "groupName": "{{parentDir}}-oxc"
+      "groupName": "{{parentDir}}-oxc",
+      "separateMajorMinor": false
     },
     {
       "matchPackageNames": [
