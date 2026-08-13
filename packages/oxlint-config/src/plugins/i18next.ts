@@ -1,1 +1,1 @@
-export { default } from 'eslint-plugin-i18next'
+export { i18next as default } from '../plugin/i18next'

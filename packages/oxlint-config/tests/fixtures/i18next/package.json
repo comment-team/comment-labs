@@ -1,0 +1,6 @@
+{
+  "name": "i18next-fixture",
+  "dependencies": {
+    "i18next": "^24.0.0"
+  }
+}
