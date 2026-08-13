@@ -1,0 +1,13 @@
+{
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome"
+  },
+  "errors": {
+    "not_found": "Not found",
+    "required": "Required"
+  },
+  "unused": {
+    "key": "Unused"
+  }
+}

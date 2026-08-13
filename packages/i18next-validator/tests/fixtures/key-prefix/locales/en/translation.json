@@ -1,0 +1,18 @@
+{
+  "section": {
+    "title": "Title",
+    "dynamic": {
+      "one": "One",
+      "two": "Two"
+    },
+    "concat": {
+      "one": "One"
+    },
+    "unused": "Unused"
+  },
+  "common": {
+    "ok": "OK"
+  },
+  "unused": "Unused",
+  "never": "Never"
+}
