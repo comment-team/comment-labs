@@ -43,6 +43,11 @@ export function localdrivePlugin(options: LocaldrivePluginOptions): Vite.Plugin 
       }
 
       context.project.provide('localdrive', connections)
+      context.project.provide('localdrive:controlUrl', controller.controlUrl ?? '')
+
+      for (const database of Object.values(databases)) {
+        controller.controlServer?.register(database)
+      }
 
       context.vitest.onClose(async () => {
         await Promise.all(Object.values(databases).map(async database => await database.close()))

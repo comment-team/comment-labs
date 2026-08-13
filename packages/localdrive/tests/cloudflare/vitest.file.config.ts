@@ -4,13 +4,16 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    fileParallelism: true
+    fileParallelism: true,
+    include: [ 'tests/cloudflare/**/*.test.ts' ]
   },
   plugins: [
     localdriveCloudflareTest({
       bindings: {
         FLAGSHIP_DB: {
           migrations: 'tests/cloudflare/migrations/*.sql',
+          snapshot: 'tests/cloudflare/snapshot.sql',
+          beforeEach: 'tests/cloudflare/before-each.sql',
           connectionString: { password: 'password' }
         }
       },

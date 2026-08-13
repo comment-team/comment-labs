@@ -7,7 +7,8 @@ import { Localdrive } from './localdrive'
 import { closeActiveDatabases, localdriveCloudflarePool } from './cloudflare-pool'
 import { localdrivePlugin } from './plugin'
 import { registerLocaldrive, unregisterLocaldrive } from './registry'
-import type { LocaldriveCloudflareTestOptions, LocaldriveConnections } from './types'
+import { localdrivePoolOptions } from './vitest'
+import type { LocaldriveCloudflareTestOptions } from './types'
 
 
 const hyperdriveLocalPrefix = 'CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_'
@@ -44,10 +45,10 @@ function projectScopePlugins(
     ? async (context: InjectContext): Promise<ResolvedCloudflareTestOptions> => {
       const resolved = await cloudflare(context)
 
-      return mergeHyperdrives(resolved, context.inject('localdrive'))
+      return mergeLocaldriveOptions(resolved, localdrivePoolOptions(context.inject))
     }
     : (context: InjectContext): ResolvedCloudflareTestOptions =>
-      mergeHyperdrives(cloudflare, context.inject('localdrive'))
+      mergeLocaldriveOptions(cloudflare, localdrivePoolOptions(context.inject))
 
   return [
     hyperdrivePlaceholderPlugin(localdriveOptions.bindings, cloudflare),
@@ -216,9 +217,11 @@ function parseTomlHyperdriveBindings(content: string): string[] {
   return names
 }
 
-function mergeHyperdrives(
+type LocaldrivePoolOptions = ReturnType<typeof localdrivePoolOptions>
+
+function mergeLocaldriveOptions(
   options: ResolvedCloudflareTestOptions,
-  connections: LocaldriveConnections
+  localdriveOptions: LocaldrivePoolOptions
 ): ResolvedCloudflareTestOptions {
   return {
     ...options,
@@ -226,7 +229,11 @@ function mergeHyperdrives(
       ...options.miniflare,
       hyperdrives: {
         ...options.miniflare?.hyperdrives,
-        ...connections
+        ...localdriveOptions.miniflare.hyperdrives
+      },
+      bindings: {
+        ...options.miniflare?.bindings,
+        ...localdriveOptions.miniflare.bindings
       }
     }
   }

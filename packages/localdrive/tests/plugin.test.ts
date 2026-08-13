@@ -18,16 +18,27 @@ describe('localdrive plugin', () => {
 
   it('builds pool options from injected connections', () => {
     const connections = { DB: 'postgresql://postgres@127.0.0.1:12345/postgres' }
+    const controlUrl = 'http://127.0.0.1:11111/reset'
+
     /* eslint-disable typescript/no-unsafe-type-assertion */
-    const inject = <K extends keyof ProvidedContext>(_key: K): ProvidedContext[K] =>
-      connections as unknown as ProvidedContext[K]
+    const inject = <K extends keyof ProvidedContext>(key: K): ProvidedContext[K] => {
+      if (key === 'localdrive:controlUrl') {
+        return controlUrl as unknown as ProvidedContext[K]
+      }
+
+      return connections as unknown as ProvidedContext[K]
+    }
     /* eslint-enable typescript/no-unsafe-type-assertion */
+
     const options = localdrivePoolOptions(inject)
 
     expect(options).toStrictEqual({
       miniflare: {
         hyperdrives: {
           DB: 'postgresql://postgres@127.0.0.1:12345/postgres'
+        },
+        bindings: {
+          LOCALDRIVE_CONTROL_URL: controlUrl
         }
       }
     })

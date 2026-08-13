@@ -44,6 +44,7 @@ export interface LocaldriveDatabase {
     query: string,
     params?: unknown[]
   ) => Promise<T[]>
+  reset: () => Promise<void>
   close: () => Promise<void>
 }
 
@@ -58,6 +59,7 @@ export type LocaldriveConnections = Record<string, string>
 declare module 'vitest' {
   export interface ProvidedContext {
     localdrive: LocaldriveConnections
+    'localdrive:controlUrl': string
     'localdrive:controller': LocaldriveController
   }
 }

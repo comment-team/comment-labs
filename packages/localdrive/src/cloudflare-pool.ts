@@ -1,5 +1,6 @@
 import { cloudflarePool } from '@cloudflare/vitest-pool-workers'
 import type { PoolOptions, PoolRunnerInitializer, PoolWorker, WorkerRequest } from 'vitest/node'
+import { startControlServer, type LocaldriveControlServer } from './control-server'
 import { getLocaldrive } from './registry'
 import type { LocaldriveCloudflareTestOptions, LocaldriveDatabase } from './types'
 
@@ -33,6 +34,7 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
   private exitCallback?: () => void
   private inner?: PoolWorker
   private databases?: Record<string, LocaldriveDatabase>
+  private controlServer?: LocaldriveControlServer
   private startMessage?: WorkerRequest
 
   constructor(
@@ -105,7 +107,17 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
         Object.entries(this.databases).map(([ name, database ]) => [ name, database.connectionString ])
       )
 
-      const cloudflareOptions = resolveCloudflareOptions(this.localdriveOptions.cloudflare, hyperdrives)
+      this.controlServer = await startControlServer()
+
+      for (const database of Object.values(this.databases)) {
+        this.controlServer.register(database)
+      }
+
+      const cloudflareOptions = resolveCloudflareOptions(
+        this.localdriveOptions.cloudflare,
+        hyperdrives,
+        this.controlServer.url
+      )
 
       this.inner = cloudflarePool(cloudflareOptions).createPoolWorker(this.options)
 
@@ -189,6 +201,9 @@ class LocaldriveCloudflarePoolWorker implements PoolWorker {
         await database.close()
       })
     )
+
+    await this.controlServer?.stop()
+    this.controlServer = undefined
   }
 
   // eslint-disable-next-line promise/prefer-await-to-callbacks
@@ -242,22 +257,24 @@ export function localdriveCloudflarePool(
 
 function resolveCloudflareOptions(
   cloudflare: LocaldriveCloudflareTestOptions['cloudflare'],
-  hyperdrives: Record<string, string>
+  hyperdrives: Record<string, string>,
+  controlUrl: string
 ): CloudflarePoolOptions {
   if (typeof cloudflare === 'function') {
     return async context => {
       const resolved = await cloudflare(context)
 
-      return mergeHyperdrives(resolved, hyperdrives)
+      return mergeLocaldriveOptions(resolved, hyperdrives, controlUrl)
     }
   }
 
-  return mergeHyperdrives(cloudflare, hyperdrives)
+  return mergeLocaldriveOptions(cloudflare, hyperdrives, controlUrl)
 }
 
-function mergeHyperdrives(
+function mergeLocaldriveOptions(
   options: ResolvedCloudflarePoolOptions,
-  hyperdrives: Record<string, string>
+  hyperdrives: Record<string, string>,
+  controlUrl: string
 ): ResolvedCloudflarePoolOptions {
   return {
     ...options,
@@ -266,6 +283,10 @@ function mergeHyperdrives(
       hyperdrives: {
         ...options.miniflare?.hyperdrives,
         ...hyperdrives
+      },
+      bindings: {
+        ...options.miniflare?.bindings,
+        LOCALDRIVE_CONTROL_URL: controlUrl
       }
     }
   }

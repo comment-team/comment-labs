@@ -223,4 +223,116 @@ describe('localdrive controller', () => {
 
     expect(true).toBeTruthy()
   })
+
+  it('reset restores the clone to the migration, snapshot and beforeEach baseline', async () => {
+    const cwd = await fixture({
+      'schema.sql': 'CREATE TABLE data (id serial primary key, name text not null);',
+      'snapshot.sql': 'INSERT INTO data (name) VALUES (\'snapshot\');',
+      'before.sql': 'INSERT INTO data (name) VALUES (\'before-each\');'
+    })
+    const controller = new Localdrive({
+      bindings: { DB: { migrations: 'schema.sql', snapshot: 'snapshot.sql', beforeEach: 'before.sql' } },
+      cwd
+    })
+
+    try {
+      await controller.initialize()
+
+      const databases = await controller.createTestDatabases()
+      const db = databases.DB
+      if (db === undefined) {
+        throw new Error('Missing DB')
+      }
+
+      const baselineConnectionString = db.connectionString
+
+      await db.testQuery('INSERT INTO data (name) VALUES ($1)', [ 'test' ])
+      await expect(db.testQuery('SELECT name FROM data ORDER BY id')).resolves.toStrictEqual([
+        { name: 'snapshot' },
+        { name: 'before-each' },
+        { name: 'test' }
+      ])
+
+      await db.reset()
+
+      expect(db.connectionString).toBe(baselineConnectionString)
+      await expect(db.testQuery('SELECT name FROM data ORDER BY id')).resolves.toStrictEqual([
+        { name: 'snapshot' },
+        { name: 'before-each' }
+      ])
+
+      await db.testQuery('INSERT INTO data (name) VALUES ($1)', [ 'another' ])
+      await db.reset()
+      await expect(db.testQuery('SELECT name FROM data ORDER BY id')).resolves.toStrictEqual([
+        { name: 'snapshot' },
+        { name: 'before-each' }
+      ])
+
+      await db.close()
+    } finally {
+      await controller.close()
+      await cleanup(cwd)
+    }
+
+    expect(true).toBeTruthy()
+  })
+
+  it('reset restores sequence state', async () => {
+    const cwd = await fixture({
+      'schema.sql': 'CREATE TABLE data (id serial primary key);',
+      'before.sql': 'INSERT INTO data DEFAULT VALUES;'
+    })
+    const controller = new Localdrive({
+      bindings: { DB: { migrations: 'schema.sql', beforeEach: 'before.sql' } },
+      cwd
+    })
+
+    try {
+      await controller.initialize()
+
+      const databases = await controller.createTestDatabases()
+      const db = databases.DB
+      if (db === undefined) {
+        throw new Error('Missing DB')
+      }
+
+      await db.testQuery('INSERT INTO data DEFAULT VALUES')
+
+      const [ firstInserted ] = await db.testQuery<{ id: number }>('SELECT id FROM data ORDER BY id DESC LIMIT 1')
+      const firstId = firstInserted?.id
+
+      await db.reset()
+
+      await db.testQuery('INSERT INTO data DEFAULT VALUES')
+
+      const [ secondInserted ] = await db.testQuery<{ id: number }>('SELECT id FROM data ORDER BY id DESC LIMIT 1')
+
+      expect(secondInserted?.id).toBe(firstId)
+      await db.close()
+    } finally {
+      await controller.close()
+      await cleanup(cwd)
+    }
+
+    expect(true).toBeTruthy()
+  })
+
+  it('reset rejects when the database is already closed', async () => {
+    const controller = new Localdrive({ bindings: { DB: {} } })
+
+    try {
+      await controller.initialize()
+
+      const databases = await controller.createTestDatabases()
+      const db = databases.DB
+      if (db === undefined) {
+        throw new Error('Missing DB')
+      }
+
+      await db.close()
+      await expect(db.reset()).rejects.toThrow('already closed')
+    } finally {
+      await controller.close()
+    }
+  })
 })

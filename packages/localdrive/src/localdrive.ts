@@ -5,6 +5,7 @@ import { unaccent } from '@electric-sql/pglite/contrib/unaccent'
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
 import process from 'node:process'
 import { resolve } from 'node:path'
+import { startControlServer, type LocaldriveControlServer } from './control-server'
 import { readSql } from './sql'
 import { TestDatabase } from './test-database'
 import type { LocaldriveBindingOptions, LocaldriveController, LocaldriveDatabase, LocaldriveOptions } from './types'
@@ -25,6 +26,7 @@ interface Template {
 export class Localdrive implements LocaldriveController {
   private readonly cwd: string
   private readonly templates = new Map<string, Template>()
+  controlServer?: LocaldriveControlServer
   private initialized = false
 
   constructor(private readonly options: LocaldriveOptions) {
@@ -35,12 +37,18 @@ export class Localdrive implements LocaldriveController {
     this.cwd = resolve(options.cwd ?? process.cwd())
   }
 
+  get controlUrl(): string | undefined {
+    return this.controlServer?.url
+  }
+
   async initialize(): Promise<void> {
     if (this.initialized) {
       return
     }
 
     try {
+      this.controlServer = await startControlServer()
+
       for (const [ name, bindingOptions ] of Object.entries(this.options.bindings)) {
         const database = await PGlite.create({
           extensions: { pg_trgm, unaccent, pg_stat_statements }
@@ -77,7 +85,14 @@ export class Localdrive implements LocaldriveController {
 
         const server = new PGLiteSocketServer({ db: database, host: '127.0.0.1', maxConnections: 16, port: 0 })
         await server.start()
-        databases[name] = new TestDatabase(database, server, template.options.connectionString)
+        databases[name] = new TestDatabase(
+          database,
+          server,
+          template.database,
+          template.options.beforeEach,
+          this.cwd,
+          template.options.connectionString
+        )
       }
 
       return databases
@@ -91,6 +106,12 @@ export class Localdrive implements LocaldriveController {
   async close(): Promise<void> {
     await Promise.all(Array.from(this.templates.values(), async ({ database }) => await database.close()))
     this.templates.clear()
+
+    if (this.controlServer !== undefined) {
+      await this.controlServer.stop()
+      this.controlServer = undefined
+    }
+
     this.initialized = false
   }
 
