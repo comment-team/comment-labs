@@ -133,7 +133,7 @@
         "minor",
         "patch"
       ],
-      "groupName": "{{parentDir}}-oxc",
+      "groupName": "oxc",
       "separateMajorMinor": false
     },
     {
