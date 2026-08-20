@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@bomb.sh/args": "^0.3.1",
-    "@bomb.sh/tab": "^0.0.21",
+    "@bomb.sh/tab": "^0.0.22",
     "@clack/prompts": "^1.7.0",
     "nostics": "^1.2.0",
     "oxc-parser": "^0.142.0",
