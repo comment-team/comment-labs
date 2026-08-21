@@ -220,8 +220,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))
       '@e18e/eslint-plugin':
-        specifier: ^0.4.1
-        version: 0.4.1(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.77.0(oxlint-tsgolint@7.0.2001))
+        specifier: ^0.8.0
+        version: 0.8.0(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.77.0(oxlint-tsgolint@7.0.2001))
       '@stylistic/eslint-plugin':
         specifier: ^5.10.0
         version: 5.10.0(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))
@@ -634,11 +634,11 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@e18e/eslint-plugin@0.4.1':
-    resolution: {integrity: sha512-Re00N8ad1HsNrzpuIX7Bhdr8RSaFWp6VgwJUEJF+47+D1CMcXoS7VNRkIG23e46pddhgxWU0cWk4wYiQIuMHqQ==}
+  '@e18e/eslint-plugin@0.8.0':
+    resolution: {integrity: sha512-js/TeM+XJyoJ2Zk4if5uTEchv3MEbqugc9gLgq8YdB6Dy+LvwGACpQiAwcul0r4LUl0TvhuzAKUeIUPtGp2cew==}
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
-      oxlint: ^1.61.0
+      oxlint: ^1.72.0
     peerDependenciesMeta:
       eslint:
         optional: true
@@ -2994,8 +2994,8 @@ packages:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
 
-  module-replacements@3.0.0-beta.8:
-    resolution: {integrity: sha512-sc8TepP9elxoOBXEpxmhPzKKjTjbswHVcmsKGbgvm3k6jZlLu/WMV/Lfmga6IGMgHU/V3WtY2s6VEgM4nTElUQ==}
+  module-replacements@3.2.0:
+    resolution: {integrity: sha512-zaDcWtW+kLmYGWCMWAyQ8Je333BYmsBMB2X6q5MKBCI697l7OawNaC5TQqfgPVxhdXBA1AjumQjPMcHyJe1f2A==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -3280,6 +3280,7 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
+    hasBin: true
 
   semver@7.8.4:
     resolution: {integrity: sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==}
@@ -4012,11 +4013,11 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@e18e/eslint-plugin@0.4.1(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.77.0(oxlint-tsgolint@7.0.2001))':
+  '@e18e/eslint-plugin@0.8.0(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.77.0(oxlint-tsgolint@7.0.2001))':
     dependencies:
       empathic: 2.0.1
-      module-replacements: 3.0.0-beta.8
-      semver: 7.8.4
+      module-replacements: 3.2.0
+      semver: 7.8.5
     optionalDependencies:
       eslint: 10.8.1(jiti@2.7.0)(supports-color@10.2.2)
       oxlint: 1.77.0(oxlint-tsgolint@7.0.2001)
@@ -5841,7 +5842,7 @@ snapshots:
     dependencies:
       brace-expansion: 5.0.6
 
-  module-replacements@3.0.0-beta.8: {}
+  module-replacements@3.2.0: {}
 
   mri@1.2.0: {}
 
