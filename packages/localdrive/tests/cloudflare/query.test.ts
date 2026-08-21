@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/vitest-pool-workers/types" />
+/// <reference types="@cloudflare/vitest-plugin/types" />
 /// <reference types="@cloudflare/workers-types" />
 import { createLocaldriveClient } from '../../src/cloudflare-test-client'
 import { env } from 'cloudflare:test'

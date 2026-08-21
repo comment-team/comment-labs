@@ -12,12 +12,13 @@ catalogs:
     tsdown: 0.22.14
     typescript: npm:typescript-native-bridge@6.0.3-bridge.12.tsgo.7.0.2
   test:
-    '@cloudflare/vitest-pool-workers': 0.20.3
+    '@cloudflare/vitest-plugin': 1.0.0
+    '@playwright/test': 1.62.1
     '@vitest/coverage-v8': 4.1.10
     '@vitest/runner': 4.1.10
     vitest: 4.1.10
   types:
-    '@cloudflare/workers-types': 5.20260808.1
+    '@cloudflare/workers-types': 5.20260821.1
     '@types/cli-progress': 3.11.6
     '@types/node': 25.9.5
     '@types/prompts': 2.4.9
@@ -34,6 +35,16 @@ minimumReleaseAgeExclude:
   - '@typescript-native-bridge/win32-arm64@6.0.3-bridge.7.tsgo.7.0.2'
   - '@typescript-native-bridge/win32-x64@6.0.3-bridge.7.tsgo.7.0.2'
   - typescript-native-bridge@6.0.3-bridge.7.tsgo.7.0.2
+  - '@cloudflare/vitest-plugin@1.0.0'
+  - '@cloudflare/workerd-darwin-64@1.20260820.1'
+  - '@cloudflare/workerd-darwin-arm64@1.20260820.1'
+  - '@cloudflare/workerd-linux-64@1.20260820.1'
+  - '@cloudflare/workerd-linux-arm64@1.20260820.1'
+  - '@cloudflare/workerd-windows-64@1.20260820.1'
+  - '@cloudflare/workers-types@5.20260821.1'
+  - miniflare@5.20260820.0-alpha
+  - workerd@1.20260820.1
+  - wrangler@4.125.0
 
 peerDependencyRules:
   allowedVersions:

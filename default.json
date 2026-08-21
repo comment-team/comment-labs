@@ -102,6 +102,7 @@
         "wrangler",
         "@cloudflare/vite-plugin",
         "@cloudflare/workers-types",
+        "@cloudflare/vitest-plugin",
         "@cloudflare/vitest-pool-workers"
       ],
       "matchUpdateTypes": [

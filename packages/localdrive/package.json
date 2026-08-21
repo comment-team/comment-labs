@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/localdrive",
-  "version": "0.1.0-beta.8",
+  "version": "0.1.0-beta.9",
   "description": "Local PostgreSQL Hyperdrive emulation for Vitest",
   "license": "Apache-2.0",
   "type": "module",
@@ -24,6 +24,10 @@
     "./cloudflare-test": {
       "types": "./dist/cloudflare-test-client.d.mts",
       "import": "./dist/cloudflare-test-client.mjs"
+    },
+    "./playwright": {
+      "types": "./dist/playwright.d.mts",
+      "import": "./dist/playwright.mjs"
     }
   },
   "scripts": {
@@ -35,10 +39,11 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "catalog:test",
+    "@cloudflare/vitest-plugin": "catalog:test",
     "@cloudflare/workers-types": "catalog:types",
     "@comment-labs/oxlint-config": "workspace:*",
     "@comment-labs/tsconfig": "workspace:*",
+    "@playwright/test": "catalog:test",
     "@types/node": "catalog:types",
     "@vitest/coverage-v8": "catalog:test",
     "@vitest/runner": "catalog:test",
@@ -56,5 +61,13 @@
     "@electric-sql/pglite-socket": "0.2.7",
     "postgres": "3.4.9",
     "tinyglobby": "0.2.17"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.62.1"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
   }
 }

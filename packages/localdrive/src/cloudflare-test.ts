@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import process from 'node:process'
-import { cloudflareTest } from '@cloudflare/vitest-pool-workers'
+import { cloudflareTest } from '@cloudflare/vitest-plugin'
 import type { ProvidedContext } from 'vitest'
 import type { Vite, VitestPluginContext } from 'vitest/node'
 import { Localdrive } from './localdrive'

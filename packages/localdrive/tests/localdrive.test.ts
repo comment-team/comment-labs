@@ -224,6 +224,43 @@ describe('localdrive controller', () => {
     expect(true).toBeTruthy()
   })
 
+  it('reset all databases from the controller', async () => {
+    const cwd = await fixture({
+      'schema.sql': 'CREATE TABLE data (id serial primary key, name text not null);',
+      'snapshot.sql': 'INSERT INTO data (name) VALUES (\'seed\');',
+      'before.sql': 'INSERT INTO data (name) VALUES (\'before-each\');'
+    })
+    const controller = new Localdrive({
+      bindings: { DB: { migrations: 'schema.sql', snapshot: 'snapshot.sql', beforeEach: 'before.sql' } },
+      cwd
+    })
+
+    try {
+      await controller.initialize()
+
+      const databases = await controller.createTestDatabases()
+      const db = databases.DB
+
+      if (db === undefined) {
+        throw new Error('Missing DB')
+      }
+
+      await db.testQuery('INSERT INTO data (name) VALUES (\'extra\')')
+      await controller.reset()
+
+      const rows = await db.testQuery<{ name: string }>('SELECT name FROM data ORDER BY id')
+
+      expect(rows).toHaveLength(2)
+      expect(rows[0]?.name).toBe('seed')
+      expect(rows[1]?.name).toBe('before-each')
+
+      await db.close()
+    } finally {
+      await controller.close()
+      await cleanup(cwd)
+    }
+  })
+
   it('reset restores the clone to the migration, snapshot and beforeEach baseline', async () => {
     const cwd = await fixture({
       'schema.sql': 'CREATE TABLE data (id serial primary key, name text not null);',

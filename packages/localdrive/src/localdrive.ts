@@ -26,6 +26,7 @@ interface Template {
 export class Localdrive implements LocaldriveController {
   private readonly cwd: string
   private readonly templates = new Map<string, Template>()
+  private activeDatabases: Record<string, LocaldriveDatabase> | undefined
   controlServer?: LocaldriveControlServer
   private initialized = false
 
@@ -55,6 +56,7 @@ export class Localdrive implements LocaldriveController {
         })
         await database.exec(extensionSql)
         await this.execute(database, bindingOptions.migrations)
+        await this.execute(database, bindingOptions.seed)
         await this.execute(database, bindingOptions.snapshot)
         this.templates.set(name, { database, options: bindingOptions })
       }
@@ -95,6 +97,8 @@ export class Localdrive implements LocaldriveController {
         )
       }
 
+      this.activeDatabases = databases
+
       return databases
     } catch (error) {
       await Promise.all(Object.values(databases).map(async database => await database.close()))
@@ -103,7 +107,20 @@ export class Localdrive implements LocaldriveController {
     }
   }
 
+  async reset(): Promise<void> {
+    if (this.activeDatabases === undefined) {
+      return
+    }
+
+    await Promise.all(Object.values(this.activeDatabases).map(async database => await database.reset()))
+  }
+
   async close(): Promise<void> {
+    if (this.activeDatabases !== undefined) {
+      await Promise.all(Object.values(this.activeDatabases).map(async database => await database.close()))
+      this.activeDatabases = undefined
+    }
+
     await Promise.all(Array.from(this.templates.values(), async ({ database }) => await database.close()))
     this.templates.clear()
 

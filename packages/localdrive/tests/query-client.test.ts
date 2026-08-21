@@ -138,6 +138,27 @@ describe('createLocaldriveClient', () => {
     }
   })
 
+  it('resetLocaldriveDatabase uses an explicit controlUrl in Node mode', async () => {
+    expect.hasAssertions()
+
+    const controlUrl = 'http://127.0.0.1:19876/reset'
+    let requestedUrl: string | undefined
+
+    Reflect.set(globalThis, 'fetch', async (input: RequestInfo | URL): Promise<Response> => {
+      requestedUrl = input instanceof URL ? input.href : typeof input === 'string' ? input : input.url
+
+      return new Response(null, { status: 204 })
+    })
+
+    try {
+      await resetLocaldriveDatabase('postgresql://postgres@127.0.0.1:1/postgres', { controlUrl })
+
+      expect(requestedUrl).toBe(controlUrl)
+    } finally {
+      Reflect.deleteProperty(globalThis, 'fetch')
+    }
+  })
+
   it('resetLocaldriveDatabase throws for unknown Node databases', async () => {
     await expect(resetLocaldriveDatabase('postgresql://postgres@127.0.0.1:1/postgres')).rejects.toThrow('not found')
   })

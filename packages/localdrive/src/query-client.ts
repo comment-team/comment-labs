@@ -36,6 +36,7 @@ async function endClient(connectionString: string): Promise<void> {
 }
 
 export interface LocaldriveClientOptions {
+  controlUrl?: string
   env?: { LOCALDRIVE_CONTROL_URL?: unknown }
 }
 
@@ -48,14 +49,23 @@ export interface LocaldriveClient {
   end: () => Promise<void>
 }
 
+function resolveControlUrl(options: LocaldriveClientOptions): string | undefined {
+  if (options.controlUrl !== undefined) {
+    return options.controlUrl
+  }
+
+  return isCloudflareWorker() ? getControlUrl(options.env) : undefined
+}
+
 export async function resetLocaldriveDatabase(
   binding: string | { connectionString?: string },
   options: LocaldriveClientOptions = {}
 ): Promise<void> {
   const connectionString = getConnectionString(binding)
+  const controlUrl = resolveControlUrl(options)
 
-  if (isCloudflareWorker()) {
-    const response = await fetch(getControlUrl(options.env), {
+  if (controlUrl !== undefined) {
+    const response = await fetch(controlUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ connectionString })

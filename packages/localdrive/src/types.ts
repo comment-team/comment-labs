@@ -1,4 +1,4 @@
-import type { cloudflareTest } from '@cloudflare/vitest-pool-workers'
+import type { cloudflareTest } from '@cloudflare/vitest-plugin'
 
 export type SqlSource = string | readonly string[]
 
@@ -12,6 +12,7 @@ export interface LocaldriveConnectionStringOptions {
 export interface LocaldriveBindingOptions {
   connectionString?: LocaldriveConnectionStringOptions
   migrations?: SqlSource
+  seed?: SqlSource
   snapshot?: SqlSource
   beforeEach?: SqlSource
 }

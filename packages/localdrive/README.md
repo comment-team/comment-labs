@@ -5,7 +5,7 @@ Fresh, isolated local PostgreSQL databases for tests. It uses [PGlite](https://p
 Use it when:
 
 - Your tests need a real PostgreSQL-compatible engine, but you want them to start instantly and clean up automatically.
-- You write Cloudflare Worker tests with `@cloudflare/vitest-pool-workers` and need Hyperdrive bindings that point to real, isolated databases.
+- You write Cloudflare Worker tests with `@cloudflare/vitest-plugin` and need Hyperdrive bindings that point to real, isolated databases.
 - You want each test file to get its own database clone without setting up Docker.
 
 ## Install
@@ -20,7 +20,7 @@ Peer dependencies must also be installed:
 pnpm add -D vitest
 ```
 
-For Cloudflare Worker tests you will also need `@cloudflare/vitest-pool-workers` and `nodejs_compat` enabled.
+For Cloudflare Worker tests you will also need `@cloudflare/vitest-plugin` and `nodejs_compat` enabled.
 
 ## Programmatic API
 
@@ -62,7 +62,8 @@ await localdrive.close()
 | Option             | Type                                              | Description                                                                         |
 | ------------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `migrations`       | `string \| string[]`                              | SQL files applied once to build the template database.                            |
-| `snapshot`         | `string \| string[]`                              | SQL files applied once after migrations on the template.                            |
+| `seed`             | `string \| string[]`                              | SQL files applied once after migrations to populate the template with data.        |
+| `snapshot`         | `string \| string[]`                              | Deprecated alias for `seed`.                                                        |
 | `beforeEach`       | `string \| string[]`                              | SQL files applied to every cloned database before it is used.                     |
 | `connectionString` | `{ username?: string; password?: string }`      | Optional credentials to include in the generated connection string.                 |
 
@@ -86,7 +87,7 @@ A `LocaldriveDatabase` gives you:
 
 ```ts
 import { localdrivePlugin, localdrivePoolOptions } from '@comment-labs/localdrive/vitest'
-import { cloudflareTest } from '@cloudflare/vitest-pool-workers'
+import { cloudflareTest } from '@cloudflare/vitest-plugin'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -193,12 +194,82 @@ export default {
 }
 ```
 
+## Playwright integration
+
+Use Localdrive for end-to-end tests where a Playwright browser talks to a local server that needs a real database.
+
+### 1. Start Localdrive before Playwright
+
+`localdrivePlaywrightSetup()` is a Playwright `globalSetup` that creates the database, exposes its connection strings, and writes them to an environment file so your `webServer` command can read them:
+
+```ts
+// playwright.config.ts
+import { localdrivePlaywrightSetup, localdrivePlaywrightFixtures } from '@comment-labs/localdrive/playwright'
+import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  globalSetup: localdrivePlaywrightSetup(
+    {
+      bindings: {
+        DB: {
+          migrations: 'drizzle/*.sql',
+          seed: 'seed.sql'
+        }
+      }
+    },
+    { envFile: '.localdrive.env' }
+  ),
+
+  webServer: {
+    command: 'dotenv -e .localdrive.env -- wrangler dev',
+    url: 'http://127.0.0.1:8787'
+  },
+
+  use: {
+    baseURL: 'http://127.0.0.1:8787'
+  },
+
+  projects: [
+    { name: 'chromium', use: devices['Desktop Chrome'] }
+  ]
+})
+```
+
+### 2. Reset the database before each test
+
+```ts
+import { test as base } from '@playwright/test'
+import { localdrivePlaywrightFixtures } from '@comment-labs/localdrive/playwright'
+
+export const test = base.extend(localdrivePlaywrightFixtures)
+
+test('creates an item', async ({ page }) => {
+  await page.goto('/items')
+  // The database was reset before this test started.
+})
+```
+
+`resetLocaldrive` is called automatically before every test. It also works as a manual fixture if a test needs to reset in the middle of a flow:
+
+```ts
+test('with explicit reset', async ({ page, resetLocaldrive }) => {
+  await resetLocaldrive()
+  // ...
+})
+```
+
+Environment variables written by `localdrivePlaywrightSetup`:
+
+- `LOCALDRIVE_CONNECTIONS` — JSON map of binding names to connection strings.
+- `LOCALDRIVE_CONTROL_URL` — URL the fixture uses to issue resets.
+- `LOCALDRIVE_<BINDING>_URL` — connection string for an individual binding (useful for `wrangler.toml` vars).
+
 ## Query helper
 
 `@comment-labs/localdrive/cloudflare-test` exports `createLocaldriveClient()`, a tiny wrapper around `postgres` that lets you run raw SQL inside your Cloudflare Worker tests:
 
 ```ts
-/// <reference types="@cloudflare/vitest-pool-workers/types" />
+/// <reference types="@cloudflare/vitest-plugin/types" />
 import { createLocaldriveClient } from '@comment-labs/localdrive/cloudflare-test'
 import { env } from 'cloudflare:test'
 import { expect, it } from 'vitest'

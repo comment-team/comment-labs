@@ -1,4 +1,4 @@
-import { cloudflarePool } from '@cloudflare/vitest-pool-workers'
+import { cloudflarePool } from '@cloudflare/vitest-plugin'
 import type { PoolOptions, PoolRunnerInitializer, PoolWorker, WorkerRequest } from 'vitest/node'
 import { startControlServer, type LocaldriveControlServer } from './control-server'
 import { getLocaldrive } from './registry'
