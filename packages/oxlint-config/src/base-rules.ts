@@ -67,6 +67,7 @@ export const baseRules: DummyRuleMap = {
   'no-unassigned-import': 'off',
   'no-use-before-define': [ 'warn', { functions: false }],
   'no-warning-comments': 'off',
+  'one-var': 'off',
   'prefer-default-export': 'off',
   'prefer-destructuring': 'off',
   'require-await': 'off',
@@ -86,6 +87,7 @@ export const baseRules: DummyRuleMap = {
   'typescript/require-await': 'warn',
   'typescript/non-nullable-type-assertion-style': 'warn',
   'typescript/explicit-member-accessibility': 'off',
+  'typescript/method-signature-style': 'off',
   'typescript/return-await': [ 'warn', 'always' ],
   'typescript/no-confusing-void-expression': [ 'warn', { ignoreArrowShorthand: true }],
 
