@@ -169,6 +169,24 @@
       "groupName": "eslint"
     },
     {
+      "matchPackageNames": [
+        "@electric-sql/client",
+        "@electric-sql/experimental",
+        "@electric-sql/pglite",
+        "@electric-sql/pglite-age",
+        "@electric-sql/pglite-pg_hashids",
+        "@electric-sql/pglite-pg_ivm",
+        "@electric-sql/pglite-pg_textsearch",
+        "@electric-sql/pglite-pg_uuidv7",
+        "@electric-sql/pglite-pgtap",
+        "@electric-sql/pglite-pgvector",
+        "@electric-sql/pglite-postgis",
+        "@electric-sql/pglite-socket",
+        "@electric-sql/pglite-tools"
+      ],
+      "groupName": "electric-sql"
+    },
+    {
       "matchFileNames": ["pnpm-workspace.yaml"],
       "groupName": "pnpm-workspace",
       "prPriority": -10
