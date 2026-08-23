@@ -15,6 +15,9 @@
     "workarounds:typesNodeVersioning"
   ],
   "npmrcMerge": true,
+  "postUpdateOptions": [
+    "pnpmDedupe"
+  ],
   "packageRules": [
     {
       "matchDepTypes": [ "dependencies" ],
@@ -60,14 +63,7 @@
     },
     {
       "matchDepNames": [
-        "@lexical/code",
-        "@lexical/link",
-        "@lexical/list",
-        "@lexical/markdown",
-        "@lexical/rich-text",
-        "@lexical/selection",
-        "@lexical/table",
-        "@lexical/utils",
+        "@lexical/*",
         "lexical",
         "lexical-vue"
       ],
@@ -83,16 +79,7 @@
     },
     {
       "matchDepNames": [
-        "@hcengineering/activity",
-        "@hcengineering/api-client",
-        "@hcengineering/card",
-        "@hcengineering/contact",
-        "@hcengineering/core",
-        "@hcengineering/tags",
-        "@hcengineering/task",
-        "@hcengineering/time",
-        "@hcengineering/tools",
-        "@hcengineering/tracker"
+        "@hcengineering/*"
       ],
       "groupName": "{{parentDir}}-huly",
       "prPriority": -1
@@ -142,23 +129,7 @@
         "better-auth",
         "better-call",
         "auth",
-        "@better-auth/telemetry",
-        "@better-auth/drizzle-adapter",
-        "@better-auth/memory-adapter",
-        "@better-auth/mongo-adapter",
-        "@better-auth/prisma-adapter",
-        "@better-auth/kysely-adapter",
-        "@better-auth/redis-storage",
-        "@better-auth/utils",
-        "@better-auth/passkey",
-        "@better-auth/sso",
-        "@better-auth/api-key",
-        "@better-auth/scim",
-        "@better-auth/oauth-provider",
-        "@better-auth/stripe",
-        "@better-auth/i18n",
-        "@better-auth/electron",
-        "@better-auth/expo"
+        "@better-auth/*"
       ],
       "groupName": "better-auth",
       "prPriority": -1,
@@ -169,20 +140,12 @@
       "groupName": "eslint"
     },
     {
+      "matchPackageNames": [ "astro", "@astrojs/*" ],
+      "groupName": "astro"
+    },
+    {
       "matchPackageNames": [
-        "@electric-sql/client",
-        "@electric-sql/experimental",
-        "@electric-sql/pglite",
-        "@electric-sql/pglite-age",
-        "@electric-sql/pglite-pg_hashids",
-        "@electric-sql/pglite-pg_ivm",
-        "@electric-sql/pglite-pg_textsearch",
-        "@electric-sql/pglite-pg_uuidv7",
-        "@electric-sql/pglite-pgtap",
-        "@electric-sql/pglite-pgvector",
-        "@electric-sql/pglite-postgis",
-        "@electric-sql/pglite-socket",
-        "@electric-sql/pglite-tools"
+        "@electric-sql/*"
       ],
       "groupName": "electric-sql"
     },
