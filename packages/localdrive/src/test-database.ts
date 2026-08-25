@@ -1,7 +1,7 @@
 import { PGlite, type PGliteInterface } from '@electric-sql/pglite'
-import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
 import { randomUUID } from 'node:crypto'
 import { readSql } from './sql'
+import { LocaldriveSocketServer } from './socket-server'
 import type { LocaldriveBindingOptions, LocaldriveDatabase } from './types'
 import { registerTestDatabase, unregisterTestDatabase } from './database-registry'
 
@@ -14,13 +14,13 @@ export class TestDatabase implements LocaldriveDatabase {
   private readonly host: string
   private readonly port: number
   private database: PGlite
-  private server: PGLiteSocketServer
+  private server: LocaldriveSocketServer
   private closed = false
   private resetting = false
 
   constructor(
     database: PGlite,
-    server: PGLiteSocketServer,
+    server: LocaldriveSocketServer,
     template: PGlite,
     beforeEach: LocaldriveBindingOptions['beforeEach'],
     cwd: string
@@ -74,7 +74,7 @@ export class TestDatabase implements LocaldriveDatabase {
 
       await this.executeBeforeEach(database)
 
-      const server = new PGLiteSocketServer({
+      const server = new LocaldriveSocketServer({
         db: database,
         host: this.host,
         port: this.port,

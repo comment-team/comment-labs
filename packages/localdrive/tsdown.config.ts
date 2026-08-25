@@ -10,7 +10,6 @@ export default defineConfig({
     neverBundle: [
       '@cloudflare/vitest-plugin',
       '@electric-sql/pglite',
-      '@electric-sql/pglite-socket',
       '@playwright/test',
       '@vitest/runner',
       'postgres',

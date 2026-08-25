@@ -125,6 +125,10 @@ export function createLocaldriveClient(
       await resetLocaldriveDatabase(connectionString, options)
     },
     end: async (): Promise<void> => {
+      if (isCloudflareWorker()) {
+        return
+      }
+
       await endClient(connectionString)
     }
   }

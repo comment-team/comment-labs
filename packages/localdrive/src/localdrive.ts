@@ -2,11 +2,11 @@ import { PGlite, type PGliteInterface } from '@electric-sql/pglite'
 import { pg_stat_statements } from '@electric-sql/pglite/contrib/pg_stat_statements'
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm'
 import { unaccent } from '@electric-sql/pglite/contrib/unaccent'
-import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
 import process from 'node:process'
 import { resolve } from 'node:path'
 import { startControlServer, type LocaldriveControlServer } from './control-server'
 import { readSql } from './sql'
+import { LocaldriveSocketServer } from './socket-server'
 import { TestDatabase } from './test-database'
 import type { LocaldriveBindingOptions, LocaldriveController, LocaldriveDatabase, LocaldriveOptions } from './types'
 
@@ -85,7 +85,7 @@ export class Localdrive implements LocaldriveController {
           throw new Error('Cloned database is not a PGlite instance')
         }
 
-        const server = new PGLiteSocketServer({ db: database, host: '127.0.0.1', maxConnections: 16, port: 0 })
+        const server = new LocaldriveSocketServer({ db: database, host: '127.0.0.1', maxConnections: 16, port: 0 })
         await server.start()
         databases[name] = new TestDatabase(
           database,
