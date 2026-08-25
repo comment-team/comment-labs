@@ -12,7 +12,10 @@ import { discoverWorkspacePackages, formatWorkspacePackageJson, writeWorkspacePa
 import { runWorkspacePnpmAddAndRefresh } from './pnpm'
 
 
-const presetOptions = [ 'astro-workers', 'base', 'node', 'react', 'react-astro', 'react-astro-workers', 'react-native', 'react-lib', 'react-workers', 'workers' ] as const
+const singleFilePresetOptions = [ 'astro-workers', 'base', 'node', 'react', 'react-astro', 'react-astro-workers', 'react-native', 'react-lib', 'react-workers', 'workers' ] as const
+type SingleFilePresetName = (typeof singleFilePresetOptions)[number]
+
+const presetOptions = [ ...singleFilePresetOptions, 'workers-vitest' ] as const
 type PresetName = (typeof presetOptions)[number]
 
 const detectionRules: Array<{ preset: PresetName; markers: string[]; requires?: string[] }> = [
@@ -23,10 +26,11 @@ const detectionRules: Array<{ preset: PresetName; markers: string[]; requires?: 
   { preset: 'react', markers: [ 'react', 'vite' ] },
   { preset: 'react-lib', markers: [ 'react' ] },
   { preset: 'astro-workers', markers: [ 'astro', '@cloudflare/workers-types', 'wrangler' ] },
+  { preset: 'workers-vitest', markers: [ '@cloudflare/vitest-pool-workers', '@cloudflare/vitest-plugin' ] },
   { preset: 'workers', markers: [ '@cloudflare/workers-types', 'wrangler' ] }
 ]
 
-const presetIncludes: Record<PresetName, string[]> = {
+const presetIncludes: Record<SingleFilePresetName, string[]> = {
   'astro-workers': [
     'src',
     'e2e',
@@ -96,6 +100,57 @@ const presetIncludes: Record<PresetName, string[]> = {
   ]
 }
 
+interface WorkersVitestTsconfigFile {
+  relativePath: string
+  extendsPath: string
+  compilerOptions: Record<string, JsonValue>
+  include: string[]
+  references?: Array<{ path: string }>
+}
+
+const workersVitestFiles: WorkersVitestTsconfigFile[] = [
+  {
+    relativePath: 'tsconfig.json',
+    extendsPath: '@comment-labs/tsconfig/workers-vitest',
+    compilerOptions: {
+      paths: {
+        '#/*': [ './src/*' ]
+      }
+    },
+    include: [ 'e2e', 'scripts', '*.ts' ],
+    references: [
+      { path: './tsconfig.app.json' },
+      { path: './test/tsconfig.json' }
+    ]
+  },
+  {
+    relativePath: 'tsconfig.app.json',
+    extendsPath: '@comment-labs/tsconfig/workers-vitest-app',
+    compilerOptions: {
+      paths: {
+        '#/*': [ './src/*' ]
+      },
+      outDir: 'build/src',
+      rootDir: 'src'
+    },
+    include: [ 'src' ]
+  },
+  {
+    relativePath: 'test/tsconfig.json',
+    extendsPath: '@comment-labs/tsconfig/workers-vitest-test',
+    compilerOptions: {
+      paths: {
+        '#/*': [ '../src/*' ]
+      },
+      outDir: '../build/test'
+    },
+    include: [ '**/*', '*.ts', '../src/environment.d.ts' ],
+    references: [
+      { path: '../tsconfig.app.json' }
+    ]
+  }
+]
+
 export async function handlePackageTypescript(context: AppContext): Promise<void> {
   const packages = await discoverWorkspacePackages(context)
 
@@ -109,11 +164,14 @@ export async function handlePackageTypescript(context: AppContext): Promise<void
 
     const shouldEnsureTsconfig = await maybeEnsureTsconfigDependency(context, pkg)
 
+    let preset: PresetName | null = null
+
     if (shouldEnsureTsconfig) {
-      await maybeEnsureTsconfig(context, pkg)
+      preset = await resolvePreset(context, pkg)
+      await ensureTsconfig(context, pkg, preset)
     }
 
-    await maybeEnsureTypecheckScript(context, pkg)
+    await maybeEnsureTypecheckScript(context, pkg, preset)
   }
 }
 
@@ -164,8 +222,17 @@ async function maybeEnsureTsconfigDependency(context: AppContext, pkg: Workspace
   return true
 }
 
-async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): Promise<void> {
-  const preset = await resolvePreset(context, pkg)
+async function ensureTsconfig(context: AppContext, pkg: WorkspacePackage, preset: PresetName): Promise<void> {
+  if (preset === 'workers-vitest') {
+    await ensureWorkersVitestTsconfigs(context, pkg)
+
+    return
+  }
+
+  await ensureSingleTsconfig(context, pkg, preset)
+}
+
+async function ensureSingleTsconfig(context: AppContext, pkg: WorkspacePackage, preset: SingleFilePresetName): Promise<void> {
   const tsconfigPath = path.join(pkg.dirPath, 'tsconfig.json')
   const hasTsconfig = await exists(tsconfigPath)
   if (!hasTsconfig) {
@@ -208,16 +275,113 @@ async function maybeEnsureTsconfig(context: AppContext, pkg: WorkspacePackage): 
   await applyProtectedFileStep(context, `packages.${pkg.dirName}.tsconfig.normalize`, tsconfigPath, current, proposed, decision)
 }
 
-async function maybeEnsureTypecheckScript(context: AppContext, pkg: WorkspacePackage): Promise<void> {
+async function ensureWorkersVitestTsconfigs(context: AppContext, pkg: WorkspacePackage): Promise<void> {
+  for (const file of workersVitestFiles) {
+    const filePath = path.join(pkg.dirPath, file.relativePath)
+    const keySuffix = file.relativePath.replaceAll('/', '.')
+    const createKey = `packages.${pkg.dirName}.tsconfig.${keySuffix}.create`
+    const normalizeKey = `packages.${pkg.dirName}.tsconfig.${keySuffix}.normalize`
+
+    if (!(await exists(filePath))) {
+      const next = createWorkersVitestTemplate(file)
+      const decision = await decideFileStep(
+        context,
+        createKey,
+        `Create ${file.relativePath} for ${pkg.dirName}?`,
+        `Aborted while creating ${file.relativePath} for ${pkg.dirName}.`,
+        {
+          title: `${pkg.dirName}/${file.relativePath}`,
+          before: '',
+          after: next
+        }
+      )
+      await applyFileDecision(context, decision, filePath, '', next)
+
+      continue
+    }
+
+    const current = await readFile(filePath, 'utf8')
+    const proposed = createWorkersVitestTemplate(file)
+    const normalizedCurrent = normalizeWorkersVitestTsconfig(current, file)
+    if (normalizedCurrent === proposed) {
+      continue
+    }
+
+    const decision = await decideProtectedFileStep(
+      context,
+      normalizeKey,
+      `Update ${file.relativePath} in ${pkg.dirName} to add $schema and use an @comment-labs/tsconfig preset?`,
+      `Aborted while updating ${file.relativePath} for ${pkg.dirName}.`,
+      {
+        title: `${pkg.dirName}/${file.relativePath}`,
+        before: current,
+        after: proposed
+      },
+      false
+    )
+    await applyProtectedFileStep(context, normalizeKey, filePath, current, proposed, decision)
+  }
+}
+
+function createWorkersVitestTemplate(file: WorkersVitestTsconfigFile): string {
+  return `${JSON.stringify({
+    $schema: 'https://json.schemastore.org/tsconfig',
+    extends: [ file.extendsPath ],
+    compilerOptions: file.compilerOptions,
+    include: file.include,
+    ...(file.references === undefined ? {} : { references: file.references })
+  }, null, 2)}\n`
+}
+
+function normalizeWorkersVitestTsconfig(current: string, file: WorkersVitestTsconfigFile): string {
+  let parsed: Record<string, unknown>
+
+  try {
+    const nextParsed: unknown = JSON.parse(current)
+    if (!isUnknownRecord(nextParsed)) {
+      return current
+    }
+
+    parsed = nextParsed
+  } catch {
+    return current
+  }
+
+  const existingCompilerOptions = isRecord(parsed.compilerOptions) ? parsed.compilerOptions : {}
+  const existingPaths = isRecord(existingCompilerOptions.paths) ? existingCompilerOptions.paths : {}
+
+  const next: Record<string, unknown> = {
+    $schema: 'https://json.schemastore.org/tsconfig',
+    ...parsed,
+    extends: normalizeExtendsTo(parsed.extends, file.extendsPath),
+    compilerOptions: {
+      ...existingCompilerOptions,
+      paths: {
+        ...existingPaths,
+        ...(file.compilerOptions.paths as Record<string, JsonValue>)
+      }
+    },
+    include: file.include,
+    ...(file.references === undefined ? {} : { references: file.references })
+  }
+
+  const newline = current.includes('\r\n') ? '\r\n' : '\n'
+  const indent = detectIndent(current)
+
+  return `${JSON.stringify(next, null, indent)}${newline}`
+}
+
+async function maybeEnsureTypecheckScript(context: AppContext, pkg: WorkspacePackage, preset: PresetName | null): Promise<void> {
+  const command = preset === 'workers-vitest' ? 'tsc --build' : 'tsc'
   const current = pkg.packageJson.scripts?.typecheck
-  if (current === 'tsc' || current === 'tsc -b') {
+  if (current === command || current === 'tsc -b') {
     return
   }
 
   const nextPackageJson: PackageJson = structuredClone(pkg.packageJson)
   nextPackageJson.scripts = {
     ...nextPackageJson.scripts,
-    typecheck: 'tsc'
+    typecheck: command
   }
 
   const decision = await decideFileStep(
@@ -291,7 +455,7 @@ async function resolvePreset(context: AppContext, pkg: WorkspacePackage): Promis
   )
 }
 
-function createTsconfigTemplate(preset: PresetName): string {
+function createTsconfigTemplate(preset: SingleFilePresetName): string {
   return `${JSON.stringify({
     $schema: 'https://json.schemastore.org/tsconfig',
     extends: [ `@comment-labs/tsconfig/${preset}` ],
@@ -304,7 +468,7 @@ function createTsconfigTemplate(preset: PresetName): string {
   }, null, 2)}\n`
 }
 
-function normalizeTsconfigJson(current: string, preset: PresetName): string {
+function normalizeTsconfigJson(current: string, preset: SingleFilePresetName): string {
   let parsed: Record<string, unknown>
 
   try {
@@ -332,9 +496,11 @@ function normalizeTsconfigJson(current: string, preset: PresetName): string {
   return `${JSON.stringify(next, null, indent)}${newline}`
 }
 
-function normalizeExtends(value: unknown, preset: PresetName): string[] {
-  const desired = `@comment-labs/tsconfig/${preset}`
+function normalizeExtends(value: unknown, preset: SingleFilePresetName): string[] {
+  return normalizeExtendsTo(value, `@comment-labs/tsconfig/${preset}`)
+}
 
+function normalizeExtendsTo(value: unknown, desired: string): string[] {
   if (Array.isArray(value)) {
     const filtered = value.filter((entry): entry is string => typeof entry === 'string' && !entry.startsWith('@comment-labs/tsconfig/'))
 
