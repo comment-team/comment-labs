@@ -13,8 +13,7 @@ export default defineConfig({
         FLAGSHIP_DB: {
           migrations: 'tests/cloudflare/migrations/*.sql',
           snapshot: 'tests/cloudflare/snapshot.sql',
-          beforeEach: 'tests/cloudflare/before-each.sql',
-          connectionString: { password: 'password' }
+          beforeEach: 'tests/cloudflare/before-each.sql'
         }
       },
       databaseScope: 'file',

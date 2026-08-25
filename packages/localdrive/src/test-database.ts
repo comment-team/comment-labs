@@ -2,14 +2,8 @@ import { PGlite, type PGliteInterface } from '@electric-sql/pglite'
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
 import { randomUUID } from 'node:crypto'
 import { readSql } from './sql'
-import type { LocaldriveBindingOptions, LocaldriveConnectionStringOptions, LocaldriveDatabase } from './types'
+import type { LocaldriveBindingOptions, LocaldriveDatabase } from './types'
 import { registerTestDatabase, unregisterTestDatabase } from './database-registry'
-
-
-const defaultConnectionStringOptions: Required<LocaldriveConnectionStringOptions> = {
-  username: 'postgres',
-  password: ''
-}
 
 export class TestDatabase implements LocaldriveDatabase {
   readonly connectionString: string
@@ -29,13 +23,9 @@ export class TestDatabase implements LocaldriveDatabase {
     server: PGLiteSocketServer,
     template: PGlite,
     beforeEach: LocaldriveBindingOptions['beforeEach'],
-    cwd: string,
-    options: LocaldriveConnectionStringOptions = {}
+    cwd: string
   ) {
-    const { username, password } = { ...defaultConnectionStringOptions, ...options }
-    const credentials = password ? `${username}:${password}` : username
-
-    const connectionUrl = new URL(`postgresql://${credentials}@${server.getServerConn()}/postgres`)
+    const connectionUrl = new URL(`postgresql://postgres:password@${server.getServerConn()}/postgres`)
     connectionUrl.searchParams.set('application_name', `localdrive-${randomUUID()}`)
 
     this.connectionString = connectionUrl.toString()

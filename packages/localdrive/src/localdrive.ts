@@ -92,8 +92,7 @@ export class Localdrive implements LocaldriveController {
           server,
           template.database,
           template.options.beforeEach,
-          this.cwd,
-          template.options.connectionString
+          this.cwd
         )
       }
 

@@ -65,7 +65,6 @@ await localdrive.close()
 | `seed`             | `string \| string[]`                              | SQL files applied once after migrations to populate the template with data.        |
 | `snapshot`         | `string \| string[]`                              | Deprecated alias for `seed`.                                                        |
 | `beforeEach`       | `string \| string[]`                              | SQL files applied to every cloned database before it is used.                     |
-| `connectionString` | `{ username?: string; password?: string }`      | Optional credentials to include in the generated connection string.                 |
 
 ### `Localdrive` methods
 
@@ -124,8 +123,7 @@ export default defineConfig({
     localdriveCloudflareTest({
       bindings: {
         FLAGSHIP_DB: {
-          migrations: 'drizzle/*.sql',
-          connectionString: { password: 'password' }
+          migrations: 'drizzle/*.sql'
         }
       },
       cloudflare: {

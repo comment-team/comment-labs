@@ -4,13 +4,7 @@ export type SqlSource = string | readonly string[]
 
 export type CloudflareTestOptions = Parameters<typeof cloudflareTest>[0]
 
-export interface LocaldriveConnectionStringOptions {
-  username?: string
-  password?: string
-}
-
 export interface LocaldriveBindingOptions {
-  connectionString?: LocaldriveConnectionStringOptions
   migrations?: SqlSource
   seed?: SqlSource
   snapshot?: SqlSource

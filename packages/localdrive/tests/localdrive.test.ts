@@ -7,8 +7,6 @@ import { Localdrive } from '../src/index'
 import { localdrive } from '../src/vitest'
 
 
-const postgresWithPasswordPattern = /^postgresql:\/\/postgres:secret@/u
-
 async function fixture(files: Record<string, string>): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'localdrive-'))
   await Promise.all(Object.entries(files).map(async ([ name, sql ]) => {
@@ -177,27 +175,6 @@ describe('localdrive controller', () => {
       await controller.close()
     } finally {
       await cleanup(cwd)
-    }
-
-    expect(true).toBeTruthy()
-  })
-
-  it('builds connection strings with optional credentials', async () => {
-    const controller = new Localdrive({ bindings: { DB: { connectionString: { password: 'secret' } } } })
-
-    try {
-      await controller.initialize()
-
-      const databases = await controller.createTestDatabases()
-      const db = databases.DB
-      if (db === undefined) {
-        throw new Error('Missing DB')
-      }
-
-      expect(db.connectionString).toMatch(postgresWithPasswordPattern)
-      await db.close()
-    } finally {
-      await controller.close()
     }
 
     expect(true).toBeTruthy()

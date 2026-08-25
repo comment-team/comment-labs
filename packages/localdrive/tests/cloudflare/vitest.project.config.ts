@@ -11,8 +11,7 @@ export default defineConfig({
     localdriveCloudflareTest({
       bindings: {
         FLAGSHIP_DB: {
-          migrations: 'tests/cloudflare/migrations/*.sql',
-          connectionString: { password: 'password' }
+          migrations: 'tests/cloudflare/migrations/*.sql'
         }
       },
       databaseScope: 'project',
