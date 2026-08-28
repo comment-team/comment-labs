@@ -15,6 +15,11 @@ const executeMessage = 0x45
 const statementKind = 0x53
 const portalKind = 0x50
 
+const syncMessage = 0x53
+const queryMessage = 0x51
+const terminateMessage = 0x58
+const flushMessage = 0x48
+
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder()
 
@@ -140,37 +145,41 @@ export class LocaldriveSocketServer {
   }
 
   private drainConnection(socket: Socket, state: ConnectionState): void {
+    let buffer = state.buffer
+
+    while (true) {
+      if (buffer.length >= 8 && readInt32BE(buffer, 0) === 8 && readInt32BE(buffer, 4) === sslRequestCode) {
+        socket.write('N')
+        buffer = buffer.subarray(8)
+        continue
+      }
+
+      if (buffer.length >= 16 && readInt32BE(buffer, 0) === 16 && readInt32BE(buffer, 4) === cancelRequestCode) {
+        buffer = buffer.subarray(16)
+        continue
+      }
+
+      break
+    }
+
     const messages: Uint8Array[] = []
     let offset = 0
-    const buffer = state.buffer
+    let cycleEnd = 0
+    let flushCount = 0
 
     while (offset < buffer.length) {
       const remaining = buffer.length - offset
-
-      if (remaining >= 8) {
-        const length = readInt32BE(buffer, offset)
-        const code = readInt32BE(buffer, offset + 4)
-
-        if (length === 8 && code === sslRequestCode) {
-          socket.write('N')
-          offset += 8
-          continue
-        }
-
-        if (length === 16 && code === cancelRequestCode) {
-          offset += 16
-          continue
-        }
-      }
 
       if (remaining < 4) {
         break
       }
 
       let messageLength = 0
+      let isStartup = false
 
       if (remaining >= 8 && readInt32BE(buffer, offset + 4) === protocolVersion3) {
         messageLength = readInt32BE(buffer, offset)
+        isStartup = true
       }
 
       if (messageLength === 0 && remaining >= 5) {
@@ -181,19 +190,26 @@ export class LocaldriveSocketServer {
         break
       }
 
-      messages.push(remapMessage(buffer.subarray(offset, offset + messageLength), state))
+      messages.push(buffer.subarray(offset, offset + messageLength))
       offset += messageLength
+
+      if (isStartup || isFlushBoundary(buffer[offset - messageLength] ?? 0)) {
+        cycleEnd = offset
+        flushCount = messages.length
+      }
     }
 
-    state.buffer = buffer.subarray(offset)
+    state.buffer = buffer.subarray(cycleEnd)
 
-    if (messages.length === 0) {
+    if (flushCount === 0) {
       return
     }
 
+    const remapped = messages.slice(0, flushCount).map(message => remapMessage(message, state))
+
     this.enqueue({
       connectionId: state.id,
-      messages: concatAll(messages),
+      messages: concatAll(remapped),
       onData: data => {
         if (!socket.destroyed && socket.writable) {
           socket.write(data)
@@ -274,6 +290,10 @@ function remapMessage(message: Uint8Array, state: ConnectionState): Uint8Array {
     default:
       return message
   }
+}
+
+function isFlushBoundary(type: number): boolean {
+  return type === syncMessage || type === queryMessage || type === terminateMessage || type === flushMessage
 }
 
 function remapParse(message: Uint8Array, state: ConnectionState): Uint8Array {
