@@ -87,23 +87,34 @@ export class LocaldriveSocketServer {
     }
 
     this.stopped = true
+    this.queue.length = 0
+
+    // Let the in-flight batch finish and deliver its response before any
+    // connection is closed, so clients never lose a query result mid-flight.
+    await this.drain
 
     for (const socket of this.connections.keys()) {
-      socket.destroy()
+      socket.end()
     }
-
-    this.connections.clear()
-    this.queue.length = 0
 
     const server = this.server
     this.server = undefined
 
     if (server !== undefined) {
+      // Clients normally close their side promptly after the FIN above; the
+      // timer force-closes any that linger so the port is always released.
+      const fallback = setTimeout(() => {
+        for (const socket of this.connections.keys()) {
+          socket.destroy()
+        }
+      }, 1000)
+
       server.close()
       await once(server, 'close')
+      clearTimeout(fallback)
     }
 
-    await this.drain
+    this.connections.clear()
   }
 
   getServerConn(): string {
