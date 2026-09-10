@@ -23,7 +23,7 @@ const hooks = {
         msw: false,
         prisma: false,
         protobufjs: false,
-        sharp: true,
+        sharp: false,
         'unrs-resolver': false,
         'vue-demi': false,
         workerd: false
