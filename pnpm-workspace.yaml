@@ -5,8 +5,8 @@ catalogs:
   lint:
     bundled-eslint-config: 0.9.1
     eslint: 10.8.1
-    eslint-plugin-oxlint: 1.77.0
-    oxlint: 1.77.0
+    eslint-plugin-oxlint: 1.81.0
+    oxlint: 1.81.0
     oxlint-tsgolint: 7.0.2001
   toolchain:
     tsdown: 0.22.14
@@ -24,7 +24,7 @@ catalogs:
     '@types/prompts': 2.4.9
 
 configDependencies:
-  '@comment-labs/pnpm-plugin-defaults': 1.0.0-beta.2+sha512-mJD/uiBAwsRk1qCdUMxmduSiQtG7TgPK2LaDk7CW+Kbi5NgYDVOhsh1lMQF9Dv/ppGgU1GZsO0ZVyno2jg1uZA==
+  '@comment-labs/pnpm-plugin-defaults': 1.0.0-beta.4
 
 minimumReleaseAgeExclude:
   - '@typescript-native-bridge/darwin-arm64@6.0.3-bridge.7.tsgo.7.0.2'
@@ -52,3 +52,4 @@ peerDependencyRules:
 
 trustPolicyExclude:
   - semver@6.3.1
+  - effect@4.0.0-beta.48
