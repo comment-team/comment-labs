@@ -134,14 +134,25 @@ export async function writeSchemaHint(filePath: string, schemaText: string): Pro
 }
 
 export async function convertIndent(filePath: string, indent: { insertSpaces: boolean; tabSize: number }): Promise<void> {
+  const nextContent = await formatContent(filePath, indent)
+
+  if (nextContent !== null) {
+    await writeFile(filePath, nextContent, 'utf8')
+  }
+}
+
+export async function formatContent(
+  filePath: string,
+  indent: { insertSpaces: boolean; tabSize: number }
+): Promise<string | null> {
   const extension = getSupportedExtension(filePath)
   if (extension === null) {
-    return
+    return null
   }
 
   const content = await readFile(filePath, 'utf8')
   if (content.length === 0) {
-    return
+    return content
   }
 
   const eol = detectEol(content)
@@ -155,26 +166,26 @@ export async function convertIndent(filePath: string, indent: { insertSpaces: bo
         insertSpaces: indent.insertSpaces,
         tabSize: indent.tabSize
       })
-      if (edits.length > 0) {
-        const nextContent = applyEdits(content, edits)
-        await writeFile(filePath, nextContent, 'utf8')
+
+      let nextContent = edits.length > 0 ? applyEdits(content, edits) : content
+
+      // Preserve trailing newline style
+      if (content.endsWith(eol) && !nextContent.endsWith(eol)) {
+        nextContent += eol
       }
-      break
+
+      return nextContent
     }
     case '.yaml':
     case '.yml': {
       const data = YAML.parse(content)
-      const nextContent = YAML.stringify(data, null, {
+      return YAML.stringify(data, null, {
         indent: indent.insertSpaces ? indent.tabSize : 2
       })
-      await writeFile(filePath, nextContent, 'utf8')
-      break
     }
     case '.toml': {
       const data = parseToml(content)
-      const nextContent = stringifyToml(data)
-      await writeFile(filePath, nextContent, 'utf8')
-      break
+      return stringifyToml(data)
     }
   }
 }

@@ -12,10 +12,17 @@ export type IndentOption = {
 
 export type CliOptions = {
   addRecommended: boolean
+  checkIndent?: IndentOption
   indent?: IndentOption
   paths: string[]
   reporter: ReporterMode
   updateRecommended: boolean
+}
+
+export type Suggestion = {
+  diff: string
+  filePath: string
+  line?: number
 }
 
 export type SchemaSource
@@ -72,6 +79,7 @@ export type CacheRecord<T> = {
 export type RunResult = {
   issues: ValidationIssue[]
   recommendations: Recommendation[]
+  suggestions: Suggestion[]
   warnings: string[]
   checkedFiles: number
 }

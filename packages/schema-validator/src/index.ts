@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { readdir, stat } from 'node:fs/promises'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { readFile, readdir, stat } from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 
@@ -9,6 +11,7 @@ import { createLogger, printResult, toErrorMessage, toIssueLocation } from './re
 import {
   convertIndent,
   createValidators,
+  formatContent,
   getSupportedExtension,
   parseDocument,
   resolveSchemaSource,
@@ -17,7 +20,7 @@ import {
   writeSchemaHint
 } from './schema-document'
 import { createSchemaStore } from './schema-store'
-import type { CliOptions, Logger, Recommendation, ReporterMode, RunResult, ValidateFunction, ValidationIssue } from './types'
+import type { CliOptions, Logger, Recommendation, ReporterMode, RunResult, Suggestion, ValidateFunction, ValidationIssue } from './types'
 
 
 const urlSchemeRegex = /^https?:\/\//u
@@ -36,6 +39,7 @@ function parseArgs(argv: string[]): CliOptions {
   let reporter: ReporterMode = isGitHubActions() ? 'github' : 'cli'
   let updateRecommended = false
   let indent: { insertSpaces: boolean; tabSize: number } | undefined
+  let checkIndent: { insertSpaces: boolean; tabSize: number } | undefined
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index]
@@ -80,6 +84,22 @@ function parseArgs(argv: string[]): CliOptions {
       continue
     }
 
+    if (argument === '--check-indent') {
+      const value = argv[index + 1]
+      if (value === undefined) {
+        throw new Error('Expected --check-indent to have a value')
+      }
+      checkIndent = parseIndentValue(value)
+      index += 1
+      continue
+    }
+
+    if (argument.startsWith('--check-indent=')) {
+      const value = argument.slice('--check-indent='.length)
+      checkIndent = parseIndentValue(value)
+      continue
+    }
+
     if (argument === '--reporter') {
       const value = argv[index + 1]
       if (value !== 'cli' && value !== 'github') {
@@ -110,6 +130,7 @@ function parseArgs(argv: string[]): CliOptions {
 
   return {
     addRecommended,
+    checkIndent,
     indent,
     paths: paths.length > 0 ? paths : [ process.cwd() ],
     reporter,
@@ -146,6 +167,7 @@ function printHelp(): void {
     '  --add-recommended       Save recommended schema hints into files that lack one',
     '  --update-recommended    Replace existing schema hints with the current recommendation when it differs',
     '  --indent <value>        Reformat all scanned files with the specified indentation (spaces, spaces-<n>, tabs)',
+    '  --check-indent <value>  Report indentation mismatches without changing files (spaces, spaces-<n>, tabs)',
     '  --reporter <cli|github>  Output style. Default: cli',
     '  --github-actions         Shortcut for --reporter github',
     '  -h, --help               Show this help text',
@@ -167,6 +189,7 @@ async function run(options: CliOptions): Promise<RunResult> {
 
   const warnings: string[] = []
   const issues: ValidationIssue[] = []
+  const suggestions: Suggestion[] = []
   const recommendations: Recommendation[] = []
   const seenRecommendations = new Set<string>()
   const schemaStore = createSchemaStore(warnings, logger)
@@ -261,6 +284,36 @@ async function run(options: CliOptions): Promise<RunResult> {
     }
   }
 
+  if (options.checkIndent) {
+    logger.progress(`Checking indentation for ${inputFiles.length} file(s)...`)
+    for (const filePath of inputFiles) {
+      try {
+        const original = await readFile(filePath, 'utf8')
+        const formatted = await formatContent(filePath, options.checkIndent)
+
+        if (formatted !== null && original !== formatted) {
+          suggestions.push({
+            filePath,
+            line: 1,
+            diff: createDiff(original, formatted, filePath)
+          })
+          issues.push({
+            filePath,
+            line: 1,
+            message: 'Indentation does not match the configured style',
+            title: 'Indentation mismatch'
+          })
+        }
+      } catch (error) {
+        issues.push({
+          filePath,
+          message: toErrorMessage(error),
+          ...toIssueLocation(error)
+        })
+      }
+    }
+  }
+
   if (options.indent) {
     logger.progress(`Converting indentation for ${inputFiles.length} file(s)...`)
     for (const filePath of inputFiles) {
@@ -282,6 +335,7 @@ async function run(options: CliOptions): Promise<RunResult> {
   return {
     issues,
     recommendations,
+    suggestions,
     warnings,
     checkedFiles: inputFiles.length
   }
@@ -383,6 +437,42 @@ function runGitCheckIgnore(filePaths: string[]): string {
 
 function isSupportedFile(filePath: string): boolean {
   return getSupportedExtension(filePath) !== null
+}
+
+function createDiff(original: string, formatted: string, filePath: string): string {
+  if (original === formatted) {
+    return ''
+  }
+
+  const tmp = mkdtempSync(path.join(os.tmpdir(), 'schema-validator-'))
+  const originalPath = path.join(tmp, 'original')
+  const formattedPath = path.join(tmp, 'formatted')
+
+  try {
+    writeFileSync(originalPath, original, 'utf8')
+    writeFileSync(formattedPath, formatted, 'utf8')
+
+    const result = spawnSync('git', [ 'diff', '--no-index', '--unified=3', '--', originalPath, formattedPath ], {
+      encoding: 'utf8'
+    })
+
+    if (result.status === 0) {
+      return ''
+    }
+
+    if (result.status === 1) {
+      const relativePath = path.relative(process.cwd(), filePath)
+
+      return result.stdout
+        .replace(/^diff --git .+\n/, '')
+        .replace(/^--- .+\n\+\+\+ .+\n/m, `--- a/${relativePath}\n+++ b/${relativePath}\n`)
+        .trimEnd()
+    }
+
+    throw new Error(result.stderr.trim() || `git diff exited with code ${result.status ?? 'unknown'}`)
+  } finally {
+    rmSync(tmp, { recursive: true, force: true })
+  }
 }
 
 function normalizeSchemaSpecifier(schemaText: string): string {

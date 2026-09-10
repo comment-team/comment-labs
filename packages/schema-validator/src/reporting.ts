@@ -27,6 +27,13 @@ export function printResult(result: RunResult, reporter: ReporterMode): void {
       console.log(toGitHubAnnotation('error', issue.filePath, issue.message, issue.title, issue.line, issue.column))
     }
 
+    for (const suggestion of result.suggestions.slice(0, 10)) {
+      if (suggestion.diff.length > 0) {
+        const message = `Suggested fix:\n${suggestion.diff}`
+        console.log(toGitHubAnnotation('notice', suggestion.filePath, message, 'Suggested fix', suggestion.line, undefined))
+      }
+    }
+
     for (const recommendation of result.recommendations) {
       const message = `No schema found. SchemaStore suggests ${recommendation.schema.url} (${recommendation.schema.name}).`
       console.log(
@@ -198,7 +205,7 @@ function formatIssueLocation(issue: { line?: number; column?: number }): string 
 }
 
 function toGitHubAnnotation(
-  level: 'error' | 'warning',
+  level: 'error' | 'warning' | 'notice',
   filePath: string,
   message: string,
   title?: string,
