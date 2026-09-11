@@ -62,7 +62,7 @@
     "tinyglobby": "0.2.17"
   },
   "peerDependencies": {
-    "@cloudflare/vitest-plugin": "^1.1.5",
+    "@cloudflare/vitest-plugin": "^1.1.6",
     "@playwright/test": "^1.62.1"
   },
   "peerDependenciesMeta": {
