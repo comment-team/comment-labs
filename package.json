@@ -4,8 +4,8 @@
   "private": true,
   "packageManager": "pnpm@12.3.4",
   "devDependencies": {
-    "@changesets/changelog-github": "1.0.0",
-    "@changesets/cli": "3.0.1",
-    "knip": "6.33.0"
+    "@changesets/changelog-github": "1.0.1",
+    "@changesets/cli": "3.0.2",
+    "knip": "6.34.0"
   }
 }

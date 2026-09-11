@@ -27,7 +27,7 @@
   "devDependencies": {
     "@comment-labs/oxlint-config": "workspace:*",
     "@comment-labs/tsconfig": "workspace:*",
-    "@opencode-ai/sdk": "1.14.19",
+    "@opencode-ai/sdk": "1.18.29",
     "@types/node": "catalog:types",
     "oxlint": "catalog:lint",
     "oxlint-tsgolint": "catalog:lint",
