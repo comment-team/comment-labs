@@ -22,7 +22,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.14.19"
+    "@opencode-ai/plugin": "1.18.30"
   },
   "devDependencies": {
     "@comment-labs/oxlint-config": "workspace:*",
