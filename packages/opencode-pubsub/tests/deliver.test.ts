@@ -9,7 +9,7 @@ import type { Subscription } from '../src/paths'
 
 type InjectedMessage = { sessionID: string; text: string; directory?: string }
 
-const noopLog: DelivererLog = () => null
+const noopLog: DelivererLog = () => {}
 
 function fakeClient(options: { knownSessions?: Set<string>; failInject?: boolean } = {}) {
   const knownSessions = options.knownSessions ?? new Set<string>()

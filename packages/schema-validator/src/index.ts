@@ -453,8 +453,8 @@ function createDiff(original: string, formatted: string, filePath: string): stri
       const relativePath = path.relative(process.cwd(), filePath)
 
       return result.stdout
-        .replace(/^diff --git .+\n/, '')
-        .replace(/^--- .+\n\+\+\+ .+\n/m, `--- a/${relativePath}\n+++ b/${relativePath}\n`)
+        .replace(/^diff --git .+\n/u, '')
+        .replace(/^--- .+\n\+\+\+ .+\n/mu, `--- a/${relativePath}\n+++ b/${relativePath}\n`)
         .trimEnd()
     }
 

@@ -5,6 +5,8 @@ import { Localdrive } from '../src/index'
 
 describe('socket server', () => {
   it('isolates prepared statements and portals across concurrent connections', async () => {
+    expect.hasAssertions()
+
     const controller = new Localdrive({ bindings: { DB: {} } })
 
     try {
@@ -24,7 +26,7 @@ describe('socket server', () => {
         const sql = postgres(db.connectionString, { max: 4, prepare })
         const errors: unknown[] = []
 
-        await Promise.all(Array.from({ length: 200 }, (_, index) => async () => {
+        await Promise.all(Array.from({ length: 200 }, async (_, index) => {
           try {
             const [ row ] = await sql<[ { name: string } ]>`SELECT name FROM items WHERE id = ${(index % 2) + 1}`
 
@@ -32,7 +34,7 @@ describe('socket server', () => {
           } catch (error) {
             errors.push(error)
           }
-        }).map(run => run()))
+        }))
 
         await sql.end()
 

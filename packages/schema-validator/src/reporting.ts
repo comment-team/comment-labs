@@ -33,7 +33,7 @@ export function printResult(result: RunResult, reporter: ReporterMode): void {
       }
 
       const message = `Suggested fix:\n${suggestion.diff}`
-      console.log(toGitHubAnnotation('notice', suggestion.filePath, message, 'Suggested fix', suggestion.line, undefined))
+      console.log(toGitHubAnnotation('notice', suggestion.filePath, message, 'Suggested fix', suggestion.line))
     }
 
     for (const recommendation of result.recommendations) {

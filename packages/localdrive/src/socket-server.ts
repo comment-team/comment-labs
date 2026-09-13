@@ -3,9 +3,9 @@ import { createServer, type Server, type Socket } from 'node:net'
 import type { PGliteInterface } from '@electric-sql/pglite'
 
 
-const sslRequestCode = 80877103
-const cancelRequestCode = 80877102
-const protocolVersion3 = 196608
+const sslRequestCode = 80_877_103
+const cancelRequestCode = 80_877_102
+const protocolVersion3 = 196_608
 
 const parseMessage = 0x50
 const bindMessage = 0x42
@@ -13,7 +13,6 @@ const describeMessage = 0x44
 const closeMessage = 0x43
 const executeMessage = 0x45
 const statementKind = 0x53
-const portalKind = 0x50
 
 const syncMessage = 0x53
 const queryMessage = 0x51
@@ -36,18 +35,22 @@ interface Batch {
   readonly connectionId: number
   readonly messages: Uint8Array
   readonly onData: (data: Uint8Array) => void
-  readonly onError: (error: Error) => void
+  readonly onError: (error: unknown) => void
+}
+
+interface SocketDb extends PGliteInterface {
+  isInTransaction: () => boolean
 }
 
 export interface LocaldriveSocketServerOptions {
-  db: PGliteInterface
+  db: SocketDb
   host?: string
   port?: number
   maxConnections?: number
 }
 
 export class LocaldriveSocketServer {
-  private readonly db: PGliteInterface
+  private readonly db: SocketDb
   private readonly host: string
   private readonly maxConnections: number
   private readonly connections = new Map<Socket, ConnectionState>()
@@ -144,7 +147,7 @@ export class LocaldriveSocketServer {
         this.handleData(socket, state, data)
       }
     })
-    socket.on('error', () => {})
+    socket.on('error', () => { /* ignore */ })
     socket.on('close', () => {
       this.connections.delete(socket)
     })
@@ -158,7 +161,7 @@ export class LocaldriveSocketServer {
   private drainConnection(socket: Socket, state: ConnectionState): void {
     let buffer = state.buffer
 
-    while (true) {
+    for (;;) {
       if (buffer.length >= 8 && readInt32BE(buffer, 0) === 8 && readInt32BE(buffer, 4) === sslRequestCode) {
         socket.write('N')
         buffer = buffer.subarray(8)
@@ -238,23 +241,22 @@ export class LocaldriveSocketServer {
     }
 
     this.queue.push(batch)
-
-    if (this.drain === undefined) {
-      this.drain = this.drainQueue().finally(() => {
-        this.drain = undefined
-      })
-    }
+    this.drain ??= this.drainQueue()
   }
 
   private async drainQueue(): Promise<void> {
-    while (!this.stopped) {
-      const batch = this.pickBatch()
+    try {
+      while (!this.stopped) {
+        const batch = this.pickBatch()
 
-      if (batch === undefined) {
-        return
+        if (batch === undefined) {
+          return
+        }
+
+        await this.execute(batch)
       }
-
-      await this.execute(batch)
+    } finally {
+      this.drain = undefined
     }
   }
 
@@ -282,13 +284,15 @@ export class LocaldriveSocketServer {
 
       this.lastConnectionId = batch.connectionId
     } catch (error) {
-      batch.onError(error as Error)
+      batch.onError(error)
     }
   }
 }
 
 function remapMessage(message: Uint8Array, state: ConnectionState): Uint8Array {
-  switch (message[0]) {
+  const type = message[0] ?? 0
+
+  switch (type) {
     case parseMessage:
       return remapParse(message, state)
     case bindMessage:
@@ -369,7 +373,12 @@ function readCString(bytes: Uint8Array, offset: number): [string, number] {
   return [ textDecoder.decode(bytes.subarray(offset, end)), end + 1 ]
 }
 
-function replaceCString(message: Uint8Array, offset: number, replacement: string): { result: Uint8Array, delta: number } {
+interface ReplacedCString {
+  readonly result: Uint8Array
+  readonly delta: number
+}
+
+function replaceCString(message: Uint8Array, offset: number, replacement: string): ReplacedCString {
   let end = offset
 
   while (end < message.length && message[end] !== 0) {

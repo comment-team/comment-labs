@@ -1,65 +1,85 @@
 import { once } from 'node:events'
 import { connect } from 'node:net'
+import { scheduler } from 'node:timers/promises'
 import { describe, expect, it } from 'vitest'
 import { Localdrive } from '../src/index'
 
 
-const protocolVersion3 = 196608
+const protocolVersion3 = 196_608
 
 const textDecoder = new TextDecoder()
+const textEncoder = new TextEncoder()
 
 function readInt32BE(bytes: Uint8Array, offset: number): number {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getInt32(offset)
 }
 
-function cstring(value: string): Buffer {
-  return Buffer.concat([ Buffer.from(value), Buffer.from([ 0 ]) ])
+function writeInt32BE(bytes: Uint8Array, offset: number, value: number): void {
+  new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).setInt32(offset, value)
 }
 
-function message(type: number, body: Buffer): Buffer {
-  const length = Buffer.alloc(4)
-  length.writeInt32BE(body.length + 4)
+function concatBytes(chunks: Uint8Array[]): Uint8Array<ArrayBuffer> {
+  const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
+  const result = new Uint8Array(total)
+  let offset = 0
 
-  return Buffer.concat([ Buffer.from([ type ]), length, body ])
+  for (const chunk of chunks) {
+    result.set(chunk, offset)
+    offset += chunk.length
+  }
+
+  return result
 }
 
-function startup(): Buffer {
-  const version = Buffer.alloc(4)
-  version.writeInt32BE(protocolVersion3)
-  const body = Buffer.concat([
+function cstring(value: string): Uint8Array {
+  return concatBytes([ textEncoder.encode(value), Uint8Array.of(0) ])
+}
+
+function message(type: number, body: Uint8Array): Uint8Array {
+  const length = new Uint8Array(4)
+  writeInt32BE(length, 0, body.length + 4)
+
+  return concatBytes([ Uint8Array.of(type), length, body ])
+}
+
+function startup(): Uint8Array {
+  const version = new Uint8Array(4)
+  writeInt32BE(version, 0, protocolVersion3)
+
+  const body = concatBytes([
     cstring('user'), cstring('postgres'),
     cstring('database'), cstring('postgres'),
-    Buffer.from([ 0 ])
+    Uint8Array.of(0)
   ])
-  const length = Buffer.alloc(4)
-  length.writeInt32BE(body.length + 8)
+  const length = new Uint8Array(4)
+  writeInt32BE(length, 0, body.length + 8)
 
-  return Buffer.concat([ length, version, body ])
+  return concatBytes([ length, version, body ])
 }
 
-function parse(name: string, query: string): Buffer {
-  return message(0x50, Buffer.concat([ cstring(name), cstring(query), Buffer.from([ 0, 0 ]) ]))
+function parse(name: string, query: string): Uint8Array {
+  return message(0x50, concatBytes([ cstring(name), cstring(query), Uint8Array.of(0, 0) ]))
 }
 
-function bind(portal: string, statement: string): Buffer {
-  return message(0x42, Buffer.concat([
+function bind(portal: string, statement: string): Uint8Array {
+  return message(0x42, concatBytes([
     cstring(portal), cstring(statement),
-    Buffer.from([ 0, 0 ]),
-    Buffer.from([ 0, 0 ]),
-    Buffer.from([ 0, 0 ])
+    Uint8Array.of(0, 0),
+    Uint8Array.of(0, 0),
+    Uint8Array.of(0, 0)
   ]))
 }
 
-function describePortal(kind: number, name: string): Buffer {
-  return message(0x44, Buffer.concat([ Buffer.from([ kind ]), cstring(name) ]))
+function describePortal(kind: number, name: string): Uint8Array {
+  return message(0x44, concatBytes([ Uint8Array.of(kind), cstring(name) ]))
 }
 
-function execute(portal: string): Buffer {
-  return message(0x45, Buffer.concat([ cstring(portal), Buffer.from([ 0, 0, 0, 0 ]) ]))
+function execute(portal: string): Uint8Array {
+  return message(0x45, concatBytes([ cstring(portal), Uint8Array.of(0, 0, 0, 0) ]))
 }
 
-function sync(): Buffer {
-  return message(0x53, Buffer.alloc(0))
+function sync(): Uint8Array {
+  return message(0x53, new Uint8Array(0))
 }
 
 function errorMessage(response: Uint8Array): string | undefined {
@@ -99,36 +119,38 @@ describe('socket server', () => {
       const url = new URL(db.connectionString)
       const socket = connect(Number(url.port), url.hostname)
 
-      let received = Buffer.alloc(0)
+      let received = new Uint8Array(0)
       socket.on('data', data => {
-        received = Buffer.concat([ received, data ])
+        if (typeof data !== 'string') {
+          received = concatBytes([ received, data ])
+        }
       })
 
       await once(socket, 'connect')
 
       socket.write(startup())
 
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await scheduler.wait(50)
 
-      socket.write(Buffer.concat([
+      socket.write(concatBytes([
         parse('', 'SELECT name FROM items WHERE id = 1'),
         bind('', ''),
         describePortal(0x50, '')
       ]))
 
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await scheduler.wait(50)
 
-      socket.write(Buffer.concat([
+      socket.write(concatBytes([
         execute(''),
         sync()
       ]))
 
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await scheduler.wait(100)
 
       const error = errorMessage(received)
 
       expect(error).toBeUndefined()
-      expect(received.toString('utf8')).toContain('a')
+      expect(textDecoder.decode(received)).toContain('a')
 
       socket.destroy()
       await Promise.all(Object.values(databases).map(async database => await database.close()))

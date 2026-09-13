@@ -1,4 +1,4 @@
-import { createServer } from 'node:http'
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { once } from 'node:events'
 
 
@@ -15,8 +15,9 @@ export interface LocaldriveControlServer {
 
 export async function startControlServer(): Promise<LocaldriveControlServer> {
   const databases = new Set<Resettable>()
+  const inFlight = new Set<Promise<void>>()
 
-  const server = createServer(async (request, response) => {
+  const handleReset = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     if (request.method !== 'POST' || request.url !== '/reset') {
       response.writeHead(404)
       response.end()
@@ -38,6 +39,10 @@ export async function startControlServer(): Promise<LocaldriveControlServer> {
       response.writeHead(500)
       response.end()
     }
+  }
+
+  const server = createServer((request, response) => {
+    inFlight.add(handleReset(request, response))
   })
 
   server.listen(0, '127.0.0.1')
@@ -59,7 +64,7 @@ export async function startControlServer(): Promise<LocaldriveControlServer> {
     },
     stop: async (): Promise<void> => {
       server.close()
-      await once(server, 'close')
+      await Promise.all([ once(server, 'close'), ...inFlight ])
     }
   }
 }

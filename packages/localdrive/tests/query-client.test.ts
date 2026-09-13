@@ -103,7 +103,7 @@ describe('createLocaldriveClient', () => {
     let requestedUrl: string | undefined
     let requestBody: unknown
 
-    Reflect.set(globalThis, 'fetch', async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    Reflect.set(globalThis, 'fetch', (input: RequestInfo | URL, init?: RequestInit): Response => {
       requestedUrl = input instanceof URL ? input.href : typeof input === 'string' ? input : input.url
       requestBody = init?.body
 
@@ -126,7 +126,7 @@ describe('createLocaldriveClient', () => {
 
     Reflect.set(globalThis, 'WebSocketPair', undefined)
 
-    Reflect.set(globalThis, 'fetch', async (): Promise<Response> => new Response(null, { status: 500 }))
+    Reflect.set(globalThis, 'fetch', (): Response => new Response(null, { status: 500 }))
 
     try {
       await expect(resetLocaldriveDatabase('postgresql://postgres@127.0.0.1:12345/postgres', {
@@ -144,7 +144,7 @@ describe('createLocaldriveClient', () => {
     const controlUrl = 'http://127.0.0.1:19876/reset'
     let requestedUrl: string | undefined
 
-    Reflect.set(globalThis, 'fetch', async (input: RequestInfo | URL): Promise<Response> => {
+    Reflect.set(globalThis, 'fetch', (input: RequestInfo | URL): Response => {
       requestedUrl = input instanceof URL ? input.href : typeof input === 'string' ? input : input.url
 
       return new Response(null, { status: 204 })
@@ -167,7 +167,7 @@ describe('createLocaldriveClient', () => {
     expect.hasAssertions()
 
     Reflect.set(globalThis, 'WebSocketPair', undefined)
-    Reflect.set(globalThis, 'fetch', async (): Promise<Response> => new Response(null, { status: 204 }))
+    Reflect.set(globalThis, 'fetch', (): Response => new Response(null, { status: 204 }))
 
     try {
       await expect(resetLocaldriveDatabase('postgresql://postgres@127.0.0.1:1/postgres'))
