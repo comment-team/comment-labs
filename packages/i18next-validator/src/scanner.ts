@@ -558,13 +558,8 @@ function unwrapTypeExpression(node: unknown): unknown {
   }
 
   if (
-    node.type === 'ChainExpression'
-    || node.type === 'ParenthesizedExpression'
-    || node.type === 'JSXExpressionContainer'
-    || node.type === 'TSAsExpression'
-    || node.type === 'TSSatisfiesExpression'
-    || node.type === 'TSTypeAssertion'
-    || node.type === 'TSNonNullExpression'
+    typeof node.type === 'string'
+    && [ 'ChainExpression', 'ParenthesizedExpression', 'JSXExpressionContainer', 'TSAsExpression', 'TSSatisfiesExpression', 'TSTypeAssertion', 'TSNonNullExpression' ].includes(node.type)
   ) {
     return unwrapTypeExpression(node.expression)
   }

@@ -45,7 +45,7 @@ type PromptQuestion
   }
 
 function isStepDecision(value: unknown): value is StepDecision {
-  return value === 'apply' || value === 'skip' || value === 'merge' || value === 'abort'
+  return typeof value === 'string' && [ 'apply', 'skip', 'merge', 'abort' ].includes(value)
 }
 
 function isPromptChoiceValue<T extends string>(
@@ -101,7 +101,7 @@ export async function askStep(
     initial: 0
   })
 
-  if (decision === 'apply' || decision === 'skip' || decision === 'merge') {
+  if (typeof decision === 'string' && [ 'apply', 'skip', 'merge' ].includes(decision)) {
     context.preferences = setPreference(
       context.preferences,
       key,

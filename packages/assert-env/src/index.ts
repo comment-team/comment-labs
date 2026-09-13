@@ -45,7 +45,7 @@ function validateNumber(raw: string): number {
   const trimmed = raw.trim()
   const parsed = Number(trimmed)
 
-  if (Number.isNaN(parsed) || trimmed === '') {
+  if (trimmed === '' || Number.isNaN(parsed)) {
     throw new Error(`expected number, got "${raw}"`)
   }
 
@@ -55,11 +55,11 @@ function validateNumber(raw: string): number {
 function validateBoolean(raw: string): boolean {
   const normalized = raw.trim().toLowerCase()
 
-  if (normalized === 'true' || normalized === '1' || normalized === 'yes') {
+  if ([ 'true', '1', 'yes' ].includes(normalized)) {
     return true
   }
 
-  if (normalized === 'false' || normalized === '0' || normalized === 'no') {
+  if ([ 'false', '0', 'no' ].includes(normalized)) {
     return false
   }
 
@@ -113,7 +113,7 @@ export function assertEnv(
       const raw = process.env[name]
 
       if (raw === undefined || raw.trim() === '') {
-        if (options.defaults !== undefined && name in options.defaults) {
+        if (options.defaults !== undefined && Object.hasOwn(options.defaults, name)) {
           result[name] = (options.defaults as Record<string, string | number | boolean>)[name]!
         }
         continue
@@ -129,7 +129,7 @@ export function assertEnv(
   }
 
   // Skip throwing errors if running in knip
-  if (process.argv.find(arg => arg.endsWith('/knip.js'))) {
+  if (process.argv.some(arg => arg.endsWith('/knip.js'))) {
     return result
   }
 
@@ -139,7 +139,7 @@ export function assertEnv(
     throw new Error(`Invalid environment variables:\n${lines.join('\n')}`)
   }
 
-  if (options?.processEnv) {
+  if (options?.processEnv === true) {
     for (const [ name, value ] of Object.entries(result)) {
       process.env[name] = String(value)
     }

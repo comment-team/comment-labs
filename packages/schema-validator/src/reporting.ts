@@ -28,10 +28,12 @@ export function printResult(result: RunResult, reporter: ReporterMode): void {
     }
 
     for (const suggestion of result.suggestions.slice(0, 10)) {
-      if (suggestion.diff.length > 0) {
-        const message = `Suggested fix:\n${suggestion.diff}`
-        console.log(toGitHubAnnotation('notice', suggestion.filePath, message, 'Suggested fix', suggestion.line, undefined))
+      if (suggestion.diff.length === 0) {
+        continue
       }
+
+      const message = `Suggested fix:\n${suggestion.diff}`
+      console.log(toGitHubAnnotation('notice', suggestion.filePath, message, 'Suggested fix', suggestion.line, undefined))
     }
 
     for (const recommendation of result.recommendations) {

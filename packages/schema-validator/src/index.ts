@@ -136,7 +136,7 @@ function parseIndentValue(value: string): { insertSpaces: boolean; tabSize: numb
   }
   if (value.startsWith('spaces-')) {
     const num = Number(value.slice('spaces-'.length))
-    if (Number.isInteger(num) && num > 0) {
+    if (Number.isSafeInteger(num) && num > 0) {
       return { insertSpaces: true, tabSize: num }
     }
   }
@@ -477,13 +477,7 @@ function normalizeSchemaUrl(url: string): string {
 
   if (
     normalizedUrl.protocol === 'http:'
-    && (
-      normalizedUrl.hostname === 'json-schema.org'
-      || normalizedUrl.hostname === 'www.json-schema.org'
-      || normalizedUrl.hostname === 'json.schemastore.org'
-      || normalizedUrl.hostname === 'schemastore.org'
-      || normalizedUrl.hostname === 'www.schemastore.org'
-    )
+    && [ 'json-schema.org', 'www.json-schema.org', 'json.schemastore.org', 'schemastore.org', 'www.schemastore.org' ].includes(normalizedUrl.hostname)
   ) {
     normalizedUrl.protocol = 'https:'
   }

@@ -119,14 +119,16 @@ async function findCommonLocaleDirectory(cwd: string, initFile: string): Promise
   ]
 
   for (const candidate of candidates) {
-    if (existsSync(candidate) && statSync(candidate).isDirectory()) {
-      const files = await glob(TRANSLATION_FILE_PATTERN, {
-        cwd: candidate,
-        absolute: true
-      })
-      if (files.length > 0) {
-        return candidate
-      }
+    if (!existsSync(candidate) || !statSync(candidate).isDirectory()) {
+      continue
+    }
+
+    const files = await glob(TRANSLATION_FILE_PATTERN, {
+      cwd: candidate,
+      absolute: true
+    })
+    if (files.length > 0) {
+      return candidate
     }
   }
 

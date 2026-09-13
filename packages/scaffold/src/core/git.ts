@@ -61,7 +61,7 @@ function parseGithubRepo(originUrl: string): string | null {
 
   const repoPath = normalized.slice(githubIndex + 'github.com'.length).replace(githubPathPrefixPattern, '')
   const [ owner, repo ] = repoPath.split('/')
-  if (owner === undefined || owner.length === 0 || repo === undefined || repo.length === 0) {
+  if (owner === undefined || repo === undefined || owner.length === 0 || repo.length === 0) {
     return null
   }
 

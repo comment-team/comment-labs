@@ -329,7 +329,7 @@ function createWorkersVitestTemplate(file: WorkersVitestTsconfigFile): string {
     extends: [ file.extendsPath ],
     compilerOptions: file.compilerOptions,
     include: file.include,
-    ...(file.references === undefined ? {} : { references: file.references })
+    ...(file.references !== undefined && { references: file.references })
   }, null, 2)}\n`
 }
 
@@ -362,7 +362,7 @@ function normalizeWorkersVitestTsconfig(current: string, file: WorkersVitestTsco
       }
     },
     include: file.include,
-    ...(file.references === undefined ? {} : { references: file.references })
+    ...(file.references !== undefined && { references: file.references })
   }
 
   const newline = current.includes('\r\n') ? '\r\n' : '\n'
@@ -416,8 +416,8 @@ function detectPreset(packageJson: PackageJson): PresetName | null {
   }
 
   for (const rule of detectionRules) {
-    const markersMatch = rule.markers.some(marker => marker in allDependencies)
-    const requiresMatch = rule.requires?.every(req => req in allDependencies) ?? true
+    const markersMatch = rule.markers.some(marker => Object.hasOwn(allDependencies, marker))
+    const requiresMatch = rule.requires?.every(req => Object.hasOwn(allDependencies, req)) ?? true
     if (markersMatch && requiresMatch) {
       return rule.preset
     }

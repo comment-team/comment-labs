@@ -173,7 +173,7 @@ async function maybeRemoveEslint(context: AppContext, pkg: WorkspacePackage): Pr
   const existingFiles = await getExistingEslintConfigFiles(pkg)
   const lintScript = pkg.packageJson.scripts?.lint
   const hasEslintLintScript = typeof lintScript === 'string' && lintScript.includes('eslint')
-  if (installedPackages.length === 0 && existingFiles.length === 0 && !hasEslintLintScript) {
+  if (!hasEslintLintScript && installedPackages.length === 0 && existingFiles.length === 0) {
     return
   }
 
@@ -206,7 +206,7 @@ async function maybeRemoveManagedLintSetup(context: AppContext, pkg: WorkspacePa
   ]
   const lintScript = pkg.packageJson.scripts?.lint
   const hasManagedLintScript = typeof lintScript === 'string' && isManagedLintScript(lintScript)
-  if (installedPackages.length === 0 && existingFiles.length === 0 && !hasManagedLintScript) {
+  if (!hasManagedLintScript && installedPackages.length === 0 && existingFiles.length === 0) {
     return
   }
 

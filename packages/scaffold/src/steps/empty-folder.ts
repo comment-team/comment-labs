@@ -31,7 +31,7 @@ export async function handleEmptyFolder(context: AppContext): Promise<void> {
 
   const { name } = (await detect({ cwd: context.cwd })) ?? { name: 'none' }
 
-  if (name === 'npm' || name === 'yarn' || name === 'bun') {
+  if ([ 'npm', 'yarn', 'bun' ].includes(name)) {
     throw new Error(`Found ${name} lockfile in an otherwise empty repository. Remove it before running scaffold.`)
   }
 }

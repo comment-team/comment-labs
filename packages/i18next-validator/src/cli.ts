@@ -196,13 +196,7 @@ async function discoverConfiguration(
 
   const hasExplicitConfig = args.locales !== undefined && args['default-ns'] !== undefined
 
-  if (!hasExplicitConfig) {
-    initFile = await discoverInitFile(cwd, args['init-file'])
-    debug('init file:', initFile)
-    config = parseInitConfig(initFile)
-    debug('extracted defaultNS:', config.defaultNS)
-    debug('extracted localeSources:', config.localeSources.map(source => `(${source.type}) ${source.path}`))
-  } else if (args['init-file'] !== undefined) {
+  if (!hasExplicitConfig || args['init-file'] !== undefined) {
     initFile = await discoverInitFile(cwd, args['init-file'])
     debug('init file:', initFile)
     config = parseInitConfig(initFile)

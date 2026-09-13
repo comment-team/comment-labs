@@ -304,7 +304,7 @@ function remapMessage(message: Uint8Array, state: ConnectionState): Uint8Array {
 }
 
 function isFlushBoundary(type: number): boolean {
-  return type === syncMessage || type === queryMessage || type === terminateMessage || type === flushMessage
+  return [ syncMessage, queryMessage, terminateMessage, flushMessage ].includes(type)
 }
 
 function remapParse(message: Uint8Array, state: ConnectionState): Uint8Array {
