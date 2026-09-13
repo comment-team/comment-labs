@@ -5,7 +5,7 @@ import type { GitContext } from './types'
 
 
 const gitSuffix = '.git'
-const githubPathPrefixPattern = /^[/:]+/
+const githubPathPrefixPattern = /^[/:]+/u
 
 export function getGitContext(cwd: string): GitContext {
   const root = runGit(cwd, [ 'rev-parse', '--show-toplevel' ])
@@ -20,8 +20,8 @@ export function getGitContext(cwd: string): GitContext {
   }
 
   const originUrl = runGit(cwd, [ 'remote', 'get-url', 'origin' ])
-  const repositoryName = originUrl !== null ? parseRepositoryName(originUrl) : path.basename(root)
-  const githubRepo = originUrl !== null ? parseGithubRepo(originUrl) : null
+  const repositoryName = originUrl === null ? path.basename(root) : parseRepositoryName(originUrl)
+  const githubRepo = originUrl === null ? null : parseGithubRepo(originUrl)
   const baseBranch
     = runGit(cwd, [ 'symbolic-ref', 'refs/remotes/origin/HEAD' ])?.replace('refs/remotes/origin/', '')
     ?? runGit(cwd, [ 'rev-parse', '--abbrev-ref', 'HEAD' ])

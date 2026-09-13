@@ -127,6 +127,7 @@ describe('bus', () => {
       const one = await listSubscriptions('1')
       expect(one.find(s => s.sessionID === 's1')?.serverUrl).toBe('http://127.0.0.1:2')
       expect(one.find(s => s.sessionID === 's2')?.serverUrl).toBe('http://127.0.0.1:1')
+
       const two = await listSubscriptions('2')
       expect(two.find(s => s.sessionID === 's1')?.serverUrl).toBe('http://127.0.0.1:2')
     })
@@ -136,6 +137,7 @@ describe('bus', () => {
 
       const before = await readFile(join(busDir, 'channels', '1', 'subscriptions', 's1.json'), 'utf8')
       await refreshServerUrls('s1', 'http://127.0.0.1:1')
+
       const after = await readFile(join(busDir, 'channels', '1', 'subscriptions', 's1.json'), 'utf8')
 
       expect(after).toBe(before)
@@ -161,13 +163,13 @@ describe('bus', () => {
       await copySubscriptions('parent', 'child', 'http://127.0.0.1:2', '/tmp/fork')
 
       const subs = await listSubscriptions('1')
-      expect(subs.map(subscription => subscription.sessionID).sort()).toStrictEqual(['child', 'parent'])
+      expect(subs.map(sub => sub.sessionID).sort()).toStrictEqual([ 'child', 'parent' ])
 
-      const child = subs.find(subscription => subscription.sessionID === 'child')
+      const child = subs.find(sub => sub.sessionID === 'child')
       expect(child?.serverUrl).toBe('http://127.0.0.1:2')
       expect(child?.directory).toBe('/tmp/fork')
 
-      expect(await readCursor('1', 'child')).toBe(2)
+      await expect(readCursor('1', 'child')).resolves.toBe(2)
     })
 
     it('starts the child after the newest message when the parent has no cursor', async () => {
@@ -177,13 +179,13 @@ describe('bus', () => {
 
       await copySubscriptions('parent2', 'child2', 'http://127.0.0.1:2', '/tmp/fork')
 
-      expect(await readCursor('1', 'child2')).toBe(await highestSeq('1'))
+      await expect(readCursor('1', 'child2')).resolves.toBe(await highestSeq('1'))
     })
 
     it('does nothing when the parent has no subscriptions', async () => {
       await copySubscriptions('lonely', 'child3', 'http://127.0.0.1:2', '/tmp/fork')
 
-      expect(await listSubscriptions('1')).toHaveLength(0)
+      await expect(listSubscriptions('1')).resolves.toHaveLength(0)
     })
   })
 })

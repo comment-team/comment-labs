@@ -145,9 +145,7 @@ const workersVitestFiles: WorkersVitestTsconfigFile[] = [
       outDir: '../build/test'
     },
     include: [ '**/*', '*.ts', '../src/environment.d.ts' ],
-    references: [
-      { path: '../tsconfig.app.json' }
-    ]
+    references: [{ path: '../tsconfig.app.json' }]
   }
 ]
 
@@ -232,7 +230,11 @@ async function ensureTsconfig(context: AppContext, pkg: WorkspacePackage, preset
   await ensureSingleTsconfig(context, pkg, preset)
 }
 
-async function ensureSingleTsconfig(context: AppContext, pkg: WorkspacePackage, preset: SingleFilePresetName): Promise<void> {
+async function ensureSingleTsconfig(
+  context: AppContext,
+  pkg: WorkspacePackage,
+  preset: SingleFilePresetName
+): Promise<void> {
   const tsconfigPath = path.join(pkg.dirPath, 'tsconfig.json')
   const hasTsconfig = await exists(tsconfigPath)
   if (!hasTsconfig) {
@@ -358,7 +360,7 @@ function normalizeWorkersVitestTsconfig(current: string, file: WorkersVitestTsco
       ...existingCompilerOptions,
       paths: {
         ...existingPaths,
-        ...(file.compilerOptions.paths as Record<string, JsonValue>)
+        ...(isRecord(file.compilerOptions.paths) && file.compilerOptions.paths)
       }
     },
     include: file.include,
@@ -371,7 +373,11 @@ function normalizeWorkersVitestTsconfig(current: string, file: WorkersVitestTsco
   return `${JSON.stringify(next, null, indent)}${newline}`
 }
 
-async function maybeEnsureTypecheckScript(context: AppContext, pkg: WorkspacePackage, preset: PresetName | null): Promise<void> {
+async function maybeEnsureTypecheckScript(
+  context: AppContext,
+  pkg: WorkspacePackage,
+  preset: PresetName | null
+): Promise<void> {
   const command = preset === 'workers-vitest' ? 'tsc --build' : 'tsc'
   const current = pkg.packageJson.scripts?.typecheck
   if (current === command || current === 'tsc -b') {

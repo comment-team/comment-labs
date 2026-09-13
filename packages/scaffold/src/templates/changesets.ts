@@ -6,12 +6,12 @@ export function changesetConfigTemplate(options: {
 }): string {
   const config = {
     $schema: `https://unpkg.com/@changesets/config@${options.packageVersion}/schema.json`,
-    changelog: options.changelogRepo !== undefined
-      ? [
+    changelog: options.changelogRepo === undefined
+      ? '@changesets/cli/changelog'
+      : [
         '@changesets/changelog-github',
         { repo: options.changelogRepo }
-      ]
-      : '@changesets/cli/changelog',
+      ],
     commit: false,
     fixed: [] as string[],
     linked: [] as string[],

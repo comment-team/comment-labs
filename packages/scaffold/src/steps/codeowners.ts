@@ -8,7 +8,7 @@ import type { AppContext } from '../core/types'
 import { codeownersTemplate } from '../templates/codeowners'
 
 
-const ownerSplitPattern = /[\s,]+/
+const ownerSplitPattern = /[\s,]+/u
 
 export async function handleCodeowners(context: AppContext): Promise<void> {
   if (context.git.githubRepo === null) {

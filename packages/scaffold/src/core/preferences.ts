@@ -14,7 +14,7 @@ export async function readPreferences(cwd: string, git: GitContext): Promise<{
 }> {
   const githubPath = path.join(cwd, ...githubPreferencesPath)
   const configPath = path.join(cwd, ...configPreferencesPath)
-  const preferredPath = git.githubRepo !== null ? githubPath : configPath
+  const preferredPath = git.githubRepo === null ? configPath : githubPath
 
   for (const candidatePath of [ githubPath, configPath ]) {
     if (!(await exists(candidatePath))) {

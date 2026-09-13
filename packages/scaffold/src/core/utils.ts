@@ -1,8 +1,8 @@
 import type { PackageJson } from './types'
 
 
-const lineSplitPattern = /\r?\n/
-const indentPattern = /^(\s+)"[^"]+":/
+const lineSplitPattern = /\r?\n/u
+const indentPattern = /^(?<indent>\s+)"[^"]+":/u
 
 export function detectIndent(raw: string): string {
   const lines = raw.split(lineSplitPattern)

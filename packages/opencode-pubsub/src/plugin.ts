@@ -16,13 +16,11 @@ async function logAsync(
   message: string,
   extra?: Record<string, unknown>
 ): Promise<void> {
-  return await (async () => {
-    try {
-      await client.app.log({ body: { service: 'opencode-pubsub', level, message, extra } })
-    } catch {
-      // logging failures are non-fatal and ignored
-    }
-  })()
+  try {
+    await client.app.log({ body: { service: 'opencode-pubsub', level, message, extra } })
+  } catch {
+    // logging failures are non-fatal and ignored
+  }
 }
 
 function makeLog(client: PubsubClient): DelivererLog {

@@ -9,8 +9,8 @@ import { logInfo } from './log'
 import type { AppContext, StepDecision } from './types'
 
 
-const templateBlockSplitPattern = /\n{2,}/
-const conflictMarkerPattern = /^(?:<<<<<<< existing|=======|>>>>>>> scaffold-recommended)$/m
+const templateBlockSplitPattern = /\n{2,}/u
+const conflictMarkerPattern = /^(?:<<<<<<< existing|=======|>>>>>>> scaffold-recommended)$/mu
 const trailingNewlinesPattern = /\n+$/u
 
 export async function exists(filePath: string): Promise<boolean> {

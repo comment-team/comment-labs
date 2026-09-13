@@ -13,7 +13,7 @@ import { invalidateWorkspacePackages } from '../manifests/workspace-package-json
 
 const workspaceSchema = 'https://www.schemastore.org/pnpm-workspace.json'
 const workspaceSchemaComment = `# yaml-language-server: $schema=${workspaceSchema}`
-const trailingWorkspaceNewlinesPattern = /\n+$/
+const trailingWorkspaceNewlinesPattern = /\n+$/u
 
 export async function inferMonorepo(context: AppContext): Promise<boolean> {
   const packagesDir = path.join(context.cwd, 'packages')
@@ -138,7 +138,7 @@ async function selectWorkspacePackages(
   const selectedValues = new Set<string>(values)
   const selectedDirs = dirs.filter(dir => selectedValues.has(dir))
   context.preferences = setPreference(context.preferences, 'workspace.packages.selectAll', false)
-  context.preferences = setPreference(context.preferences, 'workspace.packages.selected', selectedDirs as JsonValue)
+  context.preferences = setPreference(context.preferences, 'workspace.packages.selected', selectedDirs)
   await persistPreferences(context)
 
   return dirs.map(name => ({

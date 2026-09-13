@@ -1,7 +1,7 @@
 import pc from 'picocolors'
 
 
-const trailingNewlinePattern = /\n$/
+const trailingNewlinePattern = /\n$/u
 
 type DiffLine
   = | { type: 'equal'; text: string }

@@ -1,4 +1,4 @@
-const semverPrefixPattern = /^(\d+)\.\d+\.\d+/
+const semverPrefixPattern = /^(?<major>\d+)\.\d+\.\d+/u
 
 export function typescriptRangeNeedsUpdate(range: string): boolean {
   const trimmed = range.trim()

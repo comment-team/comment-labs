@@ -68,7 +68,7 @@ export async function handleChangesets(context: AppContext): Promise<void> {
     await runRootPnpmAddAndRefresh(context, [
       '-D',
       '@changesets/cli',
-      ...(changelogRepo !== undefined ? [ '@changesets/changelog-github' ] : [])
+      ...(changelogRepo === undefined ? [] : [ '@changesets/changelog-github' ])
     ])
   }
 

@@ -307,7 +307,8 @@ export async function unsubscribe(channel: string, sessionID: string): Promise<v
   await rm(cursorPath(busDir, channel, sessionID), { force: true })
 }
 
-export async function listSubscriptions(channel: string): Promise<Subscription[]> {  assertChannel(channel)
+export async function listSubscriptions(channel: string): Promise<Subscription[]> {
+  assertChannel(channel)
 
   let names: string[]
 
@@ -355,13 +356,18 @@ export async function refreshServerUrls(sessionID: string, serverUrl: string): P
       continue
     }
 
-    if (subscription !== undefined && subscription.sessionID === sessionID && subscription.serverUrl !== serverUrl) {
+    if (subscription?.sessionID === sessionID && subscription.serverUrl !== serverUrl) {
       await writeFile(file, JSON.stringify({ ...subscription, serverUrl }), 'utf8')
     }
   }
 }
 
-export async function copySubscriptions(fromSessionID: string, toSessionID: string, serverUrl: string, directory: string): Promise<void> {
+export async function copySubscriptions(
+  fromSessionID: string,
+  toSessionID: string,
+  serverUrl: string,
+  directory: string
+): Promise<void> {
   for (const channel of await listChannels()) {
     const busDir = getBusDir()
 
@@ -377,7 +383,13 @@ export async function copySubscriptions(fromSessionID: string, toSessionID: stri
       continue
     }
 
-    const child: Subscription = { ...parent, sessionID: toSessionID, serverUrl, directory, createdAt: new Date().toISOString() }
+    const child: Subscription = {
+      ...parent,
+      sessionID: toSessionID,
+      serverUrl,
+      directory,
+      createdAt: new Date().toISOString()
+    }
 
     await mkdir(subscriptionsDir(busDir, channel), { recursive: true })
     await writeFile(subscriptionPath(busDir, channel, toSessionID), JSON.stringify(child), 'utf8')

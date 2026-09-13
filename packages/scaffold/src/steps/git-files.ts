@@ -10,7 +10,7 @@ import { gitignoreTemplate } from '../templates/gitignore'
 import { renovateTemplate } from '../templates/renovate'
 
 
-const commentTeamPresetPattern = /(^|>)comment-team\//
+const commentTeamPresetPattern = /(?:^|>)comment-team\//u
 
 export async function handleRenovate(context: AppContext): Promise<void> {
   if (context.git.githubRepo === null) {
@@ -35,11 +35,16 @@ export async function handleRenovate(context: AppContext): Promise<void> {
 function hasCommentTeamRenovatePreset(content: string): boolean {
   try {
     const parsed: unknown = JSON.parse(content)
-    if (typeof parsed !== 'object' || parsed === null || !Array.isArray((parsed as { extends?: unknown }).extends)) {
+    if (typeof parsed !== 'object' || parsed === null) {
       return false
     }
 
-    return ((parsed as { extends: unknown[] }).extends).some(entry => typeof entry === 'string' && commentTeamPresetPattern.test(entry))
+    const extendsList = (parsed as { extends?: unknown }).extends
+    if (!Array.isArray(extendsList)) {
+      return false
+    }
+
+    return extendsList.some(entry => typeof entry === 'string' && commentTeamPresetPattern.test(entry))
   } catch {
     return false
   }

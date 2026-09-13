@@ -25,7 +25,7 @@ const redundantNpmrcSettings = new Map<string, string>([
   [ 'trust-policy', 'no-downgrade' ],
   [ 'verify-deps-before-run', 'warn' ]
 ])
-const trailingNewlinesPattern = /\n+$/
+const trailingNewlinesPattern = /\n+$/u
 
 export async function handleNpmrc(context: AppContext): Promise<void> {
   const npmrcPath = path.join(context.cwd, '.npmrc')
