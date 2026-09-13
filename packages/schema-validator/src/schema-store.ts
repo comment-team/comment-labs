@@ -198,9 +198,7 @@ function getPreferredCacheRoot(): string {
     if (typeof appData === 'string' && appData.length > 0) {
       return path.join(appData, 'comment-labs', 'schema-validator')
     }
-  }
-
-  if (process.platform === 'darwin') {
+  } else if (process.platform === 'darwin') {
     return path.join(os.homedir(), 'Library', 'Caches', 'comment-labs', 'schema-validator')
   }
 

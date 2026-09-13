@@ -31,7 +31,7 @@ type FunctionLikeNode = ScopeNode & {
   params: readonly ScopeNode[]
 }
 
-function isIdentifier(node: { type: string } | ScopeNode): node is IdentifierNode {
+function isIdentifier(node: ScopeNode | { type: string }): node is IdentifierNode {
   return node.type === 'Identifier'
 }
 
@@ -40,9 +40,7 @@ function isAssignmentPattern(node: ScopeNode): node is AssignmentPatternNode {
 }
 
 function isFunctionLike(node: ScopeNode): node is FunctionLikeNode {
-  return node.type === 'FunctionExpression'
-    || node.type === 'FunctionDeclaration'
-    || node.type === 'ArrowFunctionExpression'
+  return [ 'FunctionExpression', 'FunctionDeclaration', 'ArrowFunctionExpression' ].includes(node.type)
 }
 
 function isNode(value: unknown): value is ScopeNode {
@@ -114,11 +112,7 @@ function isReferenceIdentifier(identifier: IdentifierNode, sourceCode: SourceCod
     return false
   }
 
-  if (
-    parent.type === 'ImportSpecifier'
-    || parent.type === 'ImportDefaultSpecifier'
-    || parent.type === 'ImportNamespaceSpecifier'
-  ) {
+  if ([ 'ImportSpecifier', 'ImportDefaultSpecifier', 'ImportNamespaceSpecifier' ].includes(parent.type)) {
     return false
   }
 

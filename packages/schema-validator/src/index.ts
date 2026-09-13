@@ -53,76 +53,65 @@ function parseArgs(argv: string[]): CliOptions {
       process.exit(0)
     }
 
-    if (argument === '--github-actions') {
-      reporter = 'github'
-      continue
-    }
-
-    if (argument === '--add-recommended') {
-      addRecommended = true
-      continue
-    }
-
-    if (argument === '--update-recommended') {
-      updateRecommended = true
-      continue
-    }
-
-    if (argument === '--indent') {
-      const value = argv[index + 1]
-      if (value === undefined) {
-        throw new Error('Expected --indent to have a value')
+    switch (true) {
+      case argument === '--github-actions':
+        reporter = 'github'
+        continue
+      case argument === '--add-recommended':
+        addRecommended = true
+        continue
+      case argument === '--update-recommended':
+        updateRecommended = true
+        continue
+      case argument === '--indent': {
+        const value = argv[index + 1]
+        if (value === undefined) {
+          throw new Error('Expected --indent to have a value')
+        }
+        indent = parseIndentValue(value)
+        index += 1
+        continue
       }
-      indent = parseIndentValue(value)
-      index += 1
-      continue
-    }
-
-    if (argument.startsWith('--indent=')) {
-      const value = argument.slice('--indent='.length)
-      indent = parseIndentValue(value)
-      continue
-    }
-
-    if (argument === '--check-indent') {
-      const value = argv[index + 1]
-      if (value === undefined) {
-        throw new Error('Expected --check-indent to have a value')
+      case argument.startsWith('--indent='): {
+        const value = argument.slice('--indent='.length)
+        indent = parseIndentValue(value)
+        continue
       }
-      checkIndent = parseIndentValue(value)
-      index += 1
-      continue
-    }
-
-    if (argument.startsWith('--check-indent=')) {
-      const value = argument.slice('--check-indent='.length)
-      checkIndent = parseIndentValue(value)
-      continue
-    }
-
-    if (argument === '--reporter') {
-      const value = argv[index + 1]
-      if (value !== 'cli' && value !== 'github') {
-        throw new Error('Expected --reporter to be one of: cli, github')
+      case argument === '--check-indent': {
+        const value = argv[index + 1]
+        if (value === undefined) {
+          throw new Error('Expected --check-indent to have a value')
+        }
+        checkIndent = parseIndentValue(value)
+        index += 1
+        continue
       }
-
-      reporter = value
-      index += 1
-      continue
-    }
-
-    if (argument.startsWith('--reporter=')) {
-      const value = argument.slice('--reporter='.length)
-      if (value !== 'cli' && value !== 'github') {
-        throw new Error('Expected --reporter to be one of: cli, github')
+      case argument.startsWith('--check-indent='): {
+        const value = argument.slice('--check-indent='.length)
+        checkIndent = parseIndentValue(value)
+        continue
       }
+      case argument === '--reporter': {
+        const value = argv[index + 1]
+        if (value !== 'cli' && value !== 'github') {
+          throw new Error('Expected --reporter to be one of: cli, github')
+        }
 
-      reporter = value
-      continue
-    }
+        reporter = value
+        index += 1
+        continue
+      }
+      case argument.startsWith('--reporter='): {
+        const value = argument.slice('--reporter='.length)
+        if (value !== 'cli' && value !== 'github') {
+          throw new Error('Expected --reporter to be one of: cli, github')
+        }
 
-    if (argument.startsWith('-')) {
-      throw new Error(`Unknown option: ${argument}`)
+        reporter = value
+        continue
+      }
+      case argument.startsWith('-'):
+        throw new Error(`Unknown option: ${argument}`)
     }
 
     paths.push(argument)
