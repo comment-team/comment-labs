@@ -49,8 +49,8 @@ async function getGlobals(): Promise<OxlintGlobals> {
   }
 
   const isCloudflare = await enableMode(
-    [ 'wrangler.toml', 'wrangler.json', 'wrangler.jsonc' ],
-    [ '@cloudflare/workers-types', 'wrangler' ]
+    [ 'wrangler.toml', 'wrangler.json', 'wrangler.jsonc', 'cloudflare.config.ts' ],
+    [ '@cloudflare/workers-types', 'wrangler', '@cloudflare/vite-plugin', '@cloudflare/vitest-plugin' ]
   )
 
   if (isCloudflare) {
