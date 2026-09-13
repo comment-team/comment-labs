@@ -102,13 +102,13 @@ function getAncestors(context: Context, node: Node): Node[] {
 }
 
 function withDottedPrefix(patterns: readonly unknown[] = []): readonly unknown[] {
-  return patterns.map(item =>
-    typeof item === 'string' ? `(?:.*\\.)?${item}` : item
-  )
+  return patterns.map(item => typeof item === 'string' ? `(?:.*\\.)?${item}` : item)
 }
 
 function isValidFunctionCall(context: Context, options: Options, { callee }: { callee: Node }): boolean {
-  if ((callee as { type: string }).type === 'Import') return true
+  if ((callee as { type: string }).type === 'Import') {
+    return true
+  }
 
   const sourceText = getText(context, callee)
   const callees = (options.callees as SkipPatterns | undefined) ?? {}
@@ -128,9 +128,12 @@ function isValidLiteral(options: Options, { value }: { value: unknown }): boolea
   }
 
   const trimmed = value.trim()
-  if (!trimmed) return true
+  if (!trimmed) {
+    return true
+  }
 
   const words = (options.words as SkipPatterns | undefined) ?? {}
+
   return shouldSkip(words, trimmed)
 }
 
@@ -143,7 +146,6 @@ function getAttributeName(node: VAttributeNode): string | null {
   if (
     (directiveKey.name.name === 'bind' || directiveKey.name.name === 'model')
     && directiveKey.argument
-    && directiveKey.argument.type === 'VIdentifier'
   ) {
     return directiveKey.argument.rawName
   }
@@ -170,7 +172,7 @@ export const noLiteralString: Rule.RuleModule = {
       description: 'disallow literal string',
       recommended: true
     },
-    schema: [schema],
+    schema: [ schema ],
     messages: {
       literal: '{{message}}: {{parent}}'
     }
@@ -192,7 +194,7 @@ export const noLiteralString: Rule.RuleModule = {
     const mode = rawMode as string
     const framework = rawFramework as string
 
-    const onlyValidateJSX = ['jsx-only', 'jsx-text-only'].includes(mode)
+    const onlyValidateJSX = [ 'jsx-only', 'jsx-text-only' ].includes(mode)
     const onlyValidateVueTemplate = framework === 'vue' && mode === 'vue-template-only'
 
     const indicatorStack: boolean[] = []
@@ -202,7 +204,7 @@ export const noLiteralString: Rule.RuleModule = {
     }
 
     function isValidScope(): boolean {
-      return indicatorStack.some(item => item)
+      return indicatorStack.some(Boolean)
     }
 
     function report(node: Node): void {
@@ -233,12 +235,17 @@ export const noLiteralString: Rule.RuleModule = {
     }
 
     function validateBeforeReport(node: Node & { value: unknown }): void {
-      if (isValidScope()) return
-      if (isValidLiteral(options as Options, node)) return
+      if (isValidScope()) {
+        return
+      }
+
+      if (isValidLiteral(options as Options, node)) {
+        return
+      }
 
       if (typeChecker) {
         const tsNode = esTreeNodeToTSNodeMap?.get(node)
-        if (tsNode) {
+        if (tsNode !== undefined) {
           const typeObj = typeChecker.getContextualType(tsNode)
           if (typeObj) {
             if (typeObj.isStringLiteral()) {
@@ -246,10 +253,10 @@ export const noLiteralString: Rule.RuleModule = {
             }
 
             if (typeObj.isUnion()) {
-              const found = typeObj.types.some(item =>
-                item.isStringLiteral() && item.value === node.value
-              )
-              if (found) return
+              const found = typeObj.types.some(item => item.isStringLiteral() && item.value === node.value)
+              if (found) {
+                return
+              }
             }
           }
         }
@@ -259,17 +266,19 @@ export const noLiteralString: Rule.RuleModule = {
     }
 
     function filterOutJSX(node: Node): boolean {
-      if (!onlyValidateJSX) return false
+      if (!onlyValidateJSX) {
+        return false
+      }
 
-      const isInsideJSX = getAncestors(context, node).some(item =>
-        ['JSXElement', 'JSXFragment'].includes(item.type)
-      )
+      const isInsideJSX = getAncestors(context, node).some(item => [ 'JSXElement', 'JSXFragment' ].includes(item.type))
 
-      if (!isInsideJSX) return true
+      if (!isInsideJSX) {
+        return true
+      }
 
       if (
         mode === 'jsx-text-only'
-        && !['JSXElement', 'JSXFragment'].includes(node.parent?.type ?? '')
+        && ![ 'JSXElement', 'JSXFragment' ].includes(node.parent?.type ?? '')
       ) {
         return true
       }
@@ -321,6 +330,7 @@ export const noLiteralString: Rule.RuleModule = {
         const jsxAttributes = (options['jsx-attributes'] as SkipPatterns | undefined) ?? {}
         if (shouldSkip(jsxAttributes, attrName)) {
           indicatorStack.push(true)
+
           return
         }
 
@@ -328,6 +338,7 @@ export const noLiteralString: Rule.RuleModule = {
         const tagName = (jsxElement.name as JSXIdentifierNode).name
         if (isAllowedDOMAttr(tagName, attrName)) {
           indicatorStack.push(true)
+
           return
         }
 
@@ -380,14 +391,14 @@ export const noLiteralString: Rule.RuleModule = {
       PropertyDefinition(node: Node) {
         const property = node as unknown as { key: { name?: string } }
         const classProperties = (options['class-properties'] as SkipPatterns | undefined) ?? {}
-        indicatorStack.push(!!(property.key.name && shouldSkip(classProperties, property.key.name)))
+        indicatorStack.push(property.key.name !== undefined && shouldSkip(classProperties, property.key.name))
       },
       'PropertyDefinition:exit': endIndicator,
 
       ClassProperty(node: Node) {
         const property = node as unknown as { key: { name?: string } }
         const classProperties = (options['class-properties'] as SkipPatterns | undefined) ?? {}
-        indicatorStack.push(!!(property.key.name && shouldSkip(classProperties, property.key.name)))
+        indicatorStack.push(property.key.name !== undefined && shouldSkip(classProperties, property.key.name))
       },
       'ClassProperty:exit': endIndicator,
 
@@ -400,7 +411,9 @@ export const noLiteralString: Rule.RuleModule = {
       Property(node: Node) {
         const property = node as unknown as { key: { name?: string; value?: unknown } }
         const objectProperties = (options['object-properties'] as SkipPatterns | undefined) ?? {}
-        indicatorStack.push(shouldSkip(objectProperties, property.key.name ?? (property.key.value as string) ?? ''))
+        indicatorStack.push(
+          shouldSkip(objectProperties, property.key.name ?? (property.key.value as string | undefined) ?? '')
+        )
       },
       'Property:exit': endIndicator,
 
@@ -438,16 +451,26 @@ export const noLiteralString: Rule.RuleModule = {
       'AssignmentExpression[left.type="MemberExpression"]:exit': endIndicator,
 
       TemplateLiteral(node: Node) {
-        if (!validateTemplate) return
+        if (!validateTemplate) {
+          return
+        }
 
-        if (framework === 'react' && filterOutJSX(node)) return
+        if (framework === 'react' && filterOutJSX(node)) {
+          return
+        }
 
-        if (isValidScope()) return
+        if (isValidScope()) {
+          return
+        }
 
         const literal = node as unknown as { quasis: Array<{ value: { raw: string } }> }
         literal.quasis.some(({ value: { raw } }) => {
-          if (isValidLiteral(options as Options, { value: raw })) return false
+          if (isValidLiteral(options as Options, { value: raw })) {
+            return false
+          }
+
           report(node)
+
           return true
         })
       },
@@ -455,7 +478,7 @@ export const noLiteralString: Rule.RuleModule = {
       Literal(node: Node) {
         const literal = node as unknown as { value: unknown; parent: { type: string; key?: Node } }
 
-        if (['MemberExpression', 'SwitchCase'].includes(literal.parent.type)) {
+        if ([ 'MemberExpression', 'SwitchCase' ].includes(literal.parent.type)) {
           return
         }
 
@@ -466,9 +489,9 @@ export const noLiteralString: Rule.RuleModule = {
         if (onlyValidateVueTemplate) {
           const parents = getAncestors(context, node)
           if (
-            parents.length
+            parents.length > 0
             && parents.every(
-              item => !['VElement', 'VAttribute', 'VText', 'VExpressionContainer'].includes(item.type)
+              item => ![ 'VElement', 'VAttribute', 'VText', 'VExpressionContainer' ].includes(item.type)
             )
           ) {
             return
@@ -483,8 +506,9 @@ export const noLiteralString: Rule.RuleModule = {
       }
     }
 
-    const defineTemplateBodyVisitor = (parserServices as { defineTemplateBodyVisitor?: DefineTemplateBodyVisitor } | undefined)
-      ?.defineTemplateBodyVisitor
+    const defineTemplateBodyVisitor = (parserServices as {
+      defineTemplateBodyVisitor?: DefineTemplateBodyVisitor
+    } | undefined)?.defineTemplateBodyVisitor
 
     if (defineTemplateBodyVisitor) {
       const invoke = (name: string) => (node: Node) => {

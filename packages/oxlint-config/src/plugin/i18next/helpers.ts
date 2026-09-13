@@ -33,13 +33,17 @@ function isSvgTag(str: string): boolean {
   return SVG_TAGS.includes(str)
 }
 
-const BLACKLIST_ATTRS = ['placeholder', 'alt', 'aria-label', 'value', 'title']
+const BLACKLIST_ATTRS = new Set([ 'placeholder', 'alt', 'aria-label', 'value', 'title' ])
 
 export function isAllowedDOMAttr(tag: string, attr: string): boolean {
-  if (isSvgTag(tag)) return true
-  if (isNativeDOMTag(tag)) {
-    return !BLACKLIST_ATTRS.includes(attr)
+  if (isSvgTag(tag)) {
+    return true
   }
+
+  if (isNativeDOMTag(tag)) {
+    return !BLACKLIST_ATTRS.has(attr)
+  }
+
   return false
 }
 
@@ -53,7 +57,7 @@ export function generateFullMatchRegExp(source: unknown): RegExp {
   }
 
   // oxlint-disable-next-line security-js/detect-non-literal-regexp
-  return new RegExp(`^${source}${source.endsWith('$') ? '' : '$'}`)
+  return new RegExp(`^${source}${source.endsWith('$') ? '' : '$'}`, 'u')
 }
 
 const patternCache = new WeakMap<readonly unknown[], (text: string) => boolean>()
@@ -62,7 +66,7 @@ export function matchPatterns(patterns: readonly unknown[], text: string): boole
   let handler = patternCache.get(patterns)
 
   if (!handler) {
-    handler = (str: string) => patterns.map(generateFullMatchRegExp).some(item => item.test(str))
+    handler = (str: string) => patterns.map(pattern => generateFullMatchRegExp(pattern)).some(item => item.test(str))
     patternCache.set(patterns, handler)
   }
 
@@ -75,11 +79,17 @@ export interface SkipPatterns {
 }
 
 export function shouldSkip({ exclude = [], include = [] }: SkipPatterns, text: string): boolean {
-  if (!include.length && !exclude.length) return false
+  if (include.length === 0 && exclude.length === 0) {
+    return false
+  }
 
-  if (include.length && matchPatterns(include, text)) return false
+  if (include.length > 0 && matchPatterns(include, text)) {
+    return false
+  }
 
-  if (exclude.length && !matchPatterns(exclude, text)) return false
+  if (exclude.length > 0 && !matchPatterns(exclude, text)) {
+    return false
+  }
 
   return true
 }
