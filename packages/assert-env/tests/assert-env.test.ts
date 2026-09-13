@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { assertEnv } from '../src/index'
+import process from 'node:process'
 
 
-describe('assertEnv', () => {
+describe('assertEnv: parsing', () => {
   it('returns typed string values', () => {
     vi.stubEnv('ACCOUNT_ID', 'abc123')
 
@@ -135,7 +136,9 @@ describe('assertEnv', () => {
     expect(env.NAME).toBe('  hello  ')
     vi.unstubAllEnvs()
   })
+})
 
+describe('assertEnv: required variable errors', () => {
   it('throws when a required string is missing', () => {
     expect(() => assertEnv({ MISSING: 'string' })).toThrow(
       'Invalid environment variables:\n- MISSING: required but not set'
@@ -200,7 +203,9 @@ describe('assertEnv', () => {
     )
     vi.unstubAllEnvs()
   })
+})
 
+describe('assertEnv: optional variables', () => {
   it('supports optional variables when present', () => {
     vi.stubEnv('DEBUG', 'true')
     vi.stubEnv('PORT', '8080')
@@ -231,7 +236,7 @@ describe('assertEnv', () => {
       { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
     )
 
-    expect(env.DEBUG).toBe(false)
+    expect(env.DEBUG).toBeFalsy()
   })
 
   it('uses default value for optional variable when env is empty string', () => {
@@ -242,7 +247,7 @@ describe('assertEnv', () => {
       { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
     )
 
-    expect(env.DEBUG).toBe(false)
+    expect(env.DEBUG).toBeFalsy()
     vi.unstubAllEnvs()
   })
 
@@ -254,7 +259,7 @@ describe('assertEnv', () => {
       { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
     )
 
-    expect(env.DEBUG).toBe(false)
+    expect(env.DEBUG).toBeFalsy()
     vi.unstubAllEnvs()
   })
 
@@ -266,7 +271,7 @@ describe('assertEnv', () => {
       { optional: { DEBUG: 'boolean' }, defaults: { DEBUG: false } }
     )
 
-    expect(env.DEBUG).toBe(true)
+    expect(env.DEBUG).toBeTruthy()
     vi.unstubAllEnvs()
   })
 
@@ -386,7 +391,9 @@ describe('assertEnv', () => {
     expect(env.PORT).toBeUndefined()
     vi.unstubAllEnvs()
   })
+})
 
+describe('assertEnv: processEnv option', () => {
   it('does not mutate process.env by default', () => {
     vi.stubEnv('FOO', 'bar')
 

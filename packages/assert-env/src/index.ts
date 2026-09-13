@@ -1,33 +1,29 @@
 import process from 'node:process'
 
+
 export type EnvType = 'string' | 'number' | 'boolean'
-
 export type EnvSchema = Record<string, EnvType>
-
 type TypeMap = {
   string: string
   number: number
   boolean: boolean
 }
-
 type InferEnvSchema<T extends EnvSchema> = {
   [K in keyof T]: TypeMap[T[K]]
 }
-
 type EnvDefaults<O extends EnvSchema> = Partial<InferEnvSchema<O>>
-
-type OptionalResult<O extends EnvSchema, D extends EnvDefaults<O> = {}> = {
+type EmptyObject = Record<never, never>
+type OptionalResult<O extends EnvSchema, D extends EnvDefaults<O> = EmptyObject> = {
   [K in keyof O as K extends keyof D ? never : K]?: TypeMap[O[K]] | undefined
 } & {
   [K in keyof O as K extends keyof D ? K : never]: TypeMap[O[K]]
 }
 
-export interface AssertEnvOptions<O extends EnvSchema, D extends EnvDefaults<O> = {}> {
+export interface AssertEnvOptions<O extends EnvSchema, D extends EnvDefaults<O> = EmptyObject> {
   optional?: O
   defaults?: D
   processEnv?: boolean
 }
-
 interface ValidationError {
   name: string
   message: string
@@ -88,13 +84,13 @@ function assertSingleEnv(
 }
 
 export function assertEnv<R extends EnvSchema>(required: R): InferEnvSchema<R>
-export function assertEnv<R extends EnvSchema, O extends EnvSchema, D extends EnvDefaults<O> = {}>(
+export function assertEnv<R extends EnvSchema, O extends EnvSchema, D extends EnvDefaults<O> = EmptyObject>(
   required: R,
   options: AssertEnvOptions<O, D>
 ): InferEnvSchema<R> & OptionalResult<O, D>
 export function assertEnv(
   required: EnvSchema,
-  options?: AssertEnvOptions<EnvSchema>
+  options?: AssertEnvOptions<EnvSchema, EnvDefaults<EnvSchema>>
 ): Record<string, string | number | boolean> {
   const errors: ValidationError[] = []
   const result: Record<string, string | number | boolean> = {}
@@ -113,9 +109,12 @@ export function assertEnv(
       const raw = process.env[name]
 
       if (raw === undefined || raw.trim() === '') {
-        if (options.defaults !== undefined && Object.hasOwn(options.defaults, name)) {
-          result[name] = (options.defaults as Record<string, string | number | boolean>)[name]!
+        const value = options.defaults?.[name]
+
+        if (value !== undefined) {
+          result[name] = value
         }
+
         continue
       }
 
