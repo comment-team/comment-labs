@@ -68,7 +68,7 @@ export function createSchemaStore(warnings: string[], logger: Logger): SchemaSto
       schemaPromiseCache.set(normalizedUrl, schemaPromise)
     }
 
-    return schemaPromise
+    return await schemaPromise
   }
 
   async function findRecommendation(filePath: string): Promise<SchemaCatalogEntry | undefined> {
@@ -260,7 +260,7 @@ function matchPatternSegments(patternSegments: string[], candidateSegments: stri
       return cached
     }
 
-    let result = false
+    let result: boolean
     const patternSegment = patternSegments[patternIndex]
 
     if (patternSegment === undefined) {
@@ -296,7 +296,7 @@ function matchSegment(patternSegment: string, candidateSegment: string): boolean
       return cached
     }
 
-    let result = false
+    let result: boolean
     const patternCharacter = patternSegment[patternIndex]
 
     switch (patternCharacter) {

@@ -24,9 +24,9 @@ import type {
 } from './types'
 
 
-const yamlSchemaCommentRegex = /^[\t ]*#\s*yaml-language-server:\s*\$schema=([^\s#]+)[\t ]*$/m
-const tomlSchemaCommentRegex = /^[\t ]*#:\s*schema\s+(\S+)[\t ]*$/im
-const indentSizeRegex = /^( +)\S/mu
+const yamlSchemaCommentRegex = /^[\t ]*#\s*yaml-language-server:\s*\$schema=(?<schemaUrl>[^\s#]+)[\t ]*$/mu
+const tomlSchemaCommentRegex = /^[\t ]*#:\s*schema\s+(?<schemaUrl>\S+)[\t ]*$/imu
+const indentSizeRegex = /^(?<indent> +)\S/mu
 const urlSchemeRegex = /^https?:\/\//u
 
 export function createValidators(schemaStore: SchemaStore): ValidatorCollection {
@@ -122,18 +122,21 @@ export async function writeSchemaHint(filePath: string, schemaText: string): Pro
     case '.json':
     case '.jsonc':
     case '.json5':
-      return addRecommendedJsonSchema(filePath, content, schemaText, true)
+      return await addRecommendedJsonSchema(filePath, content, schemaText, true)
     case '.yaml':
     case '.yml':
-      return addRecommendedYamlSchema(filePath, content, schemaText)
+      return await addRecommendedYamlSchema(filePath, content, schemaText)
     case '.toml':
-      return addRecommendedTomlSchema(filePath, content, schemaText)
+      return await addRecommendedTomlSchema(filePath, content, schemaText)
     default:
       throw new Error(`Unsupported file extension for ${filePath}`)
   }
 }
 
-export async function convertIndent(filePath: string, indent: { insertSpaces: boolean; tabSize: number }): Promise<void> {
+export async function convertIndent(
+  filePath: string,
+  indent: { insertSpaces: boolean; tabSize: number }
+): Promise<void> {
   const nextContent = await formatContent(filePath, indent)
 
   if (nextContent !== null) {
@@ -176,17 +179,24 @@ export async function formatContent(
 
       return nextContent
     }
+
     case '.yaml':
     case '.yml': {
-      const data = YAML.parse(content)
+      const data: unknown = YAML.parse(content)
+
       return YAML.stringify(data, null, {
         indent: indent.insertSpaces ? indent.tabSize : 2
       })
     }
+
     case '.toml': {
       const data = parseToml(content)
+
       return stringifyToml(data)
     }
+
+    default:
+      throw new Error(`Unsupported file extension for ${filePath}`)
   }
 }
 
@@ -234,7 +244,7 @@ export async function validateFileAgainstResolvedSchema(
       const validatorName = getValidatorName(schema)
       logger.progress(`Compiling ${validatorName} validator for schema: ${sourceText}`)
 
-      return validators[validatorName].compileAsync(schema)
+      return await validators[validatorName].compileAsync(schema)
     })()
     validatorCache.set(schemaUrl, validatePromise)
   }

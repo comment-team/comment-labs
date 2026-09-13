@@ -24,6 +24,8 @@ import type { CliOptions, Logger, Recommendation, ReporterMode, RunResult, Sugge
 
 
 const urlSchemeRegex = /^https?:\/\//u
+const diffHeaderRegex = /^diff --git .+\n/u
+const diffFilePathsRegex = /^--- .+\n\+\+\+ .+\n/mu
 
 
 async function main(): Promise<void> {
@@ -68,29 +70,35 @@ function parseArgs(argv: string[]): CliOptions {
         if (value === undefined) {
           throw new Error('Expected --indent to have a value')
         }
+
         indent = parseIndentValue(value)
         index += 1
         continue
       }
+
       case argument.startsWith('--indent='): {
         const value = argument.slice('--indent='.length)
         indent = parseIndentValue(value)
         continue
       }
+
       case argument === '--check-indent': {
         const value = argv[index + 1]
         if (value === undefined) {
           throw new Error('Expected --check-indent to have a value')
         }
+
         checkIndent = parseIndentValue(value)
         index += 1
         continue
       }
+
       case argument.startsWith('--check-indent='): {
         const value = argument.slice('--check-indent='.length)
         checkIndent = parseIndentValue(value)
         continue
       }
+
       case argument === '--reporter': {
         const value = argv[index + 1]
         if (value !== 'cli' && value !== 'github') {
@@ -101,6 +109,7 @@ function parseArgs(argv: string[]): CliOptions {
         index += 1
         continue
       }
+
       case argument.startsWith('--reporter='): {
         const value = argument.slice('--reporter='.length)
         if (value !== 'cli' && value !== 'github') {
@@ -110,8 +119,13 @@ function parseArgs(argv: string[]): CliOptions {
         reporter = value
         continue
       }
+
       case argument.startsWith('-'):
         throw new Error(`Unknown option: ${argument}`)
+
+      // oxlint-disable-next-line typescript/no-unnecessary-condition
+      case true:
+        break
     }
 
     paths.push(argument)
@@ -131,15 +145,18 @@ function parseIndentValue(value: string): { insertSpaces: boolean; tabSize: numb
   if (value === 'tabs') {
     return { insertSpaces: false, tabSize: 1 }
   }
+
   if (value === 'spaces') {
     return { insertSpaces: true, tabSize: 2 }
   }
+
   if (value.startsWith('spaces-')) {
     const num = Number(value.slice('spaces-'.length))
     if (Number.isSafeInteger(num) && num > 0) {
       return { insertSpaces: true, tabSize: num }
     }
   }
+
   throw new Error('Expected --indent to be one of: spaces, spaces-<number>, tabs')
 }
 
@@ -275,6 +292,7 @@ async function run(options: CliOptions): Promise<RunResult> {
 
   if (options.checkIndent) {
     logger.progress(`Checking indentation for ${inputFiles.length} file(s)...`)
+
     for (const filePath of inputFiles) {
       try {
         const original = await readFile(filePath, 'utf8')
@@ -305,6 +323,7 @@ async function run(options: CliOptions): Promise<RunResult> {
 
   if (options.indent) {
     logger.progress(`Converting indentation for ${inputFiles.length} file(s)...`)
+
     for (const filePath of inputFiles) {
       try {
         await convertIndent(filePath, options.indent)
@@ -453,8 +472,8 @@ function createDiff(original: string, formatted: string, filePath: string): stri
       const relativePath = path.relative(process.cwd(), filePath)
 
       return result.stdout
-        .replace(/^diff --git .+\n/u, '')
-        .replace(/^--- .+\n\+\+\+ .+\n/mu, `--- a/${relativePath}\n+++ b/${relativePath}\n`)
+        .replace(diffHeaderRegex, '')
+        .replace(diffFilePathsRegex, `--- a/${relativePath}\n+++ b/${relativePath}\n`)
         .trimEnd()
     }
 
