@@ -291,51 +291,11 @@ async function run(options: CliOptions): Promise<RunResult> {
   }
 
   if (options.checkIndent) {
-    logger.progress(`Checking indentation for ${inputFiles.length} file(s)...`)
-
-    for (const filePath of inputFiles) {
-      try {
-        const original = await readFile(filePath, 'utf8')
-        const formatted = await formatContent(filePath, options.checkIndent)
-
-        if (formatted !== null && original !== formatted) {
-          suggestions.push({
-            filePath,
-            line: 1,
-            diff: createDiff(original, formatted, filePath)
-          })
-          issues.push({
-            filePath,
-            line: 1,
-            message: 'Indentation does not match the configured style',
-            title: 'Indentation mismatch'
-          })
-        }
-      } catch (error) {
-        issues.push({
-          filePath,
-          message: toErrorMessage(error),
-          ...toIssueLocation(error)
-        })
-      }
-    }
+    await checkIndentation(inputFiles, options.checkIndent, suggestions, issues, logger)
   }
 
   if (options.indent) {
-    logger.progress(`Converting indentation for ${inputFiles.length} file(s)...`)
-
-    for (const filePath of inputFiles) {
-      try {
-        await convertIndent(filePath, options.indent)
-        logger.progress(`Updated indentation for ${path.relative(process.cwd(), filePath) || filePath}`)
-      } catch (error) {
-        issues.push({
-          filePath,
-          message: toErrorMessage(error),
-          ...toIssueLocation(error)
-        })
-      }
-    }
+    await convertIndentation(inputFiles, options.indent, issues, logger)
   }
 
   logger.stopValidation()
@@ -346,6 +306,65 @@ async function run(options: CliOptions): Promise<RunResult> {
     suggestions,
     warnings,
     checkedFiles: inputFiles.length
+  }
+}
+
+async function checkIndentation(
+  inputFiles: string[],
+  indent: { insertSpaces: boolean; tabSize: number },
+  suggestions: Suggestion[],
+  issues: ValidationIssue[],
+  logger: Logger
+): Promise<void> {
+  logger.progress(`Checking indentation for ${inputFiles.length} file(s)...`)
+
+  for (const filePath of inputFiles) {
+    try {
+      const original = await readFile(filePath, 'utf8')
+      const formatted = await formatContent(filePath, indent)
+
+      if (formatted !== null && original !== formatted) {
+        suggestions.push({
+          filePath,
+          line: 1,
+          diff: createDiff(original, formatted, filePath)
+        })
+        issues.push({
+          filePath,
+          line: 1,
+          message: 'Indentation does not match the configured style',
+          title: 'Indentation mismatch'
+        })
+      }
+    } catch (error) {
+      issues.push({
+        filePath,
+        message: toErrorMessage(error),
+        ...toIssueLocation(error)
+      })
+    }
+  }
+}
+
+async function convertIndentation(
+  inputFiles: string[],
+  indent: { insertSpaces: boolean; tabSize: number },
+  issues: ValidationIssue[],
+  logger: Logger
+): Promise<void> {
+  logger.progress(`Converting indentation for ${inputFiles.length} file(s)...`)
+
+  for (const filePath of inputFiles) {
+    try {
+      await convertIndent(filePath, indent)
+      logger.progress(`Updated indentation for ${path.relative(process.cwd(), filePath) || filePath}`)
+    } catch (error) {
+      issues.push({
+        filePath,
+        message: toErrorMessage(error),
+        ...toIssueLocation(error)
+      })
+    }
   }
 }
 
