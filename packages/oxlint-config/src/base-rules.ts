@@ -99,11 +99,7 @@ export const baseRules: DummyRuleMap = {
   'import/unambiguous': 'off',
 
   'node/no-top-level-await': 'off',
-  'node/no-sync': [
-    'warn', {
-      ignores: [ 'execSync' ]
-    }
-  ],
+  'node/no-sync': 'off',
 
   'react/react-in-jsx-scope': 'off',
   'react/jsx-filename-extension': [ 'error', { extensions: [ 'jsx', 'tsx' ] }],
