@@ -208,8 +208,8 @@ importers:
         specifier: ^0.0.22
         version: 0.0.22(cac@7.0.0)
       '@clack/prompts':
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ^1.8.0
+        version: 1.8.0
       nostics:
         specifier: ^1.2.0
         version: 1.2.0
@@ -701,12 +701,12 @@ packages:
     resolution: {integrity: sha512-q/ThtP9gcnEP6xlv7LrY26C2mHqdGBti/MmOVngt/M/oIGYkssmQGxPK9WzBNt2juVcH/vml2WQ+ra8LXYOTaA==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@clack/core@1.4.3':
-    resolution: {integrity: sha512-/kr3UWNtdJfxZtPgDqUOmG2pvwlmcLGheex5yiZKdwbzZJxhV+HMNR9QNmyY5cGwTNV6LrR7Jtp+KjhUAP1qBQ==}
+  '@clack/core@1.5.0':
+    resolution: {integrity: sha512-zNikCcd8BbcEvzzG1sbXFrRHFk5kHPrpwZwksPvf9qyQO1Teb7JaXaOAxXZei9nZLDW0gaZawiuTCji88bTBhw==}
     engines: {node: '>= 20.12.0'}
 
-  '@clack/prompts@1.7.0':
-    resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
+  '@clack/prompts@1.8.0':
+    resolution: {integrity: sha512-PXzLZ8N34rxmuo4dJg3xtOXhcBse94qGjDqsteoEYrFrrZ5FSjIGwMAuOcv64ln8rHVBBD06XeVGr+/JX+plcA==}
     engines: {node: '>= 20.12.0'}
 
   '@cloudflare/kv-asset-handler@0.5.0':
@@ -3773,7 +3773,7 @@ snapshots:
       '@changesets/should-skip-package': 1.0.0
       '@changesets/types': 7.0.0
       '@changesets/write': 1.0.1
-      '@clack/prompts': 1.7.0
+      '@clack/prompts': 1.8.0
       '@manypkg/get-packages': 3.1.0
       '@pnpm/deps.graph-sequencer': 1100.0.1
       cac: 7.0.0
@@ -3844,14 +3844,14 @@ snapshots:
       '@changesets/types': 7.0.0
       human-id: 4.2.1
 
-  '@clack/core@1.4.3':
+  '@clack/core@1.5.0':
     dependencies:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@clack/prompts@1.7.0':
+  '@clack/prompts@1.8.0':
     dependencies:
-      '@clack/core': 1.4.3
+      '@clack/core': 1.5.0
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
@@ -4720,45 +4720,65 @@ snapshots:
   '@typescript-native-bridge/win32-x64@6.0.3-bridge.12.tsgo.7.0.2':
     optional: true
 
-  '@typescript/typescript-aix-ppc64@7.0.2': {}
+  '@typescript/typescript-aix-ppc64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-darwin-arm64@7.0.2': {}
+  '@typescript/typescript-darwin-arm64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-darwin-x64@7.0.2': {}
+  '@typescript/typescript-darwin-x64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-freebsd-arm64@7.0.2': {}
+  '@typescript/typescript-freebsd-arm64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-freebsd-x64@7.0.2': {}
+  '@typescript/typescript-freebsd-x64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-arm64@7.0.2': {}
+  '@typescript/typescript-linux-arm64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-arm@7.0.2': {}
+  '@typescript/typescript-linux-arm@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-loong64@7.0.2': {}
+  '@typescript/typescript-linux-loong64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-mips64el@7.0.2': {}
+  '@typescript/typescript-linux-mips64el@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-ppc64@7.0.2': {}
+  '@typescript/typescript-linux-ppc64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-riscv64@7.0.2': {}
+  '@typescript/typescript-linux-riscv64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-s390x@7.0.2': {}
+  '@typescript/typescript-linux-s390x@7.0.2':
+    optional: true
 
-  '@typescript/typescript-linux-x64@7.0.2': {}
+  '@typescript/typescript-linux-x64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-netbsd-arm64@7.0.2': {}
+  '@typescript/typescript-netbsd-arm64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-netbsd-x64@7.0.2': {}
+  '@typescript/typescript-netbsd-x64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-openbsd-arm64@7.0.2': {}
+  '@typescript/typescript-openbsd-arm64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-openbsd-x64@7.0.2': {}
+  '@typescript/typescript-openbsd-x64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-sunos-x64@7.0.2': {}
+  '@typescript/typescript-sunos-x64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-win32-arm64@7.0.2': {}
+  '@typescript/typescript-win32-arm64@7.0.2':
+    optional: true
 
-  '@typescript/typescript-win32-x64@7.0.2': {}
+  '@typescript/typescript-win32-x64@7.0.2':
+    optional: true
 
   '@vitest/coverage-v8@4.1.11(vitest@4.1.11)':
     dependencies:
