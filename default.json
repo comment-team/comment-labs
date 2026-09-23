@@ -97,7 +97,8 @@
         "patch"
       ],
       "prPriority": 5,
-      "groupName": "cloudflare"
+      "groupName": "cloudflare",
+      "schedule": [ "* 1-8 * * 1" ]
     },
     {
       "matchPackageNames": [
@@ -107,7 +108,8 @@
         "major"
       ],
       "groupName": "cloudflare",
-      "separateMajorMinor": false
+      "separateMajorMinor": false,
+      "schedule": [ "* 1-8 * * 1" ]
     },
     {
       "matchPackageNames": [
