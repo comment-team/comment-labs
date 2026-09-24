@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { isAbsolute, resolve } from 'node:path'
 import { glob } from 'tinyglobby'
+import type { PGliteInterface } from '@electric-sql/pglite'
 import type { SqlSource } from './types'
 
 
@@ -32,6 +33,21 @@ export async function readSql(source: SqlSource | undefined, cwd: string): Promi
   const files = await Promise.all(paths.map(async path => await readFile(path, 'utf8')))
 
   return files
+}
+
+/**
+ * Applies every SQL file referenced by `source` to `database`, in order.
+ */
+export async function applySqlSource(
+  database: PGliteInterface,
+  source: SqlSource | undefined,
+  cwd: string
+): Promise<void> {
+  const sqls = await readSql(source, cwd)
+
+  for (const sql of sqls) {
+    await database.exec(sql)
+  }
 }
 
 function isGlob(source: string): boolean {

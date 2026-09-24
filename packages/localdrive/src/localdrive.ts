@@ -5,7 +5,7 @@ import { unaccent } from '@electric-sql/pglite/contrib/unaccent'
 import process from 'node:process'
 import { resolve } from 'node:path'
 import { startControlServer, type LocaldriveControlServer } from './control-server'
-import { readSql } from './sql'
+import { applySqlSource } from './sql'
 import { LocaldriveSocketServer } from './socket-server'
 import { TestDatabase } from './test-database'
 import type { LocaldriveBindingOptions, LocaldriveController, LocaldriveDatabase, LocaldriveOptions } from './types'
@@ -18,14 +18,50 @@ const extensionSql = `
   CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 `
 
+/**
+ * PostgreSQL extensions that every Localdrive template installs. They must be
+ * registered on any PGlite instance restored from a template dump so that
+ * extension state kept inside the data directory keeps working.
+ */
+export const localdriveExtensions = {
+  pg_trgm,
+  unaccent,
+  pg_stat_statements
+}
+
 interface Template {
   options: LocaldriveBindingOptions
   database: PGlite
 }
 
+/**
+ * Clones a template, applies the binding's `beforeEach` SQL, and serves the
+ * clone over a PostgreSQL wire socket. Shared by the core-thread controller
+ * and the database host worker thread so both produce identical databases.
+ */
+export async function createTestDatabase(
+  template: PGlite,
+  options: LocaldriveBindingOptions,
+  cwd: string
+): Promise<TestDatabase> {
+  const database = await template.clone()
+
+  if (!(database instanceof PGlite)) {
+    throw new Error('Cloned database is not a PGlite instance')
+  }
+
+  await applySqlSource(database, options.beforeEach, cwd)
+
+  const server = new LocaldriveSocketServer({ db: database, host: '127.0.0.1', maxConnections: 16, port: 0 })
+  await server.start()
+
+  return new TestDatabase(database, server, template, options.beforeEach, cwd)
+}
+
 export class Localdrive implements LocaldriveController {
-  private readonly cwd: string
+  readonly cwd: string
   private readonly templates = new Map<string, Template>()
+  private readonly templateDumps = new Map<string, Uint8Array>()
   private activeDatabases: Record<string, LocaldriveDatabase> | undefined
   controlServer?: LocaldriveControlServer
   private initialized = false
@@ -52,7 +88,7 @@ export class Localdrive implements LocaldriveController {
 
       for (const [ name, bindingOptions ] of Object.entries(this.options.bindings)) {
         const database = await PGlite.create({
-          extensions: { pg_trgm, unaccent, pg_stat_statements }
+          extensions: localdriveExtensions
         })
         await database.exec(extensionSql)
         await this.execute(database, bindingOptions.migrations)
@@ -78,22 +114,7 @@ export class Localdrive implements LocaldriveController {
 
     try {
       for (const [ name, template ] of this.templates) {
-        const database = await template.database.clone()
-        await this.execute(database, template.options.beforeEach)
-
-        if (!(database instanceof PGlite)) {
-          throw new Error('Cloned database is not a PGlite instance')
-        }
-
-        const server = new LocaldriveSocketServer({ db: database, host: '127.0.0.1', maxConnections: 16, port: 0 })
-        await server.start()
-        databases[name] = new TestDatabase(
-          database,
-          server,
-          template.database,
-          template.options.beforeEach,
-          this.cwd
-        )
+        databases[name] = await createTestDatabase(template.database, template.options, this.cwd)
       }
 
       this.activeDatabases = databases
@@ -104,6 +125,36 @@ export class Localdrive implements LocaldriveController {
 
       throw error
     }
+  }
+
+  /**
+   * Returns the template's data directory as a tar dump, so another thread or
+   * process can restore an equivalent PGlite instance from it. The dump is
+   * computed once per binding and cached for the controller's lifetime.
+   */
+  async getTemplateDataDir(name: string): Promise<Uint8Array> {
+    if (!this.initialized) {
+      throw new Error('Call initialize() before reading template dumps')
+    }
+
+    const cached = this.templateDumps.get(name)
+
+    if (cached !== undefined) {
+      return cached
+    }
+
+    const template = this.templates.get(name)
+
+    if (template === undefined) {
+      throw new Error(`Unknown Localdrive binding: ${name}`)
+    }
+
+    const dump = await template.database.dumpDataDir()
+    const bytes = new Uint8Array(await dump.arrayBuffer())
+
+    this.templateDumps.set(name, bytes)
+
+    return bytes
   }
 
   async reset(): Promise<void> {
@@ -122,6 +173,7 @@ export class Localdrive implements LocaldriveController {
 
     await Promise.all(Array.from(this.templates.values(), async ({ database }) => await database.close()))
     this.templates.clear()
+    this.templateDumps.clear()
 
     if (this.controlServer !== undefined) {
       await this.controlServer.stop()
@@ -132,10 +184,6 @@ export class Localdrive implements LocaldriveController {
   }
 
   private async execute(database: PGliteInterface, source: LocaldriveBindingOptions['migrations']): Promise<void> {
-    const sqls = await readSql(source, this.cwd)
-
-    for (const sql of sqls) {
-      await database.exec(sql)
-    }
+    await applySqlSource(database, source, this.cwd)
   }
 }

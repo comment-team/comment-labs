@@ -177,6 +177,60 @@ describe('users', () => {
 
 Expose a matching endpoint in your Worker to truncate or reset the tables you touch during tests.
 
+### Worker reuse with `test.isolate: false`
+
+By default Vitest starts a fresh Cloudflare pool worker (a new workerd process and module registry) for every test file, and every file pays a cold workerd boot plus a cold evaluation of your module graph. Set `test.isolate: false` in your Vitest config and localdrive reuses one pool worker across files instead:
+
+```ts
+export default defineConfig({
+  test: {
+    isolate: false
+  },
+  plugins: [
+    localdriveCloudflareTest({
+      bindings: { FLAGSHIP_DB: { migrations: 'drizzle/*.sql' } },
+      cloudflare: { /* ... */ }
+    })
+  ]
+})
+```
+
+What this changes — and what it deliberately does not:
+
+- **Per-file database isolation is preserved.** Before each file's work message is forwarded to workerd, every database the worker owns is reset to a fresh template clone plus its `beforeEach` SQL, exactly like a brand new worker. Cross-file queries can never observe another file's rows, tables, or sequence state, regardless of scheduling order or of files failing mid-test.
+- **The module registry is shared between files paired on the same worker**, which is Vitest's documented `isolate: false` behavior with plain `@cloudflare/vitest-plugin` too. Module-level state leaks between files that share a runner; if your tests rely on pristine module state, keep `isolate: true` (the default) and forgo the reuse speedup.
+- **Keep `maxWorkers` above 1.** Vitest packs every file into a single worker request when `test.isolate: false` is combined with a single worker, and there is no per-file message boundary left to reset at; the databases and the module registry are shared between the packed files and localdrive prints a one-time warning. Any value above 1 (the default scales with your CPU count) keeps one file per request.
+- Nothing about the contract is activated unless you opt in: with the default `isolate: true`, Vitest never asks localdrive whether its worker can be reused, and every file still gets a fresh workerd and fresh databases.
+
+### Pool worker options
+
+| Option                         | Type               | Default    | Description                                                                                                            |
+| ------------------------------ | ------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `workerReuse`                  | `boolean`          | `true`     | Lets Vitest reuse one pool worker across files. Inert without consumer `test.isolate: false`.                          |
+| `databaseHost`                 | `'thread' \| 'inline'` | `'thread'` | Where each pool worker's PGlite instances and socket servers run.                                                      |
+| `databaseHostResourceLimits`   | `object`            | -          | `resourceLimits` passed to the database host `worker_threads` Worker (thread mode only).                                |
+| `databaseHostRpcTimeoutMs`     | `number`            | `60_000`   | Timeout for one request to the database host thread: create, reset, query, or close (thread mode only).                |
+
+```ts
+localdriveCloudflareTest({
+  bindings: { FLAGSHIP_DB: { migrations: 'drizzle/*.sql' } },
+  workerReuse: true,
+  databaseHost: 'thread',
+  databaseHostResourceLimits: { maxOldGenerationSizeMb: 512 },
+  databaseHostRpcTimeoutMs: 120_000,
+  cloudflare: { /* ... */ }
+})
+```
+
+- **`databaseHost: 'thread'` (default)** moves every pool worker's PGlite template clones, database clones, and PostgreSQL wire sockets into a dedicated `worker_threads` worker, so SQL from parallel test files runs on separate threads instead of blocking the Vitest core thread. The template travels to the host thread once per worker as a PGlite data-directory dump and is restored there with the exact same extensions, schema, and seed data the core thread built; clones and resets happen inside the host thread afterwards. Set `databaseHost: 'inline'` to fall back to the pre-thread behavior where everything runs on the core thread.
+- The connection strings stay plain `postgresql://…` URLs on `127.0.0.1`, so nothing changes for workerd or consumer code.
+
+### Security notes
+
+- Every localdrive surface binds to loopback only: the PostgreSQL wire sockets and the HTTP control server listen on `127.0.0.1`.
+- The control server (`LOCALDRIVE_CONTROL_URL`) has no authentication. Any local process — and any page open in your developer browser, since plain HTTP loopback is reachable from web origins — can trigger a reset of the registered databases. Do not enable port forwarding for localdrive ports, and treat localdrive URLs as test-only credentials.
+- Database host worker threads are plain Node workers; their `resourceLimits` can be capped with `databaseHostResourceLimits`.
+
 ### Accessing the binding inside the Worker
 
 The binding is passed to the Worker like a normal Hyperdrive binding:

@@ -1,6 +1,6 @@
 import { PGlite, type PGliteInterface } from '@electric-sql/pglite'
 import { randomUUID } from 'node:crypto'
-import { readSql } from './sql'
+import { applySqlSource } from './sql'
 import { LocaldriveSocketServer } from './socket-server'
 import type { LocaldriveBindingOptions, LocaldriveDatabase } from './types'
 import { registerTestDatabase, unregisterTestDatabase } from './database-registry'
@@ -104,10 +104,6 @@ export class TestDatabase implements LocaldriveDatabase {
   }
 
   private async executeBeforeEach(database: PGliteInterface): Promise<void> {
-    const sqls = await readSql(this.beforeEach, this.cwd)
-
-    for (const sql of sqls) {
-      await database.exec(sql)
-    }
+    await applySqlSource(database, this.beforeEach, this.cwd)
   }
 }
