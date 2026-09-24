@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     include: [ 'tests/cloudflare/**/*.test.ts' ],
-    exclude: [ 'tests/cloudflare/file-scope-reset.test.ts' ]
+    exclude: [ 'tests/cloudflare/file-scope-reset.test.ts', 'tests/cloudflare/file-reuse-*.test.ts' ]
   },
   plugins: [
     localdriveCloudflareTest({
