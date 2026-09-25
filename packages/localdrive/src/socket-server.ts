@@ -161,7 +161,7 @@ export class LocaldriveSocketServer {
   private drainConnection(socket: Socket, state: ConnectionState): void {
     let buffer = state.buffer
 
-    for (;;) {
+    for (; ;) {
       if (buffer.length >= 8 && readInt32BE(buffer, 0) === 8 && readInt32BE(buffer, 4) === sslRequestCode) {
         socket.write('N')
         buffer = buffer.subarray(8)
@@ -241,22 +241,33 @@ export class LocaldriveSocketServer {
     }
 
     this.queue.push(batch)
-    this.drain ??= this.drainQueue()
+
+    // Clearing `drain` inside drainQueue is racy: when pickBatch()
+    // rejects the very first batch synchronously (another connection is
+    // mid-transaction), drainQueue() settles before `??=` assigns it,
+    // and the settled promise stays in `drain` forever, wedging every
+    // later batch. Awaiting it in runDrain() below defers the clear to
+    // a microtask, which always runs after the assignment.
+    this.drain ??= this.runDrain()
+  }
+
+  private async runDrain(): Promise<void> {
+    try {
+      await this.drainQueue()
+    } finally {
+      this.drain = undefined
+    }
   }
 
   private async drainQueue(): Promise<void> {
-    try {
-      while (!this.stopped) {
-        const batch = this.pickBatch()
+    while (!this.stopped) {
+      const batch = this.pickBatch()
 
-        if (batch === undefined) {
-          return
-        }
-
-        await this.execute(batch)
+      if (batch === undefined) {
+        return
       }
-    } finally {
-      this.drain = undefined
+
+      await this.execute(batch)
     }
   }
 
