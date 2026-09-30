@@ -16,6 +16,9 @@ const placeholderConnectionString = 'postgresql://placeholder:placeholder@127.0.
 const newLinePattern = /\r?\n/u
 const bindingPattern = /^binding\s*=\s*["'](?<name>[^"']+)["']/u
 
+// One workerd-reuse notice per project, no matter how many runs happen.
+const isolateNoticeShownFor = new WeakSet<object>()
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -71,13 +74,21 @@ function fileScopePlugins(
         const controller = new Localdrive(localdriveOptions)
         await controller.initialize()
 
+        if (!isolateNoticeShownFor.has(context.project) && context.project.config.isolate) {
+          isolateNoticeShownFor.add(context.project)
+          console.info(
+            '[localdrive] This project runs with test.isolate enabled, so every test file boots a new workerd. '
+            + 'Set test.isolate to false to reuse workers across files; localdrive keeps per-file database isolation either way.'
+          )
+        }
+
         process.once('SIGINT', closeDatabasesOnSignal)
         process.once('SIGTERM', closeDatabasesOnSignal)
 
         registerLocaldrive(context.project.name, controller)
         context.project.config.pool = 'localdrive-cloudflare-pool'
         context.project.config.poolRunner = localdriveCloudflarePool({
-          bindings: localdriveOptions.bindings,
+          ...localdriveOptions,
           cloudflare
         })
 
