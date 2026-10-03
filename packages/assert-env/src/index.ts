@@ -23,6 +23,7 @@ export interface AssertEnvOptions<O extends EnvSchema, D extends EnvDefaults<O> 
   optional?: O
   defaults?: D
   processEnv?: boolean
+  envFile?: boolean | string
 }
 interface ValidationError {
   name: string
@@ -92,6 +93,12 @@ export function assertEnv(
   required: EnvSchema,
   options?: AssertEnvOptions<EnvSchema, EnvDefaults<EnvSchema>>
 ): Record<string, string | number | boolean> {
+  if (options?.envFile === true) {
+    process.loadEnvFile()
+  } else if (typeof options?.envFile === 'string') {
+    process.loadEnvFile(options.envFile)
+  }
+
   const errors: ValidationError[] = []
   const result: Record<string, string | number | boolean> = {}
 

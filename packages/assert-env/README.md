@@ -21,7 +21,8 @@ const env = assertEnv(
   {
     optional: {
       DEBUG: 'boolean'
-    }
+    },
+    envFile: true
   }
 )
 
@@ -29,6 +30,10 @@ env.ACCOUNT_ID
 env.PORT
 env.DEBUG
 ```
+
+Set `envFile: true` to load `.env` into `process.env` before validation, or pass
+a path such as `envFile: '.env.development'` to load a specific file. Omit the
+option to leave dotenv loading to the caller.
 
 ## Supported Types
 

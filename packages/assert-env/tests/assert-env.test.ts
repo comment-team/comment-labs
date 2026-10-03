@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { assertEnv } from '../src/index'
 import process from 'node:process'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 
 describe('assertEnv: parsing', () => {
@@ -445,5 +448,59 @@ describe('assertEnv: processEnv option', () => {
     expect(process.env.NUM).toBe('123')
     expect(process.env.BOOL).toBe('true')
     vi.unstubAllEnvs()
+  })
+})
+
+describe('assertEnv: envFile option', () => {
+  it('loads .env into process.env when envFile is true', () => {
+    const originalValue = process.env.ASSERT_ENV_FILE_VALUE
+    const loadEnvFile = vi.spyOn(process, 'loadEnvFile').mockImplementation(() => {
+      process.env.ASSERT_ENV_FILE_VALUE = 'from-dot-env'
+    })
+
+    try {
+      const env = assertEnv(
+        { ASSERT_ENV_FILE_VALUE: 'string' },
+        { envFile: true }
+      )
+
+      expect(loadEnvFile).toHaveBeenCalledWith()
+      expect(env.ASSERT_ENV_FILE_VALUE).toBe('from-dot-env')
+    } finally {
+      loadEnvFile.mockRestore()
+
+      if (originalValue === undefined) {
+        delete process.env.ASSERT_ENV_FILE_VALUE
+      } else {
+        process.env.ASSERT_ENV_FILE_VALUE = originalValue
+      }
+    }
+  })
+
+  it('loads the specified env file before validation', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'assert-env-'))
+    const envFile = join(directory, '.env.development')
+    const originalValue = process.env.ASSERT_ENV_FILE_VALUE
+
+    try {
+      delete process.env.ASSERT_ENV_FILE_VALUE
+      await writeFile(envFile, 'ASSERT_ENV_FILE_VALUE=from-development\n')
+
+      const env = assertEnv(
+        { ASSERT_ENV_FILE_VALUE: 'string' },
+        { envFile }
+      )
+
+      expect(env.ASSERT_ENV_FILE_VALUE).toBe('from-development')
+      expect(process.env.ASSERT_ENV_FILE_VALUE).toBe('from-development')
+    } finally {
+      if (originalValue === undefined) {
+        delete process.env.ASSERT_ENV_FILE_VALUE
+      } else {
+        process.env.ASSERT_ENV_FILE_VALUE = originalValue
+      }
+
+      await rm(directory, { recursive: true, force: true })
+    }
   })
 })
