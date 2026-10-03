@@ -132,11 +132,14 @@ describe('@comment-labs/oxlint-config', () => {
         "unicorn(no-process-exit)",
         "unicorn(no-useless-promise-resolve-reject)",
         "unicorn(prefer-top-level-await)",
-        "vitest(require-hook)",
-        "vitest(require-hook)",
-        "vitest(require-hook)",
       ]
     `)
+  })
+
+  it('applies Vitest rules only to test files', () => {
+    expect(lintRules('vitest', 'tests/unit/sample.test.ts')).toContain('vitest(require-hook)')
+    expect(lintRules('vitest', 'test/helper.ts')).toContain('vitest(require-hook)')
+    expect(lintRules('vitest', 'src/not-a-test.ts')).not.toContain('vitest(require-hook)')
   })
 
   it('applies typescript rules to ts files', () => {

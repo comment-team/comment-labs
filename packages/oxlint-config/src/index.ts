@@ -12,6 +12,7 @@ import { reactNativeOverrides } from './overrides/react-native'
 import { scriptsOverrides } from './overrides/scripts'
 import { declarationsOverrides } from './overrides/declarations'
 import { ambientOverrides } from './overrides/ambient'
+import { vitestOverrides } from './overrides/vitest'
 
 
 export const config: OxlintConfig = {
@@ -40,7 +41,8 @@ export const config: OxlintConfig = {
     playwrightOverrides,
     reactOverrides,
     reactNativeOverrides,
-    scriptsOverrides
+    scriptsOverrides,
+    vitestOverrides
   ],
   ignorePatterns: [ 'coverage/**', 'public/**', '.expo/**', '.output/**', '**/dist/**', '**/*wasm-bindgen/**' ]
 }

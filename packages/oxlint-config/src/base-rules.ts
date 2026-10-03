@@ -110,13 +110,9 @@ export const baseRules: DummyRuleMap = {
   'jest/prefer-expect-assertions': 'off',
 
   'vitest/prefer-called-times': 'off',
+  'vitest/prefer-expect-assertions': 'off',
   'vitest/prefer-strict-boolean-matchers': 'off',
-  'vitest/prefer-expect-assertions': [
-    'warn', {
-      onlyFunctionsWithExpectInCallback: true,
-      onlyFunctionsWithExpectInLoop: true
-    }
-  ],
+  'vitest/require-hook': 'off',
   'vitest/require-test-timeout': 'off',
   'vitest/no-importing-vitest-globals': 'off',
   'vitest/no-conditional-in-test': 'off',
