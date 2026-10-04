@@ -161,10 +161,11 @@ describe('@comment-labs/oxlint-config', () => {
     `)
   })
 
-  it('disables no-redeclare in ambient environment type declarations', () => {
+  it('disables no-redeclare in all declaration files', () => {
     const rules = [
       ...lintRules('ambient', 'src/env.d.ts'),
-      ...lintRules('ambient', 'src/environment.d.ts')
+      ...lintRules('ambient', 'src/environment.d.ts'),
+      ...lintRules('ts', 'src/types.d.ts')
     ]
     expect(sortedRuleIds(rules)).not.toContain('eslint(no-redeclare)')
     expect(sortedRuleIds(rules)).not.toContain('no-redeclare')

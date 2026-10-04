@@ -7,6 +7,7 @@ export const vitestOverrides: OxlintOverride = {
     '**/*.{test,spec}.{js,jsx,ts,tsx,mjs,cjs,mts,cts}'
   ],
   rules: {
+    'vitest/max-expects': 'off',
     'vitest/prefer-expect-assertions': [
       'warn', {
         onlyFunctionsWithExpectInCallback: true,

@@ -11,7 +11,6 @@ import { reactOverrides } from './overrides/react'
 import { reactNativeOverrides } from './overrides/react-native'
 import { scriptsOverrides } from './overrides/scripts'
 import { declarationsOverrides } from './overrides/declarations'
-import { ambientOverrides } from './overrides/ambient'
 import { vitestOverrides } from './overrides/vitest'
 
 
@@ -36,7 +35,6 @@ export const config: OxlintConfig = {
   },
   overrides: [
     declarationsOverrides,
-    ambientOverrides,
     i18nextOverrides,
     playwrightOverrides,
     reactOverrides,

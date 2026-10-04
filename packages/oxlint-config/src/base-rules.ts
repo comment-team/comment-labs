@@ -41,7 +41,6 @@ export const baseRules: DummyRuleMap = {
   'no-array-reduce': 'off',
   'no-array-sort': 'off',
   'no-async-await': 'off',
-  'no-await-expression-member': 'off',
   'no-await-in-loop': 'off',
   'no-bitwise': 'off',
   'new-cap': 'off',
@@ -125,7 +124,7 @@ export const baseRules: DummyRuleMap = {
   'unicorn/no-nested-ternary': 'off',
   'unicorn/switch-case-braces': [ 'warn', 'avoid' ],
   'unicorn/no-array-method-this-argument': 'warn',
-  'unicorn/no-await-expression-member': 'warn',
+  'unicorn/no-await-expression-member': 'off',
   'unicorn/no-invalid-fetch-options': 'off',
   'unicorn/import-style': [
     'warn', {
