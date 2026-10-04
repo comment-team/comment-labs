@@ -50,8 +50,8 @@
     "vitest": "catalog:test"
   },
   "peerDependencies": {
-    "oxlint": "^1.83.0",
-    "oxlint-tsgolint": "^7.0.2002"
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003"
   },
   "publishConfig": {
     "access": "public"
