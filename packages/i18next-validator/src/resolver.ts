@@ -1,10 +1,10 @@
-import { existsSync, statSync } from 'node:fs'
+import { stat } from 'node:fs/promises'
 import { basename, dirname, extname, join, relative, resolve } from 'node:path'
 import { parseSync } from 'oxc-parser'
-import { glob, globSync } from 'tinyglobby'
+import { glob } from 'tinyglobby'
 import { diagnostics } from './diagnostics'
 import type { LocaleSource } from './types'
-import { readText } from './utils'
+import { pathExists, readText } from './utils'
 
 
 const COMMON_LOCALE_DIRS = [
@@ -46,20 +46,20 @@ export async function resolveLocaleSources(
 
   if (explicitLocales !== undefined) {
     const absolute = resolve(cwd, explicitLocales)
-    if (!existsSync(absolute)) {
+    if (!await pathExists(absolute)) {
       throw diagnostics.I18V_1007({ sources: [ explicitLocales ] })
     }
 
-    if (statSync(absolute).isDirectory()) {
+    if ((await stat(absolute)).isDirectory()) {
       sources.push({ type: 'directory', path: absolute })
     } else {
       sources.push(fileSourceFromPath(absolute, initFile))
     }
 
-    return dedupeSources(filterValidSources(sources))
+    return dedupeSources(await filterValidSources(sources))
   }
 
-  const validSources = filterValidSources(sources)
+  const validSources = await filterValidSources(sources)
 
   if (validSources.length > 0) {
     return dedupeSources(validSources)
@@ -69,33 +69,33 @@ export async function resolveLocaleSources(
   if (autoDir !== undefined) {
     sources.push({ type: 'directory', path: autoDir })
 
-    return dedupeSources(filterValidSources(sources))
+    return dedupeSources(await filterValidSources(sources))
   }
 
-  const importedSources = findImportedLocaleFiles(initFile)
+  const importedSources = await findImportedLocaleFiles(initFile)
   if (importedSources.length > 0) {
     sources.push(...importedSources)
 
-    return dedupeSources(filterValidSources(sources))
+    return dedupeSources(await filterValidSources(sources))
   }
 
   throw diagnostics.I18V_1005({ sources: [ cwd ] })
 }
 
-function isSourceValid(source: LocaleSource): boolean {
+async function isSourceValid(source: LocaleSource): Promise<boolean> {
   switch (source.type) {
     case 'inline':
       return true
 
     case 'file':
-      return existsSync(source.path) && EXTENSION_REGEX.test(source.path)
+      return (await pathExists(source.path)) && EXTENSION_REGEX.test(source.path)
 
     case 'directory': {
-      if (!existsSync(source.path) || !statSync(source.path).isDirectory()) {
+      if (!(await pathExists(source.path)) || !(await stat(source.path)).isDirectory()) {
         return false
       }
 
-      const files = globSync(TRANSLATION_FILE_PATTERN, {
+      const files = await glob(TRANSLATION_FILE_PATTERN, {
         cwd: source.path,
         absolute: true
       })
@@ -108,8 +108,16 @@ function isSourceValid(source: LocaleSource): boolean {
   }
 }
 
-function filterValidSources(sources: LocaleSource[]): LocaleSource[] {
-  return sources.filter(source => isSourceValid(source))
+async function filterValidSources(sources: LocaleSource[]): Promise<LocaleSource[]> {
+  const valid: LocaleSource[] = []
+
+  for (const source of sources) {
+    if (await isSourceValid(source)) {
+      valid.push(source)
+    }
+  }
+
+  return valid
 }
 
 async function findCommonLocaleDirectory(cwd: string, initFile: string): Promise<string | undefined> {
@@ -119,7 +127,7 @@ async function findCommonLocaleDirectory(cwd: string, initFile: string): Promise
   ]
 
   for (const candidate of candidates) {
-    if (!existsSync(candidate) || !statSync(candidate).isDirectory()) {
+    if (!(await pathExists(candidate)) || !(await stat(candidate)).isDirectory()) {
       continue
     }
 
@@ -135,10 +143,10 @@ async function findCommonLocaleDirectory(cwd: string, initFile: string): Promise
   return undefined
 }
 
-function findImportedLocaleFiles(initFile: string): LocaleSource[] {
+async function findImportedLocaleFiles(initFile: string): Promise<LocaleSource[]> {
   const sources: LocaleSource[] = []
   const baseDir = dirname(initFile)
-  const source = readText(initFile)
+  const source = await readText(initFile)
   const result = parseSync(initFile, source)
 
   for (const item of result.module.staticImports) {
@@ -148,7 +156,7 @@ function findImportedLocaleFiles(initFile: string): LocaleSource[] {
     }
 
     const absolute = resolve(baseDir, moduleRequest)
-    if (!existsSync(absolute)) {
+    if (!await pathExists(absolute)) {
       continue
     }
 
@@ -218,10 +226,10 @@ function looksLikeLanguageCode(value: string): boolean {
   return value[2] === '-' && TWO_LETTERS_UPPER_REGEX.test(value.slice(3))
 }
 
-export function expandDirectorySource(
+export async function expandDirectorySource(
   directory: LocaleSource & { type: 'directory' }
-): LocaleSource[] {
-  const files = globSync(TRANSLATION_FILE_PATTERN, {
+): Promise<LocaleSource[]> {
+  const files = await glob(TRANSLATION_FILE_PATTERN, {
     cwd: directory.path,
     absolute: true
   })

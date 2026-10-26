@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import console from 'node:console'
-import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import process from 'node:process'
 import { parse } from '@bomb.sh/args'
@@ -18,25 +17,30 @@ import { findSourceFiles, scanSourceFiles } from './scanner'
 import { getCachedOptions, setCachedOptions, type CachedOptions } from './cache'
 import { diagnostics } from './diagnostics'
 import { isString } from './type-guards'
+import { pathExists } from './utils'
 import type { CliOptions, ExtractedConfig, LocaleSource, OutputFormat, ResolvedConfig } from './types'
 
 
-const tabRoot = tab.command('i18next-validator', 'Find unused i18next translation keys')
-tabRoot.option('init-file', 'Path to the i18next initialization file')
-tabRoot.option('locales', 'Path to locale files or directory')
-tabRoot.option('default-ns', 'Default i18next namespace')
-tabRoot.option('source', 'Source directory to scan for key usage', complete => {
-  complete('./src', 'Source directory')
-})
-tabRoot.option('format', 'Output format', complete => {
-  complete('terminal', 'Human-readable output')
-  complete('json', 'JSON output')
-  complete('csv', 'CSV output')
-})
-tabRoot.option('fail-on-dead', 'Exit with non-zero code if dead keys are found')
-tabRoot.option('verbose', 'Print additional diagnostic information')
-tabRoot.option('debug', 'Log debug information for troubleshooting')
-tabRoot.option('help', 'Show this help message')
+// registered lazily by handleCompletion — building the tree at module load
+// would be top-level setup code
+function registerCompletionTree(): void {
+  const tabRoot = tab.command('i18next-validator', 'Find unused i18next translation keys')
+  tabRoot.option('init-file', 'Path to the i18next initialization file')
+  tabRoot.option('locales', 'Path to locale files or directory')
+  tabRoot.option('default-ns', 'Default i18next namespace')
+  tabRoot.option('source', 'Source directory to scan for key usage', complete => {
+    complete('./src', 'Source directory')
+  })
+  tabRoot.option('format', 'Output format', complete => {
+    complete('terminal', 'Human-readable output')
+    complete('json', 'JSON output')
+    complete('csv', 'CSV output')
+  })
+  tabRoot.option('fail-on-dead', 'Exit with non-zero code if dead keys are found')
+  tabRoot.option('verbose', 'Print additional diagnostic information')
+  tabRoot.option('debug', 'Log debug information for troubleshooting')
+  tabRoot.option('help', 'Show this help message')
+}
 
 function createDebugLogger(enabled: boolean): (...messages: unknown[]) => void {
   if (!enabled) {
@@ -71,6 +75,8 @@ Options:
 }
 
 function handleCompletion(args: string[]): void {
+  registerCompletionTree()
+
   const shell = args[0]
   if (shell === '--') {
     tab.parse(args.slice(1))
@@ -199,7 +205,7 @@ async function discoverConfiguration(
   if (!hasExplicitConfig || args['init-file'] !== undefined) {
     initFile = await discoverInitFile(cwd, args['init-file'])
     debug('init file:', initFile)
-    config = parseInitConfig(initFile)
+    config = await parseInitConfig(initFile)
     debug('extracted defaultNS:', config.defaultNS)
     debug('extracted localeSources:', config.localeSources.map(source => `(${source.type}) ${source.path}`))
   }
@@ -281,7 +287,7 @@ async function run(argv: string[]): Promise<void> {
   const cwd = process.cwd()
   debug('cwd:', cwd)
 
-  const cached = getCachedOptions(cwd)
+  const cached = await getCachedOptions(cwd)
   debug('cached options:', cached)
 
   const { initFile, config } = await discoverConfiguration(args, cwd, debug)
@@ -314,9 +320,9 @@ async function run(argv: string[]): Promise<void> {
     throw diagnostics.I18V_1009({ sources: [ explicitLocales ?? fallbackInitFile ] })
   }
 
-  const sourcePath = resolveSourcePath(cwd, fallbackInitFile, args.source)
+  const sourcePath = await resolveSourcePath(cwd, fallbackInitFile, args.source)
   debug('source path:', sourcePath)
-  if (!existsSync(sourcePath)) {
+  if (!await pathExists(sourcePath)) {
     throw diagnostics.I18V_1008({ sources: [ args.source ?? sourcePath ] })
   }
 
@@ -324,7 +330,7 @@ async function run(argv: string[]): Promise<void> {
   debug('source files to scan:', sourceFiles.length)
 
   const resolvedConfig = buildResolvedConfig(config, defaultNS)
-  const usages = scanSourceFiles(sourceFiles, resolvedConfig)
+  const usages = await scanSourceFiles(sourceFiles, resolvedConfig)
 
   const result = analyze(keys, usages)
   debug(
@@ -336,7 +342,7 @@ async function run(argv: string[]): Promise<void> {
   )
   debug('keys — dead:', result.dead.length, 'ambiguous:', result.ambiguous.length, 'used:', result.used.length)
 
-  setCachedOptions(cwd, {
+  await setCachedOptions(cwd, {
     'init-file': args['init-file'] ?? initFile,
     'default-ns': defaultNS,
     locales: explicitLocales
@@ -350,7 +356,7 @@ async function run(argv: string[]): Promise<void> {
   }
 }
 
-function resolveSourcePath(cwd: string, initFile: string, source: string | undefined): string {
+async function resolveSourcePath(cwd: string, initFile: string, source: string | undefined): Promise<string> {
   if (source !== undefined) {
     return resolve(cwd, source)
   }
@@ -362,7 +368,13 @@ function resolveSourcePath(cwd: string, initFile: string, source: string | undef
     resolve(initFile, '..')
   ]
 
-  return candidates.find(candidate => existsSync(candidate)) ?? resolve(cwd, 'src')
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      return candidate
+    }
+  }
+
+  return resolve(cwd, 'src')
 }
 
 async function main(): Promise<void> {

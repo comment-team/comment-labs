@@ -17,11 +17,11 @@ const fixturesRoot = resolve(import.meta.dirname, 'fixtures')
 async function analyzeFixture(fixtureName: string) {
   const cwd = resolve(fixturesRoot, fixtureName)
   const initFile = await discoverInitFile(cwd)
-  const config = parseInitConfig(initFile)
+  const config = await parseInitConfig(initFile)
   const sources = await resolveLocaleSources(cwd, initFile, undefined, config.localeSources)
   const keys = await loadTranslations(sources)
   const sourceFiles = await findSourceFiles(resolve(cwd, 'src'))
-  const usages = scanSourceFiles(sourceFiles, {
+  const usages = await scanSourceFiles(sourceFiles, {
     localeSources: config.localeSources,
     defaultNS: config.defaultNS ?? 'translation',
     nsSeparator: config.nsSeparator ?? ':',
@@ -74,7 +74,7 @@ describe('i18next-validator', () => {
     )
     const keys = await loadTranslations(sources)
     const sourceFiles = await findSourceFiles(resolve(cwd, 'src'))
-    const usages = scanSourceFiles(sourceFiles, {
+    const usages = await scanSourceFiles(sourceFiles, {
       localeSources: sources,
       defaultNS: 'common',
       nsSeparator: ':',
@@ -124,9 +124,9 @@ describe('i18next-validator', () => {
     expect(result.usages.some(usage => usage.type === 'static' && usage.full === 'translation:common.ok')).toBeTruthy()
   })
 
-  it('scans a single file', () => {
+  it('scans a single file', async () => {
     const file = resolve(fixturesRoot, 'basic/src/app.tsx')
-    const usages = scanFile(file, {
+    const usages = await scanFile(file, {
       localeSources: [],
       defaultNS: 'common',
       nsSeparator: ':',

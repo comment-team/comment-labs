@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/opencode-unbash-guard",
+  "version": "0.1.0",
+  "description": "opencode plugin: parses every bash command with unbash, blocks read/write tool bypasses and command chaining, quietly rewrites verbose git/npm/curl invocations, and replaces the builtin grep tool with a tgrep-backed one.",
+  "license": "Apache-2.0",
+  "author": "CommEnt Team",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@opencode/plugin": "2.0.16",
+    "unbash": "4.0.11"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:test"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

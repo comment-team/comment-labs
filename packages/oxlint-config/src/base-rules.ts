@@ -44,6 +44,7 @@ export const baseRules: DummyRuleMap = {
   'no-await-in-loop': 'off',
   'no-bitwise': 'off',
   'new-cap': 'off',
+  'no-async-endpoint-handlers': 'off',
   'no-console': 'off',
   'no-continue': 'off',
   'no-default-export': 'off',

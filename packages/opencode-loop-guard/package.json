@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/opencode-loop-guard",
+  "version": "0.1.0",
+  "description": "opencode plugin: breaks agent tool-call loops — blocks the Nth identical consecutive call (same tool + arguments) in a session.",
+  "license": "Apache-2.0",
+  "author": "CommEnt Team",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@opencode/plugin": "2.0.16"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:test"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

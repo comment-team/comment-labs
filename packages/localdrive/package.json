@@ -4,6 +4,7 @@
   "version": "0.1.0-beta.14",
   "description": "Local PostgreSQL Hyperdrive emulation for Vitest",
   "license": "Apache-2.0",
+  "author": "CommEnt Team",
   "type": "module",
   "files": [
     "dist/"

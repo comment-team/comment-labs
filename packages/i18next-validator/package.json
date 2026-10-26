@@ -4,6 +4,7 @@
   "version": "0.1.0-beta.8",
   "description": "Configless CLI for finding unused i18next translation keys",
   "license": "Apache-2.0",
+  "author": "CommEnt Team",
   "type": "module",
   "files": [
     "dist/"

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { access, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { isRecord as isRecordGuard } from './type-guards'
 
@@ -6,12 +6,22 @@ import { isRecord as isRecordGuard } from './type-guards'
 export { isRecord, isString } from './type-guards'
 
 
-export function readText(path: string): string {
-  return readFileSync(resolve(path), 'utf8')
+export async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(resolve(path))
+
+    return true
+  } catch {
+    return false
+  }
 }
 
-export function parseJson(path: string): unknown {
-  return JSON.parse(readText(path)) as unknown
+export async function readText(path: string): Promise<string> {
+  return await readFile(resolve(path), 'utf8')
+}
+
+export async function parseJson(path: string): Promise<unknown> {
+  return JSON.parse(await readText(path)) as unknown
 }
 
 export function flattenKeys(

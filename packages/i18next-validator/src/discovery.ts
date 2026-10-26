@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseSync, Visitor } from 'oxc-parser'
 import { glob } from 'tinyglobby'
@@ -9,7 +8,7 @@ import {
   isIdentifier,
   isMemberExpression
 } from './type-guards'
-import { readText } from './utils'
+import { pathExists, readText } from './utils'
 
 
 export interface InitCandidate {
@@ -40,7 +39,7 @@ export async function discoverInitFile(
 ): Promise<string> {
   if (explicitInitFile !== undefined) {
     const absolute = resolve(cwd, explicitInitFile)
-    if (!existsSync(absolute)) {
+    if (!await pathExists(absolute)) {
       throw diagnostics.I18V_1003({ sources: [ explicitInitFile ] })
     }
 
@@ -48,8 +47,7 @@ export async function discoverInitFile(
   }
 
   const candidates = await findCandidateFiles(cwd)
-  const scored = candidates
-    .map(path => scoreCandidate(path))
+  const scored = (await Promise.all(candidates.map(async path => await scoreCandidate(path))))
     .filter((candidate): candidate is InitCandidate => candidate.score > 0)
     .toSorted((left, right) => right.score - left.score)
 
@@ -82,11 +80,11 @@ async function findCandidateFiles(cwd: string): Promise<string[]> {
   })
 }
 
-function scoreCandidate(path: string): InitCandidate {
+async function scoreCandidate(path: string): Promise<InitCandidate> {
   let score = 0
 
   try {
-    const source = readText(path)
+    const source = await readText(path)
     const result = parseSync(path, source)
 
     const importsFromI18next = result.module.staticImports.filter(item =>

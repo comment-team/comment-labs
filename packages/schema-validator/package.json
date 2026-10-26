@@ -4,6 +4,7 @@
   "version": "1.0.0-beta.3",
   "description": "CLI for validating JSON, YAML, and TOML files against JSON Schema",
   "license": "Apache-2.0",
+  "author": "CommEnt Team",
   "type": "module",
   "bin": {
     "schema-validator": "dist/index.mjs"

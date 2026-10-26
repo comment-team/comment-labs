@@ -22,8 +22,8 @@ const LEADING_SLASH_REGEX = /^\//u
 const TRAILING_SLASH_REGEX = /\/$/u
 
 
-export function parseInitConfig(initFile: string): ExtractedConfig {
-  const source = readText(initFile)
+export async function parseInitConfig(initFile: string): Promise<ExtractedConfig> {
+  const source = await readText(initFile)
   const result = parseSync(initFile, source)
 
   const localNames = new Set<string>()

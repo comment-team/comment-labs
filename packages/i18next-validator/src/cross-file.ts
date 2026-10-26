@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { parseSync, type StaticImport } from 'oxc-parser'
 import {
@@ -20,7 +19,7 @@ import {
   isTemplateLiteral,
   isVariableDeclarator
 } from './type-guards'
-import { readText } from './utils'
+import { pathExists, readText } from './utils'
 
 
 export interface CrossFileContext {
@@ -48,8 +47,8 @@ interface ImportReference {
   name: string
 }
 
-export function buildCrossFileContext(files: string[]): CrossFileContext {
-  const units = files.map(file => readSourceUnit(file))
+export async function buildCrossFileContext(files: string[]): Promise<CrossFileContext> {
+  const units = await Promise.all(files.map(async file => await readSourceUnit(file)))
   const propertyStringMaps = new Map<string, string[]>()
   const functions = new Map<string, FunctionDefinition>()
   const imports = new Map<string, Map<string, ImportReference>>()
@@ -61,7 +60,7 @@ export function buildCrossFileContext(files: string[]): CrossFileContext {
       functions.set(functionDefinitionLookupKey(definition.file, definition.name), definition)
     }
 
-    imports.set(unit.file, resolveImports(unit))
+    imports.set(unit.file, await resolveImports(unit))
   }
 
   const functionParameterValues = new Map<string, Map<number, string[]>>()
@@ -138,8 +137,8 @@ function functionDefinitionLookupKey(file: string, name: string): string {
   return `${file}:${name}`
 }
 
-function readSourceUnit(file: string): SourceUnit {
-  const source = readText(file)
+async function readSourceUnit(file: string): Promise<SourceUnit> {
+  const source = await readText(file)
   const result = parseSync(file, source)
   const staticStrings = new Map<string, string[]>()
 
@@ -216,7 +215,7 @@ function collectFunctions(unit: SourceUnit): FunctionDefinition[] {
   return definitions
 }
 
-function resolveImports(unit: SourceUnit): Map<string, ImportReference> {
+async function resolveImports(unit: SourceUnit): Promise<Map<string, ImportReference>> {
   const references = new Map<string, ImportReference>()
   const baseDir = dirname(unit.file)
 
@@ -226,7 +225,7 @@ function resolveImports(unit: SourceUnit): Map<string, ImportReference> {
       continue
     }
 
-    const file = resolveImportedPath(baseDir, request)
+    const file = await resolveImportedPath(baseDir, request)
     if (file === undefined) {
       continue
     }
@@ -405,10 +404,10 @@ function unwrapTypeExpression(node: unknown): unknown {
   return node
 }
 
-function resolveImportedPath(baseDir: string, request: string): string | undefined {
+async function resolveImportedPath(baseDir: string, request: string): Promise<string | undefined> {
   for (const extension of [ '', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs' ]) {
     const candidate = resolve(baseDir, `${request}${extension}`)
-    if (existsSync(candidate)) {
+    if (await pathExists(candidate)) {
       return candidate
     }
   }

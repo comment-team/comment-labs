@@ -42,5 +42,5 @@ export const config: OxlintConfig = {
     scriptsOverrides,
     vitestOverrides
   ],
-  ignorePatterns: [ 'coverage/**', 'public/**', '.expo/**', '.output/**', '**/dist/**', '**/*wasm-bindgen/**' ]
+  ignorePatterns: [ 'coverage/**', 'public/**', '.expo/**', '.output/**', '**/dist/**', '**/*wasm-bindgen/**', '**/tests/fixtures/**/*' ]
 }

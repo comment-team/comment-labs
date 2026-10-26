@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/tsdiff",
+  "version": "0.0.1",
+  "description": "CLI and library for checking changes in exported type signatures to prevent breaking changes and private API leaks",
+  "license": "Apache-2.0",
+  "author": "CommEnt Team",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "bin": {
+    "tsdiff": "./dist/index.mjs"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint",
+    "prepublishOnly": "pnpm build",
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "sade": "^1.8.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0 || ^6.0.2 || ^7.0.0"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:test"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

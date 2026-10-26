@@ -56,7 +56,7 @@ function parseDiagnostics(output: string): OxlintMessage[] {
 
 function runOxlint(cwd: string, filePath: string): OxlintResult {
   const absoluteFilePath = resolve(cwd, filePath)
-  const command = `oxlint --disable-nested-config --config "${testConfigPath}" --format json "${absoluteFilePath}"`
+  const command = `oxlint --disable-nested-config --no-ignore --config "${testConfigPath}" --format json "${absoluteFilePath}"`
 
   try {
     const output = execSync(command, {

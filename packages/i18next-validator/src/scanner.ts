@@ -1,5 +1,4 @@
 /* oxlint-disable max-lines */
-import { existsSync } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { parseSync, Visitor, type StaticImport } from 'oxc-parser'
@@ -31,7 +30,7 @@ import {
   isVariableDeclaration,
   isVariableDeclarator
 } from './type-guards'
-import { readText, splitNamespaceKey } from './utils'
+import { pathExists, readText, splitNamespaceKey } from './utils'
 
 
 const SOURCE_GLOBS = [ '**/*.{ts,tsx,js,jsx,mjs,cjs}' ]
@@ -45,10 +44,10 @@ const EXCLUDE_GLOBS = [
 
 const importedStringMapCache = new Map<string, Map<string, string[]>>()
 
-function loadImportedStringMaps(
+async function loadImportedStringMaps(
   staticImports: StaticImport[],
   contextFile: string
-): Map<string, string[]> {
+): Promise<Map<string, string[]>> {
   const maps = new Map<string, string[]>()
   const baseDir = dirname(contextFile)
 
@@ -59,12 +58,12 @@ function loadImportedStringMaps(
       continue
     }
 
-    const absolute = resolveImportedPath(baseDir, moduleRequest)
+    const absolute = await resolveImportedPath(baseDir, moduleRequest)
     if (absolute === undefined) {
       continue
     }
 
-    const exportedMaps = loadExportedStringMaps(absolute)
+    const exportedMaps = await loadExportedStringMaps(absolute)
 
     for (const entry of item.entries) {
       const exportedName = getImportedName(entry)
@@ -82,11 +81,11 @@ function loadImportedStringMaps(
   return maps
 }
 
-function resolveImportedPath(baseDir: string, request: string): string | undefined {
+async function resolveImportedPath(baseDir: string, request: string): Promise<string | undefined> {
   for (const extension of [ '', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs' ]) {
     const candidate = resolve(baseDir, `${request}${extension}`)
 
-    if (existsSync(candidate)) {
+    if (await pathExists(candidate)) {
       return candidate
     }
   }
@@ -94,7 +93,7 @@ function resolveImportedPath(baseDir: string, request: string): string | undefin
   return undefined
 }
 
-function loadExportedStringMaps(absolutePath: string): Map<string, string[]> {
+async function loadExportedStringMaps(absolutePath: string): Promise<Map<string, string[]>> {
   const cached = importedStringMapCache.get(absolutePath)
   if (cached !== undefined) {
     return cached
@@ -103,7 +102,7 @@ function loadExportedStringMaps(absolutePath: string): Map<string, string[]> {
   const maps = new Map<string, string[]>()
 
   try {
-    const source = readText(absolutePath)
+    const source = await readText(absolutePath)
     const result = parseSync(absolutePath, source)
 
     for (const statement of result.program.body as unknown[]) {
@@ -192,7 +191,7 @@ interface ScanState {
 }
 
 export async function findSourceFiles(target: string): Promise<string[]> {
-  if (existsSync(target) && (await stat(target)).isFile()) {
+  if (await pathExists(target) && (await stat(target)).isFile()) {
     return [ resolve(target) ]
   }
 
@@ -203,23 +202,23 @@ export async function findSourceFiles(target: string): Promise<string[]> {
   })
 }
 
-export function scanSourceFiles(files: string[], config: ResolvedConfig): Usage[] {
-  const crossFile = buildCrossFileContext(files)
+export async function scanSourceFiles(files: string[], config: ResolvedConfig): Promise<Usage[]> {
+  const crossFile = await buildCrossFileContext(files)
   const usages: Usage[] = []
 
   for (const file of files) {
-    usages.push(...scanFileInternal(file, config, crossFile))
+    usages.push(...(await scanFileInternal(file, config, crossFile)))
   }
 
   return usages
 }
 
-export function scanFile(file: string, config: ResolvedConfig): Usage[] {
-  return scanFileInternal(file, config, buildCrossFileContext([ file ]))
+export async function scanFile(file: string, config: ResolvedConfig): Promise<Usage[]> {
+  return await scanFileInternal(file, config, await buildCrossFileContext([ file ]))
 }
 
-function scanFileInternal(file: string, config: ResolvedConfig, crossFile: CrossFileContext): Usage[] {
-  const source = readText(file)
+async function scanFileInternal(file: string, config: ResolvedConfig, crossFile: CrossFileContext): Promise<Usage[]> {
+  const source = await readText(file)
   const result = parseSync(file, source)
 
   const defaultI18nextNames = new Set<string>()
@@ -258,7 +257,7 @@ function scanFileInternal(file: string, config: ResolvedConfig, crossFile: Cross
     }
   }
 
-  const stringMaps = loadImportedStringMaps(result.module.staticImports, file)
+  const stringMaps = await loadImportedStringMaps(result.module.staticImports, file)
 
   const state: ScanState = {
     scopes: [],

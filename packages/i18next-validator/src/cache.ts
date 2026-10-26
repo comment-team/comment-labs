@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { homedir } from 'node:os'
 import { isRecord } from './type-guards'
@@ -12,31 +12,27 @@ export interface CachedOptions {
 
 const CACHE_PATH = join(homedir(), '.config', 'i18next-validator', 'cache.json')
 
-export function getCachedOptions(cwd: string): CachedOptions {
-  const cache = readCache()
+export async function getCachedOptions(cwd: string): Promise<CachedOptions> {
+  const cache = await readCache()
   const entry = cache[cwd]
 
   return isCachedOptions(entry) ? entry : {}
 }
 
-export function setCachedOptions(cwd: string, options: CachedOptions): void {
-  const cache = readCache()
+export async function setCachedOptions(cwd: string, options: CachedOptions): Promise<void> {
+  const cache = await readCache()
 
   cache[cwd] = options
-  writeCache(cache)
+  await writeCache(cache)
 }
 
-function readCache(): Record<string, CachedOptions> {
-  if (!existsSync(CACHE_PATH)) {
-    return {}
-  }
-
+async function readCache(): Promise<Record<string, CachedOptions>> {
   try {
-    const content = readFileSync(CACHE_PATH, 'utf8')
+    const content = await readFile(CACHE_PATH, 'utf8')
 
     return parseCache(JSON.parse(content))
   } catch {
-    // ignore corrupt cache
+    // ignore missing or corrupt cache
   }
 
   return {}
@@ -58,10 +54,10 @@ function parseCache(value: unknown): Record<string, CachedOptions> {
   return result
 }
 
-function writeCache(cache: Record<string, CachedOptions>): void {
+async function writeCache(cache: Record<string, CachedOptions>): Promise<void> {
   try {
-    mkdirSync(dirname(CACHE_PATH), { recursive: true })
-    writeFileSync(CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`)
+    await mkdir(dirname(CACHE_PATH), { recursive: true })
+    await writeFile(CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`)
   } catch {
     // ignore failed writes
   }

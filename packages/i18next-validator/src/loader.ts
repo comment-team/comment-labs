@@ -12,7 +12,7 @@ export async function loadTranslations(sources: LocaleSource[]): Promise<Transla
 
   for (const source of sources) {
     if (source.type === 'directory') {
-      const expanded = expandDirectorySource(source)
+      const expanded = await expandDirectorySource(source)
 
       for (const fileSource of expanded) {
         keys.push(...(await loadFromSource(fileSource)))
@@ -51,7 +51,7 @@ async function loadFile(path: string): Promise<Record<string, unknown>> {
   const ext = extname(path).toLowerCase()
 
   if (ext === '.json') {
-    const parsed = parseJson(path)
+    const parsed = await parseJson(path)
     if (!isRecord(parsed)) {
       throw diagnostics.I18V_1007({ sources: [ path ] })
     }

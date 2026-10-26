@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@comment-labs/opencode-lane",
+  "version": "0.1.0",
+  "description": "opencode plugin: makes the lane CLI the worktree backend (copy-on-write trees with warm caches), blocks raw `git worktree` lifecycle commands in bash (lane-guard), and adds lane_create / lane_list / lane_switch agent tools. lane_switch moves the session directory like /cd, gated on user approval via a question tool answer.",
+  "license": "Apache-2.0",
+  "author": "CommEnt Team",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@opencode/plugin": "2.0.16",
+    "unbash": "4.0.11"
+  },
+  "devDependencies": {
+    "@comment-labs/oxlint-config": "workspace:*",
+    "@comment-labs/tsconfig": "workspace:*",
+    "@types/node": "catalog:types",
+    "oxlint": "catalog:lint",
+    "oxlint-tsgolint": "catalog:lint",
+    "tsdown": "catalog:toolchain",
+    "typescript": "catalog:toolchain",
+    "vitest": "catalog:test"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
