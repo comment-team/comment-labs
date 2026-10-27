@@ -19,6 +19,7 @@
   "scripts": {
     "build": "tsdown",
     "lint": "oxlint",
+    "prepublishOnly": "pnpm build",
     "test": "vitest run",
     "typecheck": "tsc"
   },

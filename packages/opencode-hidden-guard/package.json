@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/opencode-hidden-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "opencode plugin: blocks agent reads of hidden (dot) files (.env, .ssh, tokens) at the tool and bash layers.",
   "license": "Apache-2.0",
   "author": "CommEnt Team",
@@ -19,6 +19,7 @@
   "scripts": {
     "build": "tsdown",
     "lint": "oxlint",
+    "prepublishOnly": "pnpm build",
     "test": "vitest run",
     "typecheck": "tsc"
   },

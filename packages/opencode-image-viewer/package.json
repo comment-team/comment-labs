@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/opencode-image-viewer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "opencode plugin: viewimage tool that outsources image viewing to a vision subagent (config agent \"image-viewer\") for models that cannot see images.",
   "license": "Apache-2.0",
   "author": "CommEnt Team",
@@ -19,6 +19,7 @@
   "scripts": {
     "build": "tsdown",
     "lint": "oxlint",
+    "prepublishOnly": "pnpm build",
     "test": "vitest run",
     "typecheck": "tsc"
   },
