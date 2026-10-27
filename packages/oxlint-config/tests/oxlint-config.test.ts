@@ -161,6 +161,11 @@ describe('@comment-labs/oxlint-config', () => {
     `)
   })
 
+  it('disables react/jsx-no-literals by default and enables it for i18next projects', () => {
+    expect(lintRules('react', 'src/Component.jsx')).not.toContain('react(jsx-no-literals)')
+    expect(lintRules('i18next', 'src/jsx-text.jsx')).toContain('react(jsx-no-literals)')
+  })
+
   it('disables no-redeclare in all declaration files', () => {
     const rules = [
       ...lintRules('ambient', 'src/env.d.ts'),

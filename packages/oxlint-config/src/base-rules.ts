@@ -103,6 +103,7 @@ export const baseRules: DummyRuleMap = {
 
   'react/react-in-jsx-scope': 'off',
   'react/jsx-filename-extension': [ 'error', { extensions: [ 'jsx', 'tsx' ] }],
+  'react/jsx-no-literals': 'off',
 
   // TODO enable jest rules for vitest
   'jest/require-hook': 'off',

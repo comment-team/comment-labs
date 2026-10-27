@@ -1,5 +1,5 @@
 const Component = () => {
-  return <Missing />
+  return <Missing>Bare literal text</Missing>
 }
 
 export default Component
