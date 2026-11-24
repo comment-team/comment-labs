@@ -1,8 +1,9 @@
 export const jsPlugins = [
   { name: 'comment-labs-js', specifier: '@comment-labs/oxlint-config/plugins/labs' },
+  { name: 'anti-slop', specifier: '@comment-labs/oxlint-config/plugins/anti-slop' },
   { name: 'brettz9-js', specifier: '@comment-labs/oxlint-config/plugins/brettz9' },
   { name: 'i18next-js', specifier: '@comment-labs/oxlint-config/plugins/i18next' },
-  { name: 'import-zod-js', specifier: '@comment-labs/oxlint-config/plugins/import-zod' },
+  { name: 'zod', specifier: '@comment-labs/oxlint-config/plugins/zod' },
   { name: 'playwright-js', specifier: '@comment-labs/oxlint-config/plugins/playwright' },
   { name: 'react-hooks-js', specifier: '@comment-labs/oxlint-config/plugins/react-hooks' },
   { name: 'react-native-js', specifier: '@comment-labs/oxlint-config/plugins/react-native' },

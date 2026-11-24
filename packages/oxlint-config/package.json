@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@comment-labs/oxlint-config",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "Oxlint configuration for comment-labs projects",
   "license": "Apache-2.0",
   "author": "CommEnt Team",
@@ -26,24 +26,25 @@
   "dependencies": {
     "@brettz9/eslint-plugin": "^3.0.0",
     "@e18e/eslint-plugin": "^0.8.1",
-    "@stylistic/eslint-plugin": "^5.10.0",
+    "@stylistic/eslint-plugin": "^6.0.1",
     "empathic": "^2.1.0",
-    "eslint-plugin-import-zod": "^1.2.1",
-    "eslint-plugin-jsdoc": "^64.5.4",
-    "eslint-plugin-playwright": "^2.12.0",
+    "eslint": "10.11.0",
+    "eslint-plugin-jsdoc": "^65.5.0",
+    "eslint-plugin-playwright": "^2.12.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-native": "^5.0.0",
-    "eslint-plugin-react-refresh": "^0.5.7",
-    "eslint-plugin-regexp": "^3.3.1",
-    "eslint-plugin-security": "^4.2.0",
-    "eslint-plugin-unicorn": "^74.0.0",
-    "globals": "^17.13.0"
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "eslint-plugin-regexp": "^3.3.3",
+    "eslint-plugin-security": "^4.2.1",
+    "eslint-plugin-unicorn": "^80.0.0",
+    "eslint-plugin-zod": "^5.3.0",
+    "globals": "^17.14.0",
+    "oxlint-anti-slop": "^0.5.0"
   },
   "devDependencies": {
     "@comment-labs/tsconfig": "workspace:*",
     "@types/eslint-plugin-security": "3.0.1",
     "@types/node": "catalog:types",
-    "eslint": "10.11.0",
     "oxlint": "catalog:lint",
     "oxlint-tsgolint": "catalog:lint",
     "tsdown": "catalog:toolchain",
@@ -51,8 +52,8 @@
     "vitest": "catalog:test"
   },
   "peerDependencies": {
-    "oxlint": "^1.83.0",
-    "oxlint-tsgolint": "^7.0.2002"
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "^7.0.2008"
   },
   "publishConfig": {
     "access": "public"

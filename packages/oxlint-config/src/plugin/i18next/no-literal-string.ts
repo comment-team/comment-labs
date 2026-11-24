@@ -87,18 +87,12 @@ type VElementNode = LooseNode & {
   rawName: string
 }
 
-function getSourceCode(context: Context): SourceCode {
-  // oxlint-disable-next-line typescript/no-unnecessary-condition
-  return context.sourceCode
-    ?? (context as unknown as { getSourceCode(): SourceCode }).getSourceCode()
-}
-
 function getText(context: Context, node: Node): string {
-  return getSourceCode(context).getText(node as Parameters<SourceCode['getText']>[0])
+  return context.sourceCode.getText(node as Parameters<SourceCode['getText']>[0])
 }
 
 function getAncestors(context: Context, node: Node): Node[] {
-  return getSourceCode(context).getAncestors(node as Parameters<SourceCode['getAncestors']>[0]) as Node[]
+  return context.sourceCode.getAncestors(node as Parameters<SourceCode['getAncestors']>[0]) as Node[]
 }
 
 function withDottedPrefix(patterns: readonly unknown[] = []): readonly unknown[] {
@@ -179,8 +173,12 @@ export const noLiteralString: Rule.RuleModule = {
   },
 
   create(context) {
+    // Parser services are supplied by parser integrations, outside ESLint's Context type.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions
     const parserServices = (context as unknown as { parserServices?: unknown }).parserServices
-      ?? ((context as unknown as { sourceCode?: { parserServices?: unknown } }).sourceCode?.parserServices)
+      // ESLint 9 exposes parser services on sourceCode instead of context.
+      // oxlint-disable-next-line anti-slop/no-chained-type-assertions
+      ?? (context as unknown as { sourceCode?: { parserServices?: unknown } }).sourceCode?.parserServices
     const userOptions = (context.options[0] as Options | undefined) ?? {}
     const options = { ...defaults, ...userOptions }
 
@@ -239,7 +237,7 @@ export const noLiteralString: Rule.RuleModule = {
         return
       }
 
-      if (isValidLiteral(options as Options, node)) {
+      if (isValidLiteral(options, node)) {
         return
       }
 
@@ -308,7 +306,10 @@ export const noLiteralString: Rule.RuleModule = {
       'ExportNamedDeclaration[source]:exit': endIndicator,
 
       JSXElement(node: Node) {
+        // JSX nodes are added by the parser and are not represented in Rule.Node.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const element = node as unknown as JSXElementNode
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const fullComponentName = getText(context, element.openingElement.name as unknown as Node)
         const componentOptions = (options['jsx-components'] as SkipPatterns | undefined) ?? {}
         indicatorStack.push(
@@ -324,6 +325,8 @@ export const noLiteralString: Rule.RuleModule = {
       'JSXElement:exit': endIndicator,
 
       JSXAttribute(node: Node) {
+        // JSX nodes are added by the parser and are not represented in Rule.Node.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const attribute = node as unknown as JSXAttributeNode
         const attrName = attribute.name.name
 
@@ -334,6 +337,8 @@ export const noLiteralString: Rule.RuleModule = {
           return
         }
 
+        // The ancestor helper returns generic ESLint nodes; this visitor requires JSX parser nodes.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const jsxElement = getNearestAncestor(node, 'JSXOpeningElement') as unknown as JSXOpeningElementNode
         const tagName = (jsxElement.name as JSXIdentifierNode).name
         if (isAllowedDOMAttr(tagName, attrName)) {
@@ -351,6 +356,8 @@ export const noLiteralString: Rule.RuleModule = {
       },
 
       VElement(node: Node) {
+        // Vue template nodes are parser extensions to the ESLint node model.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const element = node as unknown as VElementNode
         const componentOptions = (options['jsx-components'] as SkipPatterns | undefined) ?? {}
         indicatorStack.push(
@@ -366,6 +373,8 @@ export const noLiteralString: Rule.RuleModule = {
       'VElement:exit': endIndicator,
 
       VAttribute(node: Node) {
+        // Vue template nodes are parser extensions to the ESLint node model.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const attribute = node as unknown as VAttributeNode
         const attrName = getAttributeName(attribute)
         const jsxAttributes = (options['jsx-attributes'] as SkipPatterns | undefined) ?? {}
@@ -389,6 +398,8 @@ export const noLiteralString: Rule.RuleModule = {
       'TSEnumMember:exit': endIndicator,
 
       PropertyDefinition(node: Node) {
+        // Listener nodes are typed as the broad Rule.Node union; narrow to this event's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const property = node as unknown as { key: { name?: string } }
         const classProperties = (options['class-properties'] as SkipPatterns | undefined) ?? {}
         indicatorStack.push(property.key.name !== undefined && shouldSkip(classProperties, property.key.name))
@@ -396,6 +407,8 @@ export const noLiteralString: Rule.RuleModule = {
       'PropertyDefinition:exit': endIndicator,
 
       ClassProperty(node: Node) {
+        // Listener nodes are typed as the broad Rule.Node union; narrow to this event's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const property = node as unknown as { key: { name?: string } }
         const classProperties = (options['class-properties'] as SkipPatterns | undefined) ?? {}
         indicatorStack.push(property.key.name !== undefined && shouldSkip(classProperties, property.key.name))
@@ -403,12 +416,16 @@ export const noLiteralString: Rule.RuleModule = {
       'ClassProperty:exit': endIndicator,
 
       VariableDeclarator(node: Node) {
+        // Listener nodes are typed as the broad Rule.Node union; narrow to this event's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const declarator = node as unknown as { id: { name?: string; type: string } }
         indicatorStack.push(declarator.id.type === 'Identifier' && isUpperCase(declarator.id.name ?? ''))
       },
       'VariableDeclarator:exit': endIndicator,
 
       Property(node: Node) {
+        // Listener nodes are typed as the broad Rule.Node union; narrow to this event's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const property = node as unknown as { key: { name?: string; value?: unknown } }
         const objectProperties = (options['object-properties'] as SkipPatterns | undefined) ?? {}
         indicatorStack.push(
@@ -418,6 +435,8 @@ export const noLiteralString: Rule.RuleModule = {
       'Property:exit': endIndicator,
 
       BinaryExpression(node: Node) {
+        // Listener nodes are typed as the broad Rule.Node union; narrow to this event's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const expression = node as unknown as { operator: string }
         indicatorStack.push(expression.operator !== '+')
       },
@@ -429,21 +448,23 @@ export const noLiteralString: Rule.RuleModule = {
       'AssignmentPattern:exit': endIndicator,
 
       NewExpression(node: Node) {
-        indicatorStack.push(isValidFunctionCall(context, options as Options, { callee: resolveCallee(node) }))
+        indicatorStack.push(isValidFunctionCall(context, options, { callee: resolveCallee(node) }))
       },
       'NewExpression:exit': endIndicator,
 
       CallExpression(node: Node) {
-        indicatorStack.push(isValidFunctionCall(context, options as Options, { callee: resolveCallee(node) }))
+        indicatorStack.push(isValidFunctionCall(context, options, { callee: resolveCallee(node) }))
       },
       'CallExpression:exit': endIndicator,
 
       TaggedTemplateExpression(node: Node) {
-        indicatorStack.push(isValidFunctionCall(context, options as Options, { callee: resolveCallee(node) }))
+        indicatorStack.push(isValidFunctionCall(context, options, { callee: resolveCallee(node) }))
       },
       'TaggedTemplateExpression:exit': endIndicator,
 
       'AssignmentExpression[left.type="MemberExpression"]'(node: Node) {
+        // The selector guarantees MemberExpression on the left, but Rule.Node omits that selector refinement.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const expression = node as unknown as { left: { property: { name?: string } } }
         const objectProperties = (options['object-properties'] as SkipPatterns | undefined) ?? {}
         indicatorStack.push(shouldSkip(objectProperties, expression.left.property.name ?? ''))
@@ -463,9 +484,11 @@ export const noLiteralString: Rule.RuleModule = {
           return
         }
 
+        // Listener nodes are typed as the broad Rule.Node union; narrow to TemplateLiteral's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const literal = node as unknown as { quasis: Array<{ value: { raw: string } }> }
         literal.quasis.some(({ value: { raw } }) => {
-          if (isValidLiteral(options as Options, { value: raw })) {
+          if (isValidLiteral(options, { value: raw })) {
             return false
           }
 
@@ -476,6 +499,8 @@ export const noLiteralString: Rule.RuleModule = {
       },
 
       Literal(node: Node) {
+        // Listener nodes are typed as the broad Rule.Node union; narrow to Literal's shape.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         const literal = node as unknown as { value: unknown; parent: { type: string; key?: Node } }
 
         if ([ 'MemberExpression', 'SwitchCase' ].includes(literal.parent.type)) {
@@ -502,18 +527,21 @@ export const noLiteralString: Rule.RuleModule = {
           return
         }
 
+        // Literal's value field is not present on the base Rule.Node type.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
         validateBeforeReport(node as unknown as Node & { value: unknown })
       }
     }
 
-    const defineTemplateBodyVisitor = (parserServices as {
-      defineTemplateBodyVisitor?: DefineTemplateBodyVisitor
-    } | undefined)?.defineTemplateBodyVisitor
+    // Parser-specific API is not declared by ESLint's parserServices type.
+    const defineTemplateBodyVisitor = (parserServices as ParserServices | undefined)?.defineTemplateBodyVisitor
 
     if (defineTemplateBodyVisitor) {
-      const invoke = (name: string) => (node: Node) => {
-        const handler = (scriptVisitor as unknown as Record<string, (node: Node) => void>)[name]
-        handler?.(node)
+      const invoke = (name: TemplateVisitorName) => (node: Node) => {
+        // Listener entries have event-specific parameter types; the template API supplies the matching node.
+        // oxlint-disable-next-line anti-slop/no-chained-type-assertions
+        const handler = scriptVisitor[name] as unknown as (node: Node) => void
+        handler(node)
       }
 
       return defineTemplateBodyVisitor(
@@ -540,3 +568,17 @@ type DefineTemplateBodyVisitor = (
   templateBodyVisitor: Record<string, (node: Node) => void>,
   scriptVisitor: Rule.RuleListener
 ) => Rule.RuleListener
+
+type ParserServices = {
+  defineTemplateBodyVisitor?: DefineTemplateBodyVisitor
+}
+
+type TemplateVisitorName =
+  | 'JSXText'
+  | 'VElement'
+  | 'VElement:exit'
+  | 'VAttribute'
+  | 'VAttribute:exit'
+  | 'CallExpression'
+  | 'CallExpression:exit'
+  | 'Literal'

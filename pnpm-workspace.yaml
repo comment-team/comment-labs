@@ -6,8 +6,8 @@ catalogs:
     bundled-eslint-config: 0.9.1
     eslint: 10.8.1
     eslint-plugin-oxlint: 1.81.0
-    oxlint: 1.83.0
-    oxlint-tsgolint: 7.0.2002
+    oxlint: 1.95.0
+    oxlint-tsgolint: 7.0.2008
   toolchain:
     tsdown: 0.23.1
     typescript: npm:typescript-native-bridge@6.0.3-bridge.12.tsgo.7.0.2
@@ -25,6 +25,35 @@ catalogs:
 
 configDependencies:
   '@comment-labs/pnpm-plugin-defaults': 1.0.0-beta.4
+
+minimumReleaseAgeExclude:
+  - '@oxlint-tsgolint/darwin-arm64@7.0.2008'
+  - '@oxlint-tsgolint/darwin-x64@7.0.2008'
+  - '@oxlint-tsgolint/linux-arm64@7.0.2008'
+  - '@oxlint-tsgolint/linux-x64@7.0.2008'
+  - '@oxlint-tsgolint/win32-arm64@7.0.2008'
+  - '@oxlint-tsgolint/win32-x64@7.0.2008'
+  - '@oxlint/binding-android-arm-eabi@1.95.0'
+  - '@oxlint/binding-android-arm64@1.95.0'
+  - '@oxlint/binding-darwin-arm64@1.95.0'
+  - '@oxlint/binding-darwin-x64@1.95.0'
+  - '@oxlint/binding-freebsd-x64@1.95.0'
+  - '@oxlint/binding-linux-arm-gnueabihf@1.95.0'
+  - '@oxlint/binding-linux-arm-musleabihf@1.95.0'
+  - '@oxlint/binding-linux-arm64-gnu@1.95.0'
+  - '@oxlint/binding-linux-arm64-musl@1.95.0'
+  - '@oxlint/binding-linux-ppc64-gnu@1.95.0'
+  - '@oxlint/binding-linux-riscv64-gnu@1.95.0'
+  - '@oxlint/binding-linux-riscv64-musl@1.95.0'
+  - '@oxlint/binding-linux-s390x-gnu@1.95.0'
+  - '@oxlint/binding-linux-x64-gnu@1.95.0'
+  - '@oxlint/binding-linux-x64-musl@1.95.0'
+  - '@oxlint/binding-openharmony-arm64@1.95.0'
+  - '@oxlint/binding-win32-arm64-msvc@1.95.0'
+  - '@oxlint/binding-win32-ia32-msvc@1.95.0'
+  - '@oxlint/binding-win32-x64-msvc@1.95.0'
+  - oxlint-tsgolint@7.0.2008
+  - oxlint@1.95.0
 
 peerDependencyRules:
   allowedVersions:

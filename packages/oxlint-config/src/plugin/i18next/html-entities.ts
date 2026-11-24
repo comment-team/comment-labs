@@ -17,10 +17,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-const entities: Record<string, string> = {
-  quot: '\u0022',
+const entities = {
+  quot: '"',
   amp: '&',
-  apos: '\u0027',
+  apos: "'",
   lt: '<',
   gt: '>',
   nbsp: '\u00A0',

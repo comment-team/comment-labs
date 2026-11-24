@@ -17,8 +17,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-// oxlint-disable stylistic-js/array-bracket-spacing
-
 import { htmlEntities } from './html-entities'
 
 export const defaults = {
@@ -26,7 +24,7 @@ export const defaults = {
   mode: 'jsx-text-only' as const,
   'jsx-components': {
     include: [] as readonly string[],
-    exclude: ['Trans'] as readonly string[]
+    exclude: [ 'Trans' ] as readonly string[]
   },
   'jsx-attributes': {
     include: [] as readonly string[],
@@ -68,11 +66,11 @@ export const defaults = {
   },
   'object-properties': {
     include: [] as readonly string[],
-    exclude: ['[A-Z_-]+'] as readonly string[]
+    exclude: [ '[A-Z_-]+' ] as readonly string[]
   },
   'class-properties': {
     include: [] as readonly string[],
-    exclude: ['displayName'] as readonly string[]
+    exclude: [ 'displayName' ] as readonly string[]
   },
   message: 'disallow literal string',
   'should-validate-template': false
@@ -86,11 +84,11 @@ export const schema = {
   properties: {
     framework: {
       type: 'string',
-      enum: ['react', 'vue']
+      enum: [ 'react', 'vue' ]
     },
     mode: {
       type: 'string',
-      enum: ['jsx-text-only', 'jsx-only', 'all', 'vue-template-only']
+      enum: [ 'jsx-text-only', 'jsx-only', 'all', 'vue-template-only' ]
     },
     'jsx-components': {
       type: 'object',

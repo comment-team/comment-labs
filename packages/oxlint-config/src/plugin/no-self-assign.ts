@@ -49,7 +49,7 @@ function isNode(value: unknown): value is ScopeNode {
     && typeof Reflect.get(value, 'type') === 'string'
 }
 
-function getProperty(value: object, key: PropertyKey): unknown {
+function getProperty(value: ScopeNode, key: PropertyKey): unknown {
   return Reflect.get(value, key)
 }
 

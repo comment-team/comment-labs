@@ -4,6 +4,33 @@ import type { DummyRuleMap } from 'oxlint'
 export const stylisticRules: DummyRuleMap = {
   'stylistic-js/type-generic-spacing': 'warn',
   'stylistic-js/type-named-tuple-spacing': 'warn',
+  'stylistic-js/list-style': [
+    'warn',
+    {
+      empty: 'never',
+      singleLine: { spacing: 'never' },
+      overrides: {
+        ArrayExpression: {
+          singleLine: { spacing: 'always' }
+        },
+        ArrayPattern: {
+          singleLine: { spacing: 'always' }
+        },
+        ObjectExpression: {
+          singleLine: { spacing: 'always' }
+        },
+        ObjectPattern: {
+          singleLine: { spacing: 'always' }
+        },
+        ImportDeclaration: {
+          singleLine: { spacing: 'always' }
+        },
+        ExportNamedDeclaration: {
+          singleLine: { spacing: 'always' }
+        }
+      }
+    }
+  ],
   'stylistic-js/function-call-spacing': [
     'warn',
     'never'
@@ -21,21 +48,24 @@ export const stylisticRules: DummyRuleMap = {
       'named': 'never'
     }
   ],
-  'stylistic-js/space-infix-ops': [ 'warn', { int32Hint: false }],
+  'stylistic-js/space-infix-ops': [ 'warn', { int32Hint: false } ],
   'stylistic-js/semi-spacing': 'warn',
   'stylistic-js/type-annotation-spacing': [
-    'warn', {
-      after: true, before: true,
+    'warn',
+    {
+      after: true,
+      before: true,
       overrides: { colon: { after: true, before: false } }
     }
   ],
   'stylistic-js/member-delimiter-style': [
-    'warn', {
+    'warn',
+    {
       multiline: { delimiter: 'none', requireLast: true },
       singleline: { delimiter: 'semi', requireLast: false }
     }
   ],
-  'stylistic-js/quotes': [ 'warn', 'single' ],
+  'stylistic-js/quotes': [ 'warn', 'single', { avoidEscape: true } ],
   'stylistic-js/rest-spread-spacing': 'warn',
   'stylistic-js/space-in-parens': [
     'warn',
@@ -59,20 +89,6 @@ export const stylisticRules: DummyRuleMap = {
     'never'
   ],
   'stylistic-js/template-tag-spacing': 'warn',
-  'stylistic-js/array-bracket-newline': [
-    'warn',
-    {
-      'multiline': true
-    }
-  ],
-  'stylistic-js/array-bracket-spacing': [
-    'warn',
-    'always',
-    {
-      'arraysInArrays': false,
-      'objectsInArrays': false
-    }
-  ],
   'stylistic-js/arrow-parens': [
     'warn',
     'as-needed'
@@ -108,14 +124,6 @@ export const stylisticRules: DummyRuleMap = {
   'stylistic-js/eol-last': [
     'warn',
     'always'
-  ],
-  'stylistic-js/function-call-argument-newline': [
-    'warn',
-    'consistent'
-  ],
-  'stylistic-js/function-paren-newline': [
-    'warn',
-    'multiline-arguments'
   ],
   'stylistic-js/indent': [
     'warn',
@@ -172,7 +180,8 @@ export const stylisticRules: DummyRuleMap = {
   'stylistic-js/no-extra-semi': 'warn',
   'stylistic-js/no-floating-decimal': 'warn',
   'stylistic-js/no-mixed-operators': [
-    'warn', {
+    'warn',
+    {
       'groups': [
         [ '&', '|', '^', '~', '<<', '>>', '>>>' ],
         [ '==', '!=', '===', '!==', '>', '>=', '<', '<=' ],
@@ -193,21 +202,6 @@ export const stylisticRules: DummyRuleMap = {
   'stylistic-js/no-tabs': 'warn',
   'stylistic-js/no-trailing-spaces': 'warn',
   'stylistic-js/no-whitespace-before-property': 'warn',
-  'stylistic-js/object-curly-newline': [
-    'warn',
-    {
-      'ExportDeclaration': {
-        'multiline': true
-      },
-      'ImportDeclaration': {
-        'multiline': true
-      }
-    }
-  ],
-  'stylistic-js/object-curly-spacing': [
-    'warn',
-    'always'
-  ],
   'stylistic-js/operator-linebreak': [
     'warn',
     'before'

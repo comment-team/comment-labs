@@ -8,7 +8,7 @@ describe('sanitizePlugin', () => {
       rules: {
         broken: { meta: { defaultOptions: [ undefined ] } },
         explicitNull: { meta: { defaultOptions: [ null ] } },
-        prefix: { meta: { defaultOptions: [ 'always', undefined, { enforceForIfStatements: true }] } }
+        prefix: { meta: { defaultOptions: [ 'always', undefined, { enforceForIfStatements: true } ] } }
       }
     }
 

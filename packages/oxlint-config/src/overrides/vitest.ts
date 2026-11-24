@@ -9,7 +9,8 @@ export const vitestOverrides: OxlintOverride = {
   rules: {
     'vitest/max-expects': 'off',
     'vitest/prefer-expect-assertions': [
-      'warn', {
+      'warn',
+      {
         onlyFunctionsWithExpectInCallback: true,
         onlyFunctionsWithExpectInLoop: true
       }
